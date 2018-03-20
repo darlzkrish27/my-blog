@@ -1,0 +1,186 @@
+---
+layout: default
+---
+
+<html><head><title>Automatically backup mysql database to Amazon S3 using django (Python) script</title>
+<meta name="tags" content="mysql"/><meta name="date" content="2009-02-23 06:48:31"/><meta name="modified" content="2009-02-23 18:18:31+05:30" /><meta name="authors" content="rama"/><meta name="summary" content="<p>Many of us use Amazon S3 to backup&nbsp; their mysql databases.As we do it so often we thought of writing an automated script which does this task of taking the backup of a mysql database and then moving it to the Amazon S3 .&nbsp; Below is the django script .</p> <p><a href="http://uswaretech.com/blog/wp-content/uploads/2009/02/download.png"><img title="download" style="border-width: 0px; display: inline;" alt="download" src="http://uswaretech.com/blog/wp-content/uploads/2009/02/download-thumb.png" border="0" width="374" height="191"></a></p> <div style="border: 1px solid gray; margin: 20px 0px 10px; padding: 4px; overflow: auto; font-size: 8pt; width: 97.5%; cursor: text; max-height: 200px; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"> <div style="border-style: none; padding: 0px; overflow: visible; font-size:"/>
+<body><p>Many of us use Amazon S3 to backup&nbsp; their mysql databases.As we do it so often we thought of writing an automated script which does this task of taking the backup of a mysql database and then moving it to the Amazon S3 .&nbsp; Below is the django script .</p>  <p><a href="http://uswaretech.com/blog/wp-content/uploads/2009/02/download.png"><img title="download" style="border-width: 0px; display: inline;" alt="download" src="http://uswaretech.com/blog/wp-content/uploads/2009/02/download-thumb.png" border="0" width="374" height="191"></a></p>  <div style="border: 1px solid gray; margin: 20px 0px 10px; padding: 4px; overflow: auto; font-size: 8pt; width: 97.5%; cursor: text; max-height: 200px; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);">   <div style="border-style: none; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);">     <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   1:</span> def upload_db_to_Amazons3():</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">   2:</span> <span style="color: rgb(0, 96, 128);">""</span><span style="color: rgb(0, 96, 128);">" function which uploadd mysql database to amazon s3"</span><span style="color: rgb(0, 96, 128);">""</span></pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   3:</span>&nbsp; </pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">   4:</span> AWS_ACCESS_KEY_ID = settings.AWS_ACCESS_KEY_ID</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   5:</span> AWS_SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">   6:</span> BUCKET_NAME = settings.BUCKET_NAME</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   7:</span> MYSQL_DUMP_PATH = settings.MYSQL_DUMP_PATH</pre>
+
+ <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">   8:</span> DATABASE_NAME = settings.DATABASE_NAME</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   9:</span> ARCHIVE_NAME = settings.ARCHIVE_NAME</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  10:</span> .....</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  11:</span>&nbsp; </pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  12:</span> proc1 = subprocess.Popen(settings.MYSQL_DUMP_PATH+<span style="color: rgb(0, 96, 128);">" --no-data  -u root -pwelcome   -x  --databases  doloto"</span>,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  13:</span> #create data file</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  14:</span> proc3 = subprocess.Popen(settings.MYSQL_DUMP_PATH+<span style="color: rgb(0, 96, 128);">" --no-create-info  -u root -pwelcome   -x  --databases  doloto"</span>,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  15:</span> ...</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  16:</span>&nbsp; </pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  17:</span> t1.write(proc1.communicate()[0])</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  18:</span> t2.write(proc3.communicate()[0])</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  19:</span>&nbsp; </pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  20:</span> #create  tar.gz <span style="color: rgb(0, 0, 255);">for</span> the above two files</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  21:</span> tar = tarfile.open( (os.path.join(os.curdir, settings.ARCHIVE_NAME+<span style="color: rgb(0, 96, 128);">"_archive.tar.gz"</span>)), <span style="color: rgb(0, 96, 128);">"w|gz"</span>)</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  22:</span> tar.add(t1.name,ARCHIVE_NAME+<span style="color: rgb(0, 96, 128);">"_struct.sql"</span>)</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  23:</span> tar.add(t2.name,ARCHIVE_NAME+<span style="color: rgb(0, 96, 128);">"_data.sql"</span>)</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  24:</span> ........</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  25:</span> #upload file to Amazon S3</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  26:</span> tardata = open(os.path.join(os.curdir, settings.ARCHIVE_NAME+<span style="color: rgb(0, 96, 128);">"_archive.tar.gz"</span>) , <span style="color: rgb(0, 96, 128);">"rb"</span>).read()</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  27:</span> response = conn.put(BUCKET_NAME,settings.ARCHIVE_NAME+<span style="color: rgb(0, 96, 128);">"_archive.tar.gz"</span>,S3.S3Object(tardata))</pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  28:</span>&nbsp; </pre>
+
+<pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  29:</span> upload_db_to_Amazons3()</pre>
+  </div>
+</div>
+
+<p><strong>Download the script by using the below link</strong></p>
+
+<p><strong>1) <a title="http://uswaretech.com/blog/wp-content/uploads/2009/02/mysql_to_amazons3.zip" href="http://uswaretech.com/blog/wp-content/uploads/2009/02/mysql_to_amazons3.zip">http://uswaretech.com/blog/wp-content/uploads/2009/02/mysql_to_amazons3.zip</a></strong></p>
+
+<p><strong>Things to do before using the script:</strong></p>
+
+<p>1) You need to put down Amazon S3 library for python in the sys.path .you can download the python S3 library by following the below link.(<a title="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=134" href="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=134">http://developer.amazonwebservices.com</a><a title="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=134" href="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=134">/connect/entry.jspa?externalID=134</a>)</p>
+
+<p>2)For a given project keep the script mysql_to_amazons3.py&nbsp; at the&nbsp; same level as that of settings.py.</p>
+
+<p>3) Define the following variables in settings.py </p>
+
+<div style="border: 1px solid gray; margin: 20px 0px 10px; padding: 4px; overflow: auto; font-size: 8pt; width: 97.5%; cursor: text; max-height: 200px; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);">
+  <div style="border-style: none; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);">
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   1:</span> #MySQL information</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">   2:</span> #MYSQL_DUMP_PATH should be the path to the mysqldump executable file</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   3:</span> #To know <span style="color: rgb(0, 0, 255);">where</span>  mysqldump executable <span style="color: rgb(0, 0, 255);">is</span> present <span style="color: rgb(0, 0, 255);">in</span> your local system</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">   4:</span> #use the command <span style="color: rgb(0, 96, 128);">"which mysqldump"</span>.</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   5:</span> #database name, user_name and password will be taken from settings.DATABASE_NAME,DATABASE_USER etc...</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">   6:</span> MYSQL_DUMP_PATH = <span style="color: rgb(0, 96, 128);">"/usr/bin/mysqldump"</span></pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   7:</span>&nbsp; </pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">   8:</span>&nbsp; </pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">   9:</span> #Amazon S3 credentials</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  10:</span> #Bucket_Name The name of the bucket <span style="color: rgb(0, 0, 255);">in</span> Amazon S3</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  11:</span> AWS_ACCESS_KEY_ID = <span style="color: rgb(0, 96, 128);">''</span></pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  12:</span> AWS_SECRET_ACCESS_KEY = <span style="color: rgb(0, 96, 128);">''</span></pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  13:</span> BUCKET_NAME = <span style="color: rgb(0, 96, 128);">'tempstore'</span></pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  14:</span>&nbsp; </pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  15:</span> #Archive name with <span style="color: rgb(0, 0, 255);">out</span> any extension (i.e):</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  16:</span> #what name <span style="color: rgb(0, 0, 255);">do</span> you want <span style="color: rgb(0, 0, 255);">for</span> the file which <span style="color: rgb(0, 0, 255);">is</span> uploaded to AMazon S3</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  17:</span> #please give the name  without any extension</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: rgb(244, 244, 244);"><span style="color: rgb(96, 96, 96);">  18:</span> #Also note that a copy of <span style="color: rgb(0, 0, 255);">this</span> file will be stored <span style="color: rgb(0, 0, 255);">in</span> the directory <span style="color: rgb(0, 0, 255);">where</span> the script resides</pre>
+
+    <pre style="border-style: none; margin: 0em; padding: 0px; overflow: visible; font-size: 8pt; width: 100%; color: black; line-height: 12pt; font-family: consolas,'Courier New',courier,monospace; background-color: white;"><span style="color: rgb(96, 96, 96);">  19:</span> ARCHIVE_NAME = <span style="color: rgb(0, 96, 128);">""</span> </pre>
+  </div>
+</div>
+
+<p><strong>a.MYSQL_DUMP_PATH</strong>=&nbsp; â€œ/usr/bin/mysqldumpâ€</p>
+
+<p>&nbsp;&nbsp;&nbsp; mysqldump is the command using which we take database backup.Here you should mention path to this mysqldump executable.Read the comments above that variable for more details.</p>
+
+<p><strong>b.AWS_ACCESS_KEY_ID</strong> = ''</p>
+
+<p>Amazon access key which amazon will provide after signing up for their webservices.</p>
+
+<p><strong>c.AWS_SECRET_ACCESS_KEY</strong> = ''</p>
+
+<p>Amazon secret key which amazon will provide after&nbsp; signing up for their webservices.</p>
+
+<p><strong>d.BUCKET_NAME</strong> = 'tempstore'</p>
+
+<p>Bucket name to which to which you want to store the database archive.More details about what a bucket means at <b><a href="http://tinyurl.com/5nlrkz">http://tinyurl.com/5nlrkz</a></b></p>
+
+<p><strong>e.ARCHIVE_NAME</strong> = " " </p>
+
+<p>Name of archive file.What name do you want to give to this archive?.</p>
+
+<p>f.Please note that the script will take the database name, database user,database password from already existing settings variables <strong>DATABASE_NAME , DATABASE_USER</strong>&nbsp; and <strong>DATABASE_PASSWORD</strong></p>
+
+<p><strong>Running the script:</strong></p>
+
+<p>1) python mysql_to_amazons3.py to upload the database archive of settings.DATABASE_NAME to Amazon S3 into the respective bucket.</p>
+
+<p>2) It also places the archive in the&nbsp; directory where the script resides for your convenience.</p>
+
+<p>3)The archive contains two files&nbsp; ***_data.sql which contains database data, ***_struct.sql which contains database structure.We intentionally separate the data and structure as it is a good practice.</p>
+
+<p>4) if you want to run this script as a cron job use crontab â€“e for setting up the cron job. </p>
+
+<p><strong>How to run this script in python?</strong></p>
+
+<p>if you want to run this script in python then do the following steps</p>
+
+<p>1)Remove the top 4 lines of code in above script.</p>
+
+<p>2) In upload_db_to_Amazons3()&nbsp; function replace all the capital variables with their corresponding values.</p>
+
+<p>3)Run the script.</p>
+
+<p><strong>How does the script work?</strong></p>
+
+<p>1.It uses subprocess.Popen (pipe open) functions to first execute the commands (mysqldump -&nbsp; -&nbsp; - ).</p>
+
+<p>2.It&nbsp; then reads the output from the pipes to create a .tar.gz archive.</p>
+
+<p>3.It then uses&nbsp; Amazon S3 web services API to upload the above file to Amazon S3.</p>
+
+<p><strong>Do you have any problems with the script?</strong></p>
+
+<p>if you have any problems with the script or any other feedback please let me know in comments.</p>
+
+<p>Resources:</p>
+
+<p>1)<a href="http://tinyurl.com/5nlrkz">http://tinyurl.com/5nlrkz</a></p>
+
+<p>2)<a title="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=134" href="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=134">http://developer.amazonwebservices.com/connect/entry.jspa?externalID=134</a></p>
+
+<p>3)<a title="http://www.holovaty.com/code/update_s3.py" href="http://www.holovaty.com/code/update_s3.py">http://www.holovaty.com/code/update_s3.py</a></p>
+
+<p>4)<a title="http://www.djangosnippets.org/snippets/580/" href="http://www.djangosnippets.org/snippets/580/">http://www.djangosnippets.org/snippets/580/</a></p>
+
+</body>
+</html>

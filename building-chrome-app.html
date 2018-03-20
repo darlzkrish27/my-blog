@@ -1,0 +1,97 @@
+---
+layout: default
+---
+
+<html><head><title>Tutorial: Building a Chrome app </title>
+<meta name="tags" content="chrome-extension"/><meta name="date" content="2013-01-16 12:46:01"/><meta name="modified" content="2013-01-16 12:16:01+05:30" /><meta name="authors" content="bhaskar"/><meta name="summary" content="This tutorial helps in building a simple chrome app . Examples included along with source code."/>
+<body>This is a hands on tutorial about <strong>How to build chrome apps</strong>, with examples of two Chrome apps we published recently. Lets get started.
+
+<p>Chrome apps are of two types:
+</p>
+
+<ul>
+    <li>Extensions : They extend the functionality of Google chrome and the websites. They have little or no UI. Ex:<a href='https://chrome.google.com/webstore/detail/password-generator/nnjgaeekiplalipomfgacalgehhcckbp'>Password Generator</a> . Source code : <a href='https://github.com/agiliq/forgot-me-password'>Github</a> </li>
+    <li>Apps: These are separate apps and appear just like any other website. Ex: <a href='https://chrome.google.com/webstore/detail/to-do-list/pmpdkgedikcgfpjbcafckjabeeialdel'>To Do List</a>. Source Code : <a href='https://github.com/agiliq/to-do-list-chrome-app'>Github</a></li>
+</ul>
+
+<p>Depending on our requirement, we need to decide what kind of app we need to build.</p>
+
+
+<h2>Extension: Password Generator</h2>
+    <h3>Installation : </h3>
+    <p>
+        Visit the link <a href='https://chrome.google.com/webstore/detail/password-generator/nnjgaeekiplalipomfgacalgehhcckbp'>Password Generator</a> using google-chrome browser and
+         click 'Add To Chrome' button on the top-right corner. Then an extra icon will appear right to the address bar of the browser.
+          If you cant see any icons, try clicking the 'down arrow' that is visible between the address bar and the settings icon.
+          Or just drag and decrease the size of the address bar to see the icons. (see screenshot from the app). Click the icon and a small popup will be opened which is the required app !
+    </p>
+
+    <h3>What it does :</h3>
+    <p>
+        It gets the domain of the currently opened webpage and generates a unique password for that domain by combining the master password that one can set and the domain.
+        The combined string is encrypted using SHA2 and first 8 letters of the generated string is used as the password.</p>
+    <h3>Its Manifest File </h3>
+    <p>
+        <pre>
+        {
+        "name": "Password Generator",
+        "version": "1.2",
+        "manifest_version": 2,
+        "description": "Generates domain specific passwords ",
+        "browser_action": {
+            "default_icon": "images/icon.png",
+            "default_title":"Password generator",
+            "default_popup": "popup.html"
+        },
+        "icons" : {"16" : "images/icon16.png","48" : "images/icon48.png","128" : "images/icon128.png"},
+        "permissions": ["tabs"]
+        }
+        </pre>
+
+    <h3>Understanding the Manifest file</h3>
+    The above code is the content of manifest.json of the app you just installed(Password Generator).<br>
+    If you observe the value of the key 'browser_action', it has 3 keys default_icon, default_title, default_popup.<br>
+    <ol>
+        <li>default_icon : It is the icon that is visible to the right side of the address bar. </li>
+        <li>default_title : The 'name' that appears when you hover on the icon.</li>
+        <li>default_popup : It is the html file that will be shown as popup when we click the icon.</li>
+    </ol>
+    <h4>Permissions</h4> 
+    <p>Chrome API lets your app  access various things like the bookmarks, about the other tabs etc.. To use these features, you need to take appropriate permission from the user by
+        mentioning them in the 'permissions' key of the manifest file. In the password generator app, I have used chrome api to get the current tab details.
+        So, I have added the permission 'tabs'.
+        Here is the full list of permissions : <a href='http://developer.chrome.com/extensions/permissions.html'>http://developer.chrome.com/extensions/permissions.html</a></p>
+     <h4>Ajax call</h4>
+     <p>When you are doing any ajax call, you may need to take permission depending on whether the 'url' used is local (bundled with app) or from the internet.
+         If it is a local one, you need not take any permissions. But, if the url is from internet(not bundled with app), then you need to mention that url in the permissions.
+         There is an option '&lt;all_urls&gt;' that you can give in the permissions if you want any url to be accessible. </p>
+
+    </p>
+
+    <h2>Manifest file for chrome app <a href='https://chrome.google.com/webstore/detail/to-do-list/pmpdkgedikcgfpjbcafckjabeeialdel' style='font-size:12pt'>To Do List</a></h2>
+    <pre>
+        {
+        "name": "To Do List",
+        "version": "1.2",
+        "manifest_version": 2,
+        "description": "Simple and best way to organise work and increase productivity. ",
+        "app" : {
+            "launch" : {
+            "local_path" : "index.html"
+            }
+        },
+        "icons" : {"16" : "to-do-list.png","48" : "to-do-list.png","128" : "to-do-list.png"},
+        "permissions": []
+        }
+        </pre>
+
+    If you observe the difference between the manifest files of an app and an extension, an app uses the 'launch' parameter which tells Google chrome what to show when an app is opened.
+    Where as the manifest file of an extension contains 'browser_action' which tells what icon to be used to recognise the extension(icon will be shown to the right side of addressbar). Rest of the things are the same.
+
+    <h3>Building</h3>
+    <p>
+        Package the whole files(html/css/js/images/manifest.json) in 'zip' format and distribute it by uploading the zipped app in the <a href='https://chrome.google.com/webstore/developer/dashboard'>Chrome developer dashboard</a> .
+
+
+    </p></body>
+</html>

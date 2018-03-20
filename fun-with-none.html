@@ -1,0 +1,227 @@
+---
+layout: default
+---
+<html><head><title>Fun with none</title>
+<meta name="tags" content="algorithms"/><meta name="date" content="2009-07-16 02:07:45"/><meta name="modified" content="2009-07-16 12:37:45+05:30" /><meta name="authors" content="rohit"/><meta name="summary" content="(If you are in a hurry, <a href="#funn">here is the fun part.</a>;) A few days ago, I was working with a nullable field, which wasn't behaving as I expected. So I started a shell, and see how nulls compare. <pre> <div class="line">In [1]: None</div> <div class="line">In [2]: None &gt; 10</div> <div class="line">Out[2]: False</div> <div class="line">In [3]: None &lt; 10</div> <div class="line">Out[3]: True</div> <div class="line">In [4]: None == None</div> <div class="line">Out[4]: True</div></pre> Funny, not as I expected. (Why is None &lt; 10 True. I thought it would be either False or None or cause an Error?) So python is obviously broken,"/>
+<body>(If you are in a hurry, <a href="#funn">here is the fun part.</a>;)
+
+A few days ago, I was working with a nullable field, which wasn't behaving as I expected. So I started a shell, and see how nulls compare.
+<pre>
+<div class="line">In [1]: None</div>
+<div class="line">In [2]: None &gt; 10</div>
+<div class="line">Out[2]: False</div>
+<div class="line">In [3]: None &lt; 10</div>
+<div class="line">Out[3]: True</div>
+<div class="line">In [4]: None == None</div>
+<div class="line">Out[4]: True</div></pre>
+Funny, not as I expected. (Why is None &lt; 10 True. I thought it would be either False or None or cause an Error?)
+
+So python is obviously broken, next steps, see the same thing in some other language. Lets try some other language, Javascript maybe?
+<div class="highlight">
+<pre>
+<div class="line">//#Javascript</div>
+<div class="line">&gt;&gt;&gt; null</div>
+<div class="line">null</div>
+<div class="line">&gt;&gt;&gt; null == 10</div>
+<div class="line">false</div>
+<div class="line">&gt;&gt;&gt; null &gt; 10</div>
+<div class="line">false</div>
+<div class="line">&gt;&gt;&gt; null &lt; 10</div>
+<div class="line">true</div>
+<div class="line">&gt;&gt;&gt; null == null</div>
+<div class="line">true</div></pre>
+</div>
+Ruby?
+<pre>irb(main):001:0&gt; nil
+=&gt; nil
+irb(main):002:0&gt; nil &gt; 10
+NoMethodError: undefined method `&gt;' for nil:NilClass
+  from (irb):2
+  from :0
+irb(main):003:0&gt; 10 &gt; nil
+ArgumentError: comparison of Fixnum with nil failed
+  from (irb):3:in `&gt;'
+  from (irb):3
+  from :0
+irb(main):004:0&gt; 10 &lt; nil
+ArgumentError: comparison of Fixnum with nil failed
+  from (irb):4:in ` 10 == nil
+=&gt; false</pre>
+So, this piqued my curiosity and without further ado, here is how None/nil/null/Nothing behave in fifteen different languages. You would assume they would have sorted something this basic out by now. :)
+
+<a name="funn"></a>
+<h3>Comparision of how null behaves in different languages for</h3>
+<ul>
+	<li>null &gt; 10</li>
+	<li>null &lt; 10</li>
+	<li>null == 10</li>
+	<li>null == null</li>
+</ul>
+<table class="ta1" border="1" cellspacing="0" cellpadding="0"><col></col><col></col><col></col><col></col><col></col><col></col><col></col><col></col>
+<tbody>
+<tr class="ro1">
+<td class="Default" style="2.267cm;"></td>
+<td class="ce1" style="2.267cm;">Null &gt; 10</td>
+<td class="ce1" style="2.267cm;">Null &lt; 10</td>
+<td class="ce1" style="2.267cm;">Null == null</td>
+<td class="ce1" style="2.267cm;">10 == 10</td>
+<td class="ce1" style="2.267cm;">Null == 10</td>
+<td class="ce1" style="2.267cm;">names</td>
+<td class="ce1" style="6.724cm;">Link</td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Python</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="Default" style="2.267cm;">None</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147892">http://gist.github.com/147892</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Ruby</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="Default" style="2.267cm;">nil</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147894">http://gist.github.com/147894</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Lua</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="Default" style="2.267cm;">nil</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147906">http://gist.github.com/147906</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Javascript</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147909">http://gist.github.com/147909</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Mysql</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147921">http://gist.github.com/147921</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Psql</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147915">http://gist.github.com/147915</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Sqlite</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147919">http://gist.github.com/147919</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Haskell</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Nothing</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147953">http://gist.github.com/147953</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Clojure</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">nil</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147958">http://gist.github.com/147958</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Java</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147932">http://gist.github.com/147932</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Groovy</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147936">http://gist.github.com/147936</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Perl</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">undef</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147925">http://gist.github.com/147925</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Scala</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="Default" style="2.267cm;">Error</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147923">http://gist.github.com/147923</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Jython</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">FALSE</td>
+<td class="Default" style="2.267cm;">None</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147914">http://gist.github.com/147914</a></td>
+</tr>
+<tr class="ro1">
+<td class="ce1" style="2.267cm;">Php</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="ce2" style="2.267cm;">TRUE</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="2.267cm;">null</td>
+<td class="Default" style="6.724cm;"><a rel="nofollow" href="http://gist.github.com/147899">http://gist.github.com/147899</a></td>
+</tr>
+</tbody></table>
+All these are high level languages, and with exception of Java/Haskell/Sql are dynamically typed, so why is there this much difference in how None/null/nil as a type is handled?
+
+----
+As you can tell, I am very new to some of these languages, so if I have got your favorite language wrong. Please let me know in the comments and I will fix it.</body>
+</html>

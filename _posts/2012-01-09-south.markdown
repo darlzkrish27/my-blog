@@ -1,0 +1,218 @@
+---
+layout: post
+title:  "Getting started with South for Django DB migrations"
+date:   2012-01-09 11:30:01+05:30
+categories: south
+author: akshar
+---
+South is a migration tool used with Django.There will be times when you would be adding fields to a model or changing the type of field (eg: Field was an IntegerField and you want to change it to FloatField). In such cases syncdb doesn't help and South comes to your rescue.
+
+There were times when i tried "python manage.py migrate southapp", got some error and then tried "python manage.py migrate southapp 0001 --fake". In some cases, that worked. When it did not work, i tried something else and so on. There were confusions regarding what --fake does and why it does so. In this post, i intend to remove(lessen) that confusion.
+
+We will be seeing some scenarios which will help us understand south better. At various points, we will intentionally make some mistakes and will rectify them later. Also, we keep looking at our database schema as we go. 
+
+Scenario 1: Using south on a brand new app.
+
+Let's create an app named "farzi_app".
+
+	python manage.py startapp farzi_app
+
+In settings.py, add 'south' to INSTALLED_APPS and run syncdb.
+
+	python manage.py syncdb
+
+Running syncdb creates a table named 'south_migrationhistory' in your database. 
+This table 'south_migrationhistory' keeps a track of all the migrations which have been applied. So, this is the table used by south to determine which migrations have been applied and which need to be applied, when you run "python manage.py migrate app_name". More on this table later. You can see this table in your database. See it.
+
+	python manage.py dbshell
+	mysql> show tables;
+
+See the entries in table south_migrationhistory.
+
+	select * from south_migrationhistory;
+You would see an Empty set at this point.
+
+The command used to perform migrations is:
+
+	python manage.py migrate
+
+Run this command.
+Since at this point, none of our apps are being managed by south, so performing migration do not do anything.
+
+Let's make a model in our app 'farzi_app'. Let's name the model Employee. This model looks like:
+
+	class Employee(models.Model):
+    		name = models.CharField(max_length=100)
+
+Let's set "farzi_app" to be managed by South(south works on an app level and not on a model level). Had you not wanted to manage this app(farzi_app) by South, you would have run syncdb and a table named "farzi_app_employee" would be created in your database.
+But since we want to use south on a brand new app we won't be using syncdb, we need to write a migration which will create the corresponding table in database. 
+Before writing the migration, add "farzi_app" to INSTALLED_APPS in settings.py .Writing our migration:
+	
+	python manage.py schemamigration farzi_app --initial
+
+We used --initial because this is the first migration we wrote. Since, we don't have any migration written for "farzi_app", we need to use --initial. Other option which can be used is --auto. But, --auto needs a previous migration. In our next migration, we will use --auto and see what it does. So, the output for our previous command is :
+
+	 + Added model farzi_app.Employee
+	Created 0001_initial.py. You can now apply this migration with: ./manage.py migrate farzi_app
+
+Now, check your database. Still the table "farzi_app_employee" is not created in your database. Also, you can't find any row in table south_migrationhistory. Let's confirm this:
+
+	python manage.py dbshell
+	show tables; (You can't see farzi_app_employee)
+	select * from south_migrationhistory; (This gives Empty Set)
+
+You need to apply the migration you wrote. So, command you use is:
+
+	python manage.py migrate farzi_app
+
+What happens when you run this command? 
+
+South checks all the migration written for "farzi_app" in the directory "farzi_app/migrations". Then it checks the table "south_migrationhistory" to see what migrations have already been applied. If a migration has already been applied(if its applied,it is entered in south_migrationhistory), south will not try to apply that migration. For migrations which have not been applied till now(not entered in south_migrationhistory), south will try to apply those migrations and try making the corresponding change in the database. 
+
+In present scenario, south could not find any entry in 'south_migrationhistory' table, so it assumes no migration has been applied till now and tries to apply whatever migrations are there in "farzi_app/migrations". Currently, we have only one migration named "0001_initial.py" in this directory. So, south will try to apply this migration. In this situation, migration would be successful and hence our command "python manage.py migrate farzi_app" is successful. 
+Now, check the tables in database and entries in south_migrationhistory.
+
+	python manage.py dbshell
+	show tables; (You can see farzi_app_employee)
+	select * from south_migrationhistory; (This contains one row now. You can easily identify that this table keeps track of what migrations have been applied.)
+	
+Let's change our model now. Add a new field named 'salary' to model 'Employee'. So, our model looks like.
+ 	
+	class Employee(models.Model):
+    		name = models.CharField(max_length=100)
+    		salary = models.IntegerField(null=True)  
+		"""Yeah i know salary should not be left as null. But if we don't use it, we will have to make some one-off value and all 
+			which we don't want to see right now."""
+
+Making this corresponding change to database would have been difficult with syncdb, but not with south. We need to write one more migration. This time we will use --auto(remember last time we used --initial). Let's write the migration.
+
+	python manage.py schemamigration farzi_app --auto  
+
+	Output:
+	 + Added field salary on farzi_app.Employee
+	Created 0002_auto__add_field_employee_salary.py. You can now apply this migration with: ./manage.py migrate farzi_app
+
+What happens when we run this command? 
+
+South sees our current code, sees the last migration which we wrote, which in current situation is 0001_initial.py, figures out what has changed since our last migration and then writes the information about the changes in our new migration(0002_auto__add_field_employee_salary.py). 
+Just creating this migration would not make the corresponding change in our database i.e at this point column 'salary' is not added to table 'farzi_app_employee'. For that, we need to run this migration.Let's do that:
+
+	python manage.py migrate farzi_app
+
+	Output:
+	Running migrations for farzi_app:
+ 	- Migrating forwards to 0002_auto__add_field_employee_salary.
+ 	> farzi_app:0002_auto__add_field_employee_salary
+ 	- Loading initial data for farzi_app.
+	No fixtures found.
+
+What happened when we ran "python manage.py migrate farzi_app"?
+
+Similar to what we saw earlier. South checks all the migrations in farzi_app/migrations/ . It sees two migrations namely '0001_initial.py' and '0002_auto\_\_add_field_employee_salary.py'. It then checks 'south_migrationhistory' table to see what migrations have been applied. It could find one row(this row was inserted by south when we last ran 'python manage.py migrate farzi_app'). So, south figured out that '0001_initial.py' is applied since this entry is there in table 'south_migrationhistory'. Also, south figured out that '0002_auto\_\_add_field_employee_salary.py' is not applied since this entry was not in table 'south_migrationhistory'. So, it tries applying this migration i.e 0002_auto\_\_add_field_employee_salary.py'. In this case, this try is successful and corresponding change is made in table farzi_app_employee. Also, an entry would be now made in 'south_mihgrationhistory' that tells that '0002_auto\_\_add_field_employee_salary.py' is applied. So, next time somebody runs migrate, this migration '0002_auto\_\_add_field_employee_salary.py' will not be applied. Check your database now.
+
+	python manage.py dbshell
+	desc farzi_app_employee; (you can see column salary).
+	select * from south_migrationhistory; 
+	
+south_migrationhistory has two rows now, which indicates both the migrations we wrote till now has been applied. Next time user runs migrate, south will not try to apply these migrations.
+
+<b>Understanding --fake:</b>
+
+Let's get some errors intentionally which will help understand --fake better. Delete the second row in "south_migrationhistory" table. We will see an actual use of --fake in the next scenario, but i am doing this just to illustrate the use of --fake.
+
+Deleting the second migration from south_migrationhistory:
+	
+	delete from south_migrationhistory where migration='0002_auto__add_field_employee_salary';
+	
+Now, only one row remains in 'south_migrationhistory'.
+Let's change our Employee model a bit and write a migration. Add one more field to 'Employee', so it looks like:
+
+	class Employee(models.Model):
+    		name = models.CharField(max_length=100)
+    		salary = models.IntegerField(null=True)
+    		age = models.IntegerField(null=True)
+
+Writing the migration:
+
+	python manage.py schemamigration farzi_app --auto
+
+This creates a migration named '0003_auto__add_field_employee_age.py' in directory farzi_app/migrations. Hereafter we will be referring to this migration as 0003 and will refer to the other two migrations as 0002 and 0001. To add the column 'age' to table 'farzi_app_employee', you need to run this migration i.e 0003.
+Let's try running the migration.
+
+	python manage.py migrate farzi_app
+
+	Output:
+	Running migrations for farzi_app:
+	- Migrating forwards to 0003_auto__add_field_employee_age.
+	> farzi_app:0002_auto__add_field_employee_salary
+	! Error found during real run of migration! Aborting.
+       
+	! Since you have a database that does not support running
+	! schema-altering statements in transactions, we have had 
+	! to leave it in an interim state between migrations.
+       
+       ! You *might* be able to recover with:   = ALTER TABLE `farzi_app_employee` DROP COLUMN `salary` CASCADE; []
+       
+	! The South developers regret this has happened, and would
+	! like to gently persuade you to consider a slightly
+	! easier-to-deal-with DBMS.
+	! NOTE: The error which caused the migration to fail is further up.
+       Traceback (most recent call last):
+	 File "manage.py", line 14, in <module>
+	   execute_manager(settings)
+	 File "/usr/local/lib/python2.7/dist-packages/django/core/management/__init__.py", line 438, in execute_manager
+	   utility.execute()
+	 File "/usr/local/lib/python2.7/dist-packages/django/core/management/__init__.py", line 379, in execute
+	   self.fetch_command(subcommand).run_from_argv(self.argv)
+	 File "/usr/local/lib/python2.7/dist-packages/django/core/management/base.py", line 191, in run_from_argv
+	   self.execute(*args, **options.__dict__)
+	 File "/usr/local/lib/python2.7/dist-packages/django/core/management/base.py", line 220, in execute
+	   output = self.handle(*args, **options)
+	 File "/usr/local/lib/python2.7/dist-packages/south/management/commands/migrate.py", line 105, in handle
+	   ignore_ghosts = ignore_ghosts,
+	 File "/usr/local/lib/python2.7/dist-packages/south/migration/__init__.py", line 191, in migrate_app
+	   success = migrator.migrate_many(target, workplan, database)
+	 File "/usr/local/lib/python2.7/dist-packages/south/migration/migrators.py", line 221, in migrate_many
+	   result = migrator.__class__.migrate_many(migrator, target, migrations, database)
+	 File "/usr/local/lib/python2.7/dist-packages/south/migration/migrators.py", line 292, in migrate_many
+	   result = self.migrate(migration, database)
+	 File "/usr/local/lib/python2.7/dist-packages/south/migration/migrators.py", line 125, in migrate
+	   result = self.run(migration)
+	 File "/usr/local/lib/python2.7/dist-packages/south/migration/migrators.py", line 99, in run
+	   return self.run_migration(migration)
+	 File "/usr/local/lib/python2.7/dist-packages/south/migration/migrators.py", line 81, in run_migration
+	   migration_function()
+	 File "/usr/local/lib/python2.7/dist-packages/south/migration/migrators.py", line 57, in <lambda>
+	   return (lambda: direction(orm))
+	 File "/home/akshar/Posts/learnsouth/southlearn/farzi_app/migrations/0002_auto__add_field_employee_salary.py", line 12, in forwards
+	   db.add_column('farzi_app_employee', 'salary', self.gf('django.db.models.fields.IntegerField')(null=True), keep_default=False)
+	 File "/usr/local/lib/python2.7/dist-packages/south/db/generic.py", line 282, in add_column
+	   self.execute(sql)
+	 File "/usr/local/lib/python2.7/dist-packages/south/db/generic.py", line 150, in execute
+	   cursor.execute(sql, params)
+	 File "/usr/local/lib/python2.7/dist-packages/django/db/backends/util.py", line 34, in execute
+	   return self.cursor.execute(sql, params)
+	 File "/usr/local/lib/python2.7/dist-packages/django/db/backends/mysql/base.py", line 86, in execute
+	   return self.cursor.execute(query, args)
+	 File "/usr/lib/pymodules/python2.7/MySQLdb/cursors.py", line 166, in execute
+	   self.errorhandler(self, exc, value)
+	 File "/usr/lib/pymodules/python2.7/MySQLdb/connections.py", line 35, in defaulterrorhandler
+	   raise errorclass, errorvalue
+       _mysql_exceptions.OperationalError: (1060, "Duplicate column name 'salary'")
+
+OOPS, you got an error and migration did not run properly. Why this happened?
+
+South saw the migrations directory and saw three migrations there namely 0001, 0002 and 0003. Then it checked 'south_migrationhistory' table and found out only one row in the table which corresponds to the migration 0001 (remember , we deleted 0002). So, south feels that migration 0002 and 0003 needs to be applied. Remember, 0002 was written to add the column 'salary' to table 'farzi_app_employee'. So while running 0002, south tries adding column 'salary' while actually, that column exists in the database (this was added when we ran migrate for the second time). So, this causes the error. This is evident from the last line of the error we got, which says "_mysql_exceptions.OperationalError: (1060, "Duplicate column name 'salary'")".
+
+So, we need to FAKE the migration which is causing this error. What we want to do is, we somehow lead south to beleive that migration 0002 has been applied and south should not try to apply this migration next time we run migrate. So, our command will be:
+
+	python manage.py migrate farzi_app 0002 --fake
+
+So what this command did was, it created an entry into 'south_migrationhistory' corresponding to migration 0002. So, south now beleives that 0002 has been applied. But this command did not try to make any changes to the database. So, we did not get any error. Check 'south_migrationhistory', you would again see two rows there each corresponding to migration 0001 and 0002.
+
+Now, run the migration to add the column 'age', which has to be done by migration 0003.
+
+	python manage.py migrate farzi_app
+
+This should run without giving any error now. What we talked about --fake was just to see what --fake does, we will see a practical use of --fake in our next scenario, which is eventually my next post.
+
