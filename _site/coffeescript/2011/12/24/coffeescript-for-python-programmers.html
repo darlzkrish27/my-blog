@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Coffeescript for Python programmers | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Coffeescript for Python programmers" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="I just learnt Coffeescript, and as a Python programmer loved being able to write Javascript in a Python like language. Coffeescript is inspired by Python/Ruby and is very close to these languages. Writing Coffeescript and reading the compiled Javascript also improved my understanding of Javascript. Without much ado here is translation of some Python code to Coffeescript to get you started. Defining a variable Python a = 10 Coffeescript a = 10 Setting scope is done via whitespaces. Python if i == 10: foo() Coffeescript if i == 10 foo() No semicolons List comprehensions Python languages = [&quot;Python&quot;, &quot;Coffeescript&quot;, &quot;Java&quot;, &quot;Ruby&quot;, &quot;Haskell&quot;] languages = [lan.lower() for lan in languages] Coffeescript languages = [&quot;Python&quot;, &quot;Coffeescript&quot;, &quot;Java&quot;, &quot;Ruby&quot;, &quot;Haskell&quot;] languages = (lan.lowerCase for lan in languages) Get a range Python tillTen = range(1, 10) CoffeScript tillTen = [1...10] String Interpolation Python language = &quot;Python&quot; greet = &quot;I love %s&quot; % language Coffeescript language = &quot;Coffescript&quot; greet = &quot;I love #{language}&quot; Multi Line String Python &quot;&quot;&quot; The Quick Brown Fox, Jumps over The lazy Dog &quot;&quot;&quot; Coffeescript &quot;&quot;&quot; The Quick Brown Fox, Jumps over The lazy Dog &quot;&quot;&quot; Defining a function Python def double(x): return 2 * x Coffeescript double = (x) -&gt; 2 * x Here is a larger python script converted to Coffeescript. You will see that they are very similar and if you know Python learning (and loving) Coffeescript won’t take you a long time. Excited? Get started here. Resources CoffeeScript: Accelerated JavaScript Development: This is the book I read Coffeescript from and I highly recommend it. The Little book of Coffeescript Official Coffeescript Site Another take on Coffeescript for Python people Can you believe that it has been only an year since the 1.0 release!" />
+<meta property="og:description" content="I just learnt Coffeescript, and as a Python programmer loved being able to write Javascript in a Python like language. Coffeescript is inspired by Python/Ruby and is very close to these languages. Writing Coffeescript and reading the compiled Javascript also improved my understanding of Javascript. Without much ado here is translation of some Python code to Coffeescript to get you started. Defining a variable Python a = 10 Coffeescript a = 10 Setting scope is done via whitespaces. Python if i == 10: foo() Coffeescript if i == 10 foo() No semicolons List comprehensions Python languages = [&quot;Python&quot;, &quot;Coffeescript&quot;, &quot;Java&quot;, &quot;Ruby&quot;, &quot;Haskell&quot;] languages = [lan.lower() for lan in languages] Coffeescript languages = [&quot;Python&quot;, &quot;Coffeescript&quot;, &quot;Java&quot;, &quot;Ruby&quot;, &quot;Haskell&quot;] languages = (lan.lowerCase for lan in languages) Get a range Python tillTen = range(1, 10) CoffeScript tillTen = [1...10] String Interpolation Python language = &quot;Python&quot; greet = &quot;I love %s&quot; % language Coffeescript language = &quot;Coffescript&quot; greet = &quot;I love #{language}&quot; Multi Line String Python &quot;&quot;&quot; The Quick Brown Fox, Jumps over The lazy Dog &quot;&quot;&quot; Coffeescript &quot;&quot;&quot; The Quick Brown Fox, Jumps over The lazy Dog &quot;&quot;&quot; Defining a function Python def double(x): return 2 * x Coffeescript double = (x) -&gt; 2 * x Here is a larger python script converted to Coffeescript. You will see that they are very similar and if you know Python learning (and loving) Coffeescript won’t take you a long time. Excited? Get started here. Resources CoffeeScript: Accelerated JavaScript Development: This is the book I read Coffeescript from and I highly recommend it. The Little book of Coffeescript Official Coffeescript Site Another take on Coffeescript for Python people Can you believe that it has been only an year since the 1.0 release!" />
+<link rel="canonical" href="http://localhost:4000/coffeescript/2011/12/24/coffeescript-for-python-programmers.html" />
+<meta property="og:url" content="http://localhost:4000/coffeescript/2011/12/24/coffeescript-for-python-programmers.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2011-12-24T11:54:11+05:30" />
+<script type="application/ld+json">
+{"description":"I just learnt Coffeescript, and as a Python programmer loved being able to write Javascript in a Python like language. Coffeescript is inspired by Python/Ruby and is very close to these languages. Writing Coffeescript and reading the compiled Javascript also improved my understanding of Javascript. Without much ado here is translation of some Python code to Coffeescript to get you started. Defining a variable Python a = 10 Coffeescript a = 10 Setting scope is done via whitespaces. Python if i == 10: foo() Coffeescript if i == 10 foo() No semicolons List comprehensions Python languages = [&quot;Python&quot;, &quot;Coffeescript&quot;, &quot;Java&quot;, &quot;Ruby&quot;, &quot;Haskell&quot;] languages = [lan.lower() for lan in languages] Coffeescript languages = [&quot;Python&quot;, &quot;Coffeescript&quot;, &quot;Java&quot;, &quot;Ruby&quot;, &quot;Haskell&quot;] languages = (lan.lowerCase for lan in languages) Get a range Python tillTen = range(1, 10) CoffeScript tillTen = [1...10] String Interpolation Python language = &quot;Python&quot; greet = &quot;I love %s&quot; % language Coffeescript language = &quot;Coffescript&quot; greet = &quot;I love #{language}&quot; Multi Line String Python &quot;&quot;&quot; The Quick Brown Fox, Jumps over The lazy Dog &quot;&quot;&quot; Coffeescript &quot;&quot;&quot; The Quick Brown Fox, Jumps over The lazy Dog &quot;&quot;&quot; Defining a function Python def double(x): return 2 * x Coffeescript double = (x) -&gt; 2 * x Here is a larger python script converted to Coffeescript. You will see that they are very similar and if you know Python learning (and loving) Coffeescript won’t take you a long time. Excited? Get started here. Resources CoffeeScript: Accelerated JavaScript Development: This is the book I read Coffeescript from and I highly recommend it. The Little book of Coffeescript Official Coffeescript Site Another take on Coffeescript for Python people Can you believe that it has been only an year since the 1.0 release!","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/coffeescript/2011/12/24/coffeescript-for-python-programmers.html","headline":"Coffeescript for Python programmers","dateModified":"2011-12-24T11:54:11+05:30","datePublished":"2011-12-24T11:54:11+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/coffeescript/2011/12/24/coffeescript-for-python-programmers.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Coffeescript for Python programmers</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2011-12-24T11:54:11+05:30" itemprop="datePublished">Dec 24, 2011
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>I just learnt Coffeescript, and as a Python programmer loved being able to write Javascript in a Python like language. Coffeescript is inspired by 
+Python/Ruby and is very close to these languages. Writing Coffeescript and reading the compiled Javascript also improved my understanding of Javascript.
+Without much ado here is translation of some Python code to Coffeescript to get you started.</p>
+
+<p>Defining a variable</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Python
+a = 10
+
+Coffeescript
+a = 10
+</code></pre></div></div>
+
+<p>Setting scope is done via whitespaces.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Python
+
+if i == 10:
+	foo()
+
+
+Coffeescript
+
+if i == 10
+	foo()
+</code></pre></div></div>
+
+<p>No semicolons</p>
+
+<p>List comprehensions</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Python
+
+languages = ["Python", "Coffeescript", "Java", "Ruby", "Haskell"]
+languages = [lan.lower() for lan in languages]
+
+Coffeescript
+
+languages = ["Python", "Coffeescript", "Java", "Ruby", "Haskell"]
+languages = (lan.lowerCase for lan in languages)
+</code></pre></div></div>
+
+<p>Get a range</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Python
+tillTen = range(1, 10)
+
+CoffeScript
+
+tillTen = [1...10]
+</code></pre></div></div>
+
+<p>String Interpolation</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Python
+
+language = "Python"
+greet = "I love %s" % language
+
+Coffeescript
+
+language = "Coffescript"
+greet = "I love #{language}"
+</code></pre></div></div>
+
+<p>Multi Line String</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Python
+
+"""
+The Quick Brown
+Fox, Jumps over
+The lazy Dog
+"""
+
+Coffeescript
+
+"""
+The Quick Brown
+Fox, Jumps over
+The lazy Dog
+"""
+</code></pre></div></div>
+
+<p>Defining a function</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Python
+
+def double(x):
+	return 2 * x
+
+Coffeescript	
+
+double = (x) -&gt; 
+	2 * x
+</code></pre></div></div>
+
+<p>Here is a larger <a href="https://github.com/shabda/humanhash-coffeescript/blob/master/humanhash.py">python script</a> converted to <a href="https://github.com/shabda/humanhash-coffeescript/blob/master/humanhash.coffee">Coffeescript</a>.</p>
+
+<p>You will see that they are very similar and if you know Python learning (and loving) Coffeescript won’t take you a long time. Excited? 
+<a href="http://coffeescript.org/">Get started here</a>.</p>
+
+<hr />
+
+<h3 id="resources">Resources</h3>
+
+<ul>
+  <li><a href="http://pragprog.com/book/tbcoffee/coffeescript">CoffeeScript: Accelerated JavaScript Development</a>: This is the book I read Coffeescript from and I highly recommend it.</li>
+  <li><a href="http://arcturo.github.com/library/coffeescript/">The Little book of Coffeescript</a></li>
+  <li><a href="Http://coffeescript.org/">Official Coffeescript Site</a></li>
+  <li><a href="http://blog.ssokolow.com/archives/2011/05/07/a-python-programmers-first-impression-of-coffeescript/">Another take on Coffeescript for Python people</a></li>
+</ul>
+
+<hr />
+<p>Can you believe that it has been only an year since the 1.0 release!</p>
+
+
+  </div><a class="u-url" href="/coffeescript/2011/12/24/coffeescript-for-python-programmers.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

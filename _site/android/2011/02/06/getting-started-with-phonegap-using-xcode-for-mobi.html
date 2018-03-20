@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Getting started with PhoneGap using Xcode for Mobile app development | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Getting started with PhoneGap using Xcode for Mobile app development" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This is next in the series of apps I am building using various mobile technologies. It is the same app as build using Java for Android for calculating the Tax payable (in India). You can get the code for Objective-C, Java-Android, and PhoneGap. First the impressions Phonegap was the easiest to work with among the Objective-C, Java and PhoneGap, by far. I created the app as easily as Step 1. Write the app and test it in Browser using the Chrome developer tools. Step 2. Start a project in Xcode. Step 3. Copy the HTML and CSS files to project directory and export to simulator. The experience was very good, (After spending time with Obj-C and Java), as I could use a Chrome console as a repl, something which I sorely missed. The exported app does look native, with controls which look coming from browser. But with some CSS you can go a long way here. Getting started Get the Xcode and the Iphone SDK. Download PhoneGap and install from PhoneGap iOS, this will create a new user template for PhoneGap in Xcode. Create a PhoneGap project in Xcode. Edit the www/index.html Code like it is the web I don’t like working with the code-&gt;compile-&gt;check in simulator cycle. You can work much faster if you work with the browser. I edited the index.html, adding the Jquery library for easy DOM manipulation, and a bit of CSS to align. Lay out the Layout You can layout your UI using the common HTML elements. Here is a snippet from the finished app. &lt;div class=&quot;input&quot;&gt; &lt;label&gt; Your investments under 80D are: &lt;/label&gt; &lt;input type=&quot;number&quot; placeholder=0 id=&quot;infra_investment&quot;&gt;&lt;/input&gt; &lt;/div&gt; &lt;div class=&quot;input&quot;&gt; &lt;label&gt; Your housing loan interests paid are: &lt;/label&gt; &lt;input type=&quot;number&quot; placeholder=0 id=&quot;housing_interest&quot;&gt;&lt;/input&gt; &lt;/div&gt; These are standard HTML5 elements. Note that we were able to use HTML5 only elements like type=&quot;number&quot; placeholder=0 which set the keyboard type and placeholder which you can do via android:inputType or editing in Interface Builder. Code the code We will write the code to get the input values and then calculate the tax. We are using Jquery functions for UI manipulation. Here is what the code looks like. $(&quot;#calculate_tax&quot;).click(function(){ income = $(&quot;#income&quot;).val(); investment = $(&quot;#investment&quot;).val(); infra_investment = $(&quot;#infra_investment&quot;).val(); housing_interest = $(&quot;#housing_interest&quot;).val(); medical_premium = $(&quot;#medical_premium&quot;).val(); console.log(&quot;&quot;+income+investment+infra_investment+housing_interest+medical_premium); if (!income){ income = 0; } ..... var tax = calculateTax(income, investment, infra_investment, housing_interest, medical_premium); console.log(&quot;&quot;+tax); calculated_tax = $(&quot;#calculated_tax&quot;); calculated_tax.html(tax); }); function getTax(taxableIncome){ ..... Full listing here Put on iPhone Once you like what you see in chrome, you can put this code on simulator. Build and run from Xcode and you are done. Resources Code on github Similar app using Java(For Android) Similar app using Objective-C Our starting Android development tutorial" />
+<meta property="og:description" content="This is next in the series of apps I am building using various mobile technologies. It is the same app as build using Java for Android for calculating the Tax payable (in India). You can get the code for Objective-C, Java-Android, and PhoneGap. First the impressions Phonegap was the easiest to work with among the Objective-C, Java and PhoneGap, by far. I created the app as easily as Step 1. Write the app and test it in Browser using the Chrome developer tools. Step 2. Start a project in Xcode. Step 3. Copy the HTML and CSS files to project directory and export to simulator. The experience was very good, (After spending time with Obj-C and Java), as I could use a Chrome console as a repl, something which I sorely missed. The exported app does look native, with controls which look coming from browser. But with some CSS you can go a long way here. Getting started Get the Xcode and the Iphone SDK. Download PhoneGap and install from PhoneGap iOS, this will create a new user template for PhoneGap in Xcode. Create a PhoneGap project in Xcode. Edit the www/index.html Code like it is the web I don’t like working with the code-&gt;compile-&gt;check in simulator cycle. You can work much faster if you work with the browser. I edited the index.html, adding the Jquery library for easy DOM manipulation, and a bit of CSS to align. Lay out the Layout You can layout your UI using the common HTML elements. Here is a snippet from the finished app. &lt;div class=&quot;input&quot;&gt; &lt;label&gt; Your investments under 80D are: &lt;/label&gt; &lt;input type=&quot;number&quot; placeholder=0 id=&quot;infra_investment&quot;&gt;&lt;/input&gt; &lt;/div&gt; &lt;div class=&quot;input&quot;&gt; &lt;label&gt; Your housing loan interests paid are: &lt;/label&gt; &lt;input type=&quot;number&quot; placeholder=0 id=&quot;housing_interest&quot;&gt;&lt;/input&gt; &lt;/div&gt; These are standard HTML5 elements. Note that we were able to use HTML5 only elements like type=&quot;number&quot; placeholder=0 which set the keyboard type and placeholder which you can do via android:inputType or editing in Interface Builder. Code the code We will write the code to get the input values and then calculate the tax. We are using Jquery functions for UI manipulation. Here is what the code looks like. $(&quot;#calculate_tax&quot;).click(function(){ income = $(&quot;#income&quot;).val(); investment = $(&quot;#investment&quot;).val(); infra_investment = $(&quot;#infra_investment&quot;).val(); housing_interest = $(&quot;#housing_interest&quot;).val(); medical_premium = $(&quot;#medical_premium&quot;).val(); console.log(&quot;&quot;+income+investment+infra_investment+housing_interest+medical_premium); if (!income){ income = 0; } ..... var tax = calculateTax(income, investment, infra_investment, housing_interest, medical_premium); console.log(&quot;&quot;+tax); calculated_tax = $(&quot;#calculated_tax&quot;); calculated_tax.html(tax); }); function getTax(taxableIncome){ ..... Full listing here Put on iPhone Once you like what you see in chrome, you can put this code on simulator. Build and run from Xcode and you are done. Resources Code on github Similar app using Java(For Android) Similar app using Objective-C Our starting Android development tutorial" />
+<link rel="canonical" href="http://localhost:4000/android/2011/02/06/getting-started-with-phonegap-using-xcode-for-mobi.html" />
+<meta property="og:url" content="http://localhost:4000/android/2011/02/06/getting-started-with-phonegap-using-xcode-for-mobi.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2011-02-06T21:48:33+05:30" />
+<script type="application/ld+json">
+{"description":"This is next in the series of apps I am building using various mobile technologies. It is the same app as build using Java for Android for calculating the Tax payable (in India). You can get the code for Objective-C, Java-Android, and PhoneGap. First the impressions Phonegap was the easiest to work with among the Objective-C, Java and PhoneGap, by far. I created the app as easily as Step 1. Write the app and test it in Browser using the Chrome developer tools. Step 2. Start a project in Xcode. Step 3. Copy the HTML and CSS files to project directory and export to simulator. The experience was very good, (After spending time with Obj-C and Java), as I could use a Chrome console as a repl, something which I sorely missed. The exported app does look native, with controls which look coming from browser. But with some CSS you can go a long way here. Getting started Get the Xcode and the Iphone SDK. Download PhoneGap and install from PhoneGap iOS, this will create a new user template for PhoneGap in Xcode. Create a PhoneGap project in Xcode. Edit the www/index.html Code like it is the web I don’t like working with the code-&gt;compile-&gt;check in simulator cycle. You can work much faster if you work with the browser. I edited the index.html, adding the Jquery library for easy DOM manipulation, and a bit of CSS to align. Lay out the Layout You can layout your UI using the common HTML elements. Here is a snippet from the finished app. &lt;div class=&quot;input&quot;&gt; &lt;label&gt; Your investments under 80D are: &lt;/label&gt; &lt;input type=&quot;number&quot; placeholder=0 id=&quot;infra_investment&quot;&gt;&lt;/input&gt; &lt;/div&gt; &lt;div class=&quot;input&quot;&gt; &lt;label&gt; Your housing loan interests paid are: &lt;/label&gt; &lt;input type=&quot;number&quot; placeholder=0 id=&quot;housing_interest&quot;&gt;&lt;/input&gt; &lt;/div&gt; These are standard HTML5 elements. Note that we were able to use HTML5 only elements like type=&quot;number&quot; placeholder=0 which set the keyboard type and placeholder which you can do via android:inputType or editing in Interface Builder. Code the code We will write the code to get the input values and then calculate the tax. We are using Jquery functions for UI manipulation. Here is what the code looks like. $(&quot;#calculate_tax&quot;).click(function(){ income = $(&quot;#income&quot;).val(); investment = $(&quot;#investment&quot;).val(); infra_investment = $(&quot;#infra_investment&quot;).val(); housing_interest = $(&quot;#housing_interest&quot;).val(); medical_premium = $(&quot;#medical_premium&quot;).val(); console.log(&quot;&quot;+income+investment+infra_investment+housing_interest+medical_premium); if (!income){ income = 0; } ..... var tax = calculateTax(income, investment, infra_investment, housing_interest, medical_premium); console.log(&quot;&quot;+tax); calculated_tax = $(&quot;#calculated_tax&quot;); calculated_tax.html(tax); }); function getTax(taxableIncome){ ..... Full listing here Put on iPhone Once you like what you see in chrome, you can put this code on simulator. Build and run from Xcode and you are done. Resources Code on github Similar app using Java(For Android) Similar app using Objective-C Our starting Android development tutorial","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/android/2011/02/06/getting-started-with-phonegap-using-xcode-for-mobi.html","headline":"Getting started with PhoneGap using Xcode for Mobile app development","dateModified":"2011-02-06T21:48:33+05:30","datePublished":"2011-02-06T21:48:33+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/android/2011/02/06/getting-started-with-phonegap-using-xcode-for-mobi.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Getting started with PhoneGap using Xcode for Mobile app development</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2011-02-06T21:48:33+05:30" itemprop="datePublished">Feb 6, 2011
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This is next in the series of apps I am building using various mobile technologies.
+It is the same app as build using Java for Android for calculating the Tax payable (in India). You can 
+get the code for <a href="https://github.com/agiliq/TaxCalculatorIndia">Objective-C</a>, <a href="https://github.com/agiliq/TaxCalculatorAndroid">Java-Android</a>, and <a href="https://github.com/agiliq/TaxCalculatorPhoneGap">PhoneGap</a>.</p>
+
+<h2 id="first-the-impressions">First the impressions</h2>
+
+<p><a href="http://www.phonegap.com/">Phonegap</a> was the easiest to work with among the Objective-C, Java and PhoneGap, by far.
+I created the app as easily as</p>
+
+<p>Step 1. Write the app and test it in Browser using the Chrome developer tools. 
+Step 2. Start a project in Xcode.
+Step 3. Copy the HTML and CSS files to project directory and export to simulator.</p>
+
+<p>The experience was very good, (After spending time with Obj-C and Java), as I could use a Chrome console as a repl,
+something which I sorely missed.</p>
+
+<p>The exported app does <em>look</em> native, with controls which look coming from browser. But with some CSS you can go
+a long way here.</p>
+
+<h2 id="getting-started">Getting started</h2>
+
+<ol>
+  <li>Get the Xcode and the Iphone SDK.</li>
+  <li>Download PhoneGap and install from PhoneGap iOS, this will create a new user template for PhoneGap in Xcode.</li>
+  <li>Create a PhoneGap project in Xcode.</li>
+  <li>Edit the www/index.html</li>
+</ol>
+
+<h2 id="code-like-it-is-the-web">Code like it is the web</h2>
+<p>I don’t like working with the code-&gt;compile-&gt;check in simulator cycle. You can work much faster if you work with the browser.</p>
+
+<p>I edited the index.html, adding the Jquery library for easy DOM manipulation, and a bit of CSS to align.</p>
+
+<h2 id="lay-out-the-layout">Lay out the Layout</h2>
+
+<p>You can layout your UI using the common HTML elements. Here is a snippet from the finished app.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &lt;div class="input"&gt;
+ 	&lt;label&gt;
+ 		Your investments under 80D are:
+ 	&lt;/label&gt;
+ 	&lt;input type="number"  placeholder=0 id="infra_investment"&gt;&lt;/input&gt;
+&lt;/div&gt;
+
+
+ &lt;div class="input"&gt;
+ 	&lt;label&gt;
+ 		Your housing loan interests paid are:
+ 	&lt;/label&gt;
+ 	&lt;input type="number"  placeholder=0 id="housing_interest"&gt;&lt;/input&gt;
+&lt;/div&gt;
+</code></pre></div></div>
+
+<p>These are standard HTML5 elements. Note that we were able to use HTML5 only elements like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>type="number"  placeholder=0
+</code></pre></div></div>
+
+<p>which set the keyboard type and placeholder which you can do via <code class="highlighter-rouge">android:inputType</code> or editing in Interface Builder.</p>
+
+<h2 id="code-the-code">Code the code</h2>
+<p>We will write the code to get the input values and then calculate the tax. We are using Jquery functions
+for UI manipulation. Here is what the code looks like.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>		$("#calculate_tax").click(function(){
+        income = $("#income").val();
+    	investment = $("#investment").val();
+		infra_investment = $("#infra_investment").val();
+		housing_interest = $("#housing_interest").val();
+		medical_premium =  $("#medical_premium").val();
+		console.log(""+income+investment+infra_investment+housing_interest+medical_premium);
+		if (!income){
+			income = 0;
+		}
+		.....
+			var tax = calculateTax(income, investment, infra_investment, housing_interest, medical_premium);
+			console.log(""+tax);			
+			calculated_tax  = $("#calculated_tax");
+			calculated_tax.html(tax);
+        });
+
+		function getTax(taxableIncome){
+		.....
+</code></pre></div></div>
+
+<p><a href="https://github.com/agiliq/TaxCalculatorPhoneGap/blob/master/www/index.html">Full listing here</a></p>
+
+<h2 id="put-on-iphone">Put on iPhone</h2>
+<p>Once you like what you see in chrome, you can put this code on simulator. Build and run from Xcode and you are done.</p>
+
+<h2 id="resources">Resources</h2>
+
+<ol>
+  <li><a href="https://github.com/agiliq/TaxCalculatorPhoneGap">Code on github</a></li>
+  <li><a href="https://github.com/agiliq/TaxCalculatorAndroid">Similar app using Java(For Android)</a></li>
+  <li><a href="https://github.com/agiliq/TaxCalculatorIndia">Similar app using Objective-C</a></li>
+  <li><a href="http://agiliq.com/blog/2011/02/starting-android-app-developement-from-zero-to-app/">Our starting Android development tutorial</a></li>
+</ol>
+
+
+  </div><a class="u-url" href="/android/2011/02/06/getting-started-with-phonegap-using-xcode-for-mobi.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

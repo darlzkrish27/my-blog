@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Essential web-apps to run a software business. | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Essential web-apps to run a software business." />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="We work on a variety of products and with people. We work in a highly distributed environment, with all of our clients working remotely from us. And while we work out of the same office, we are frequently working from other places as well. Here are the tools which help us stay productive, sane and working. :) Code hosting: Unfuddle and Github. For our open source projects we use Github. For our client and non OS projects, we use Unfuddle. For our client code we need both SVN and Git, and we need tickets which can be assigned to people. Both these features are missing from Github. For our open source projects, we use Github. It lacks the features above, but its code browser, code diff and patch queue etc are much more advanced than Unfuddle. Unfuddle doesn’t have open access repositories, so they segment nicely for us. For Unfuddle we pay 49$/Month. Since all our repositories at Github are open, we don’t have to pay anything for it. We also use Bitbucket, to keep our code in a Mercurial repo. Additionally, Bitbucket supports CNAMEs, so we can point code.agiliq.com, to our bitbucket code. (Github does not support Cnames for repositories.) This used to cost us USD 5/Month, but after Atlassion acquisition of Bitbucket, this is free. Collaboration, docs and Mail: Google apps for your domains. At free, the price is right. And with Gmail like interface and searching which is both best in class and familiar, using this is a no brainer. You can pay 50$/user/year, to get extra space and ads. We never hit the free space limitation. Invoicing: Freshbooks. We use Freshbooks for invoicing and accounting. Freshbooks is fairly standard as an invoicing tool, but its feature set leaves a bit to be desired. It only recently got multi currency invoicing, and still doesn’t have multi currency expenses. (Which is sort of a deal breaker for us. We invoice is USD, AUD and Euro, our expenses are in USD and INR). We get around this by having multiple accounts for tracking the different currencies, but still have to account things by pen and paper. Cost: 19$/Month. Voice Chat: Skype. Skype is the (Afaik) only voice chat software which works reliably across Win/Mac/Linux. We have a skype-in number and we use it to call out bound as well. Cost: Depends upon usage. Hosting: Webfaction, Slicehost, Linode and Ec2. It might be weird to see so many listed as webhosts. Webfaction is really easy as a Django host. They have one click install of Django, and make using Django apps easy without fiddling with Apache configs. I started with Webfaction in 2008, and still have some sites from back then hosted with them. But soon we needed a VPS for flexibility. Our next host was Slicehost, and we have been very happy with them. Their support and quality of support staff is phenomenal. However, they are weak when in comes to price to server specs bang. We recently got a Linode to test things out and have been happy with them as well. I havent used their support yet, and they don’t offer a easy backup like Slicehost, but are much more powered for he same price. Cost: Webfaction: ~40$/Month. Slicehost: 50$/Month, with backups. Linode: 20$/Month. Backup: S3 We backup our media and Databases on S3, using a custom script. Cost: Depends on usage, but very less. Dns: Dnsmadeeasy A good, fast DNS can speed up your site, and its a good idea to keep this separate from rest of your hosting. Dnsmadeeasy is straightforward DNS provider, which has proved very solid for us. Cost: 30$/Year. Email sending: Sendgrid While it is easy to use a local SMTP to send emails from your servers, it is not easy to make sure it will reach recipients. You will need to fiddle with SPF, and other email mumbo-jumbo. It is easy to outsource it to a third party provider, which has expertise in email deliverability. Cost: 10$/Month. CRM: Highrise. We use Highrise to keep track on leads and contacts. However I haven’t found any actionable insights to take actions from it, so I am looking for alternatives. Cost: 49$/Month Also, We used to use Efax, but nobody sent us fax, so we don’t use that anymore. We used to use Clicktale, but I could never figure out what to do with their data, and at 100$/month they are costly to keep around. We use Crazyegg, as needed. I used Basecamp and Assembla but I much prefer Unfuddle. We also use Google Analytics, Google Adword, Flickr, Twitter, Facebook, Delicious …" />
+<meta property="og:description" content="We work on a variety of products and with people. We work in a highly distributed environment, with all of our clients working remotely from us. And while we work out of the same office, we are frequently working from other places as well. Here are the tools which help us stay productive, sane and working. :) Code hosting: Unfuddle and Github. For our open source projects we use Github. For our client and non OS projects, we use Unfuddle. For our client code we need both SVN and Git, and we need tickets which can be assigned to people. Both these features are missing from Github. For our open source projects, we use Github. It lacks the features above, but its code browser, code diff and patch queue etc are much more advanced than Unfuddle. Unfuddle doesn’t have open access repositories, so they segment nicely for us. For Unfuddle we pay 49$/Month. Since all our repositories at Github are open, we don’t have to pay anything for it. We also use Bitbucket, to keep our code in a Mercurial repo. Additionally, Bitbucket supports CNAMEs, so we can point code.agiliq.com, to our bitbucket code. (Github does not support Cnames for repositories.) This used to cost us USD 5/Month, but after Atlassion acquisition of Bitbucket, this is free. Collaboration, docs and Mail: Google apps for your domains. At free, the price is right. And with Gmail like interface and searching which is both best in class and familiar, using this is a no brainer. You can pay 50$/user/year, to get extra space and ads. We never hit the free space limitation. Invoicing: Freshbooks. We use Freshbooks for invoicing and accounting. Freshbooks is fairly standard as an invoicing tool, but its feature set leaves a bit to be desired. It only recently got multi currency invoicing, and still doesn’t have multi currency expenses. (Which is sort of a deal breaker for us. We invoice is USD, AUD and Euro, our expenses are in USD and INR). We get around this by having multiple accounts for tracking the different currencies, but still have to account things by pen and paper. Cost: 19$/Month. Voice Chat: Skype. Skype is the (Afaik) only voice chat software which works reliably across Win/Mac/Linux. We have a skype-in number and we use it to call out bound as well. Cost: Depends upon usage. Hosting: Webfaction, Slicehost, Linode and Ec2. It might be weird to see so many listed as webhosts. Webfaction is really easy as a Django host. They have one click install of Django, and make using Django apps easy without fiddling with Apache configs. I started with Webfaction in 2008, and still have some sites from back then hosted with them. But soon we needed a VPS for flexibility. Our next host was Slicehost, and we have been very happy with them. Their support and quality of support staff is phenomenal. However, they are weak when in comes to price to server specs bang. We recently got a Linode to test things out and have been happy with them as well. I havent used their support yet, and they don’t offer a easy backup like Slicehost, but are much more powered for he same price. Cost: Webfaction: ~40$/Month. Slicehost: 50$/Month, with backups. Linode: 20$/Month. Backup: S3 We backup our media and Databases on S3, using a custom script. Cost: Depends on usage, but very less. Dns: Dnsmadeeasy A good, fast DNS can speed up your site, and its a good idea to keep this separate from rest of your hosting. Dnsmadeeasy is straightforward DNS provider, which has proved very solid for us. Cost: 30$/Year. Email sending: Sendgrid While it is easy to use a local SMTP to send emails from your servers, it is not easy to make sure it will reach recipients. You will need to fiddle with SPF, and other email mumbo-jumbo. It is easy to outsource it to a third party provider, which has expertise in email deliverability. Cost: 10$/Month. CRM: Highrise. We use Highrise to keep track on leads and contacts. However I haven’t found any actionable insights to take actions from it, so I am looking for alternatives. Cost: 49$/Month Also, We used to use Efax, but nobody sent us fax, so we don’t use that anymore. We used to use Clicktale, but I could never figure out what to do with their data, and at 100$/month they are costly to keep around. We use Crazyegg, as needed. I used Basecamp and Assembla but I much prefer Unfuddle. We also use Google Analytics, Google Adword, Flickr, Twitter, Facebook, Delicious …" />
+<link rel="canonical" href="http://localhost:4000/business/2010/10/18/essential-web-apps-to-run-a.html" />
+<meta property="og:url" content="http://localhost:4000/business/2010/10/18/essential-web-apps-to-run-a.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2010-10-18T00:53:28+05:30" />
+<script type="application/ld+json">
+{"description":"We work on a variety of products and with people. We work in a highly distributed environment, with all of our clients working remotely from us. And while we work out of the same office, we are frequently working from other places as well. Here are the tools which help us stay productive, sane and working. :) Code hosting: Unfuddle and Github. For our open source projects we use Github. For our client and non OS projects, we use Unfuddle. For our client code we need both SVN and Git, and we need tickets which can be assigned to people. Both these features are missing from Github. For our open source projects, we use Github. It lacks the features above, but its code browser, code diff and patch queue etc are much more advanced than Unfuddle. Unfuddle doesn’t have open access repositories, so they segment nicely for us. For Unfuddle we pay 49$/Month. Since all our repositories at Github are open, we don’t have to pay anything for it. We also use Bitbucket, to keep our code in a Mercurial repo. Additionally, Bitbucket supports CNAMEs, so we can point code.agiliq.com, to our bitbucket code. (Github does not support Cnames for repositories.) This used to cost us USD 5/Month, but after Atlassion acquisition of Bitbucket, this is free. Collaboration, docs and Mail: Google apps for your domains. At free, the price is right. And with Gmail like interface and searching which is both best in class and familiar, using this is a no brainer. You can pay 50$/user/year, to get extra space and ads. We never hit the free space limitation. Invoicing: Freshbooks. We use Freshbooks for invoicing and accounting. Freshbooks is fairly standard as an invoicing tool, but its feature set leaves a bit to be desired. It only recently got multi currency invoicing, and still doesn’t have multi currency expenses. (Which is sort of a deal breaker for us. We invoice is USD, AUD and Euro, our expenses are in USD and INR). We get around this by having multiple accounts for tracking the different currencies, but still have to account things by pen and paper. Cost: 19$/Month. Voice Chat: Skype. Skype is the (Afaik) only voice chat software which works reliably across Win/Mac/Linux. We have a skype-in number and we use it to call out bound as well. Cost: Depends upon usage. Hosting: Webfaction, Slicehost, Linode and Ec2. It might be weird to see so many listed as webhosts. Webfaction is really easy as a Django host. They have one click install of Django, and make using Django apps easy without fiddling with Apache configs. I started with Webfaction in 2008, and still have some sites from back then hosted with them. But soon we needed a VPS for flexibility. Our next host was Slicehost, and we have been very happy with them. Their support and quality of support staff is phenomenal. However, they are weak when in comes to price to server specs bang. We recently got a Linode to test things out and have been happy with them as well. I havent used their support yet, and they don’t offer a easy backup like Slicehost, but are much more powered for he same price. Cost: Webfaction: ~40$/Month. Slicehost: 50$/Month, with backups. Linode: 20$/Month. Backup: S3 We backup our media and Databases on S3, using a custom script. Cost: Depends on usage, but very less. Dns: Dnsmadeeasy A good, fast DNS can speed up your site, and its a good idea to keep this separate from rest of your hosting. Dnsmadeeasy is straightforward DNS provider, which has proved very solid for us. Cost: 30$/Year. Email sending: Sendgrid While it is easy to use a local SMTP to send emails from your servers, it is not easy to make sure it will reach recipients. You will need to fiddle with SPF, and other email mumbo-jumbo. It is easy to outsource it to a third party provider, which has expertise in email deliverability. Cost: 10$/Month. CRM: Highrise. We use Highrise to keep track on leads and contacts. However I haven’t found any actionable insights to take actions from it, so I am looking for alternatives. Cost: 49$/Month Also, We used to use Efax, but nobody sent us fax, so we don’t use that anymore. We used to use Clicktale, but I could never figure out what to do with their data, and at 100$/month they are costly to keep around. We use Crazyegg, as needed. I used Basecamp and Assembla but I much prefer Unfuddle. We also use Google Analytics, Google Adword, Flickr, Twitter, Facebook, Delicious …","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/business/2010/10/18/essential-web-apps-to-run-a.html","headline":"Essential web-apps to run a software business.","dateModified":"2010-10-18T00:53:28+05:30","datePublished":"2010-10-18T00:53:28+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/business/2010/10/18/essential-web-apps-to-run-a.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Essential web-apps to run a software business.</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2010-10-18T00:53:28+05:30" itemprop="datePublished">Oct 18, 2010
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>We work on a variety of products and with people. We work in a highly distributed environment,
+with all of our clients working
+remotely from us. And while we work out of the same office, we are frequently
+working from other places as well. Here are the tools which help us stay productive,
+sane and working. :)</p>
+
+<ul>
+  <li>Code hosting: <a href="http://agiliq.unfuddle.com/">Unfuddle</a> and <a href="http://github.com/agiliq">Github</a>.</li>
+</ul>
+
+<p>For our open source projects we use Github.<br />
+For our client and non OS projects, we use Unfuddle.</p>
+
+<p>For our client code we need both SVN and Git, and we need tickets which can be
+assigned to people. Both these features are missing from Github.</p>
+
+<p>For our open source projects, we use Github. It lacks the features above, but
+its code browser, code diff and patch queue etc are much more advanced than
+Unfuddle. Unfuddle doesn’t have open access repositories, so they segment nicely
+for us.</p>
+
+<p>For Unfuddle we pay 49$/Month. Since all our repositories at Github are open,
+we don’t have to pay anything for it.</p>
+
+<p>We also use <a href="http://bitbucket.org/agiliq">Bitbucket</a>, to keep
+our code in a Mercurial repo. Additionally,
+Bitbucket supports CNAMEs, so we can point <a href="http://code.agiliq.com">code.agiliq.com</a>,
+to our bitbucket code.
+(Github does not support Cnames for repositories.) This used to cost us USD 5/Month,
+but after <a href="http://blogs.atlassian.com/news/2010/09/atlassian_acquires_bitbucketorg_distributed_version_control.html">Atlassion acquisition of Bitbucket</a>, this is free.</p>
+
+<ul>
+  <li>Collaboration, docs and Mail: <a href="http://www.google.com/apps/intl/en/group/index.html">Google apps for your domains</a>.</li>
+</ul>
+
+<p>At free, the price is right. And with Gmail like interface and searching which
+is both best in class and familiar, using this is a no brainer. You can pay 50$/user/year,
+to get extra space and ads. We never hit the free space limitation.</p>
+
+<ul>
+  <li>Invoicing: <a href="http://agiliq.freshbooks.com/">Freshbooks</a>.</li>
+</ul>
+
+<p>We use Freshbooks for invoicing and accounting. Freshbooks is fairly standard as
+an invoicing tool, but its feature set leaves a bit to be desired. It only recently
+got <a href="http://www.freshbooks.com/blog/2010/01/13/multi-currency-arrives-at-freshbooks/">multi currency invoicing</a>,
+and still doesn’t have multi currency expenses.</p>
+
+<p>(Which is sort of a deal breaker for us. We invoice is USD, AUD and Euro, our
+expenses are in USD and INR). We get around this by having multiple accounts for tracking
+the different currencies, but still have to account things by pen and paper.</p>
+
+<p>Cost: 19$/Month.</p>
+
+<ul>
+  <li>Voice Chat: <a href="skype:shabda.raaj?call">Skype</a>.</li>
+</ul>
+
+<p>Skype is the (Afaik) only voice chat software which works reliably across Win/Mac/Linux.
+We have a skype-in number and we use it to call out bound as well.</p>
+
+<ul>
+  <li>Cost: Depends upon usage.</li>
+</ul>
+
+<p>Hosting: <a href="http://www.webfaction.com/">Webfaction</a>,
+<a href="http://www.slicehost.com/">Slicehost</a>, <a href="http://www.linode.com/">Linode</a>
+and <a href="http://aws.amazon.com/ec2">Ec2</a>.</p>
+
+<p>It might be weird to see so many listed as webhosts. Webfaction is <em>really</em> easy as
+a Django host. They have one click install of Django, and make using Django apps easy
+without fiddling with Apache configs.<br />
+I started with Webfaction in 2008, and still have some sites from back then hosted with
+them. But soon we needed a VPS for flexibility.</p>
+
+<p>Our next host was Slicehost, and we have been very happy with them. Their
+support and quality of support staff is phenomenal. However, they are weak when in comes
+to price to server specs bang.</p>
+
+<p>We recently got a Linode to test things out and have been happy with them as well. I havent
+used their support yet, and they don’t offer a easy backup like Slicehost, but are much more
+powered for he same price.</p>
+
+<p>Cost:</p>
+
+<p>Webfaction: ~40$/Month.<br />
+Slicehost: 50$/Month, with backups.<br />
+Linode: 20$/Month.</p>
+
+<ul>
+  <li>Backup: <a href="http://aws.amazon.com/s3">S3</a></li>
+</ul>
+
+<p>We backup our media and Databases on S3,
+<a href="http://uswaretech.com/blog/2009/02/automatically-backup-mysql-database-to-amazon-s3-using-django-python-script/">using a custom script</a>.</p>
+
+<p>Cost: Depends on usage, but very less.</p>
+
+<ul>
+  <li>Dns: <a href="http://www.dnsmadeeasy.com/">Dnsmadeeasy</a></li>
+</ul>
+
+<p>A good, fast DNS can speed up your site, and its a good idea to keep this separate from rest of your hosting.
+Dnsmadeeasy is straightforward DNS provider, which has proved very solid for us.</p>
+
+<p>Cost: 30$/Year.</p>
+
+<ul>
+  <li>Email sending: <a href="http://www.sendgrid.com/">Sendgrid</a></li>
+</ul>
+
+<p>While it is easy to use a local SMTP to send emails from your servers, it is not easy to make
+sure it will reach recipients. You will need to fiddle with SPF, and other email mumbo-jumbo.
+It is easy to outsource it to a third party provider, which has expertise in email deliverability.</p>
+
+<p>Cost: 10$/Month.</p>
+
+<ul>
+  <li>CRM: <a href="http://agiliq.highrisehq.com/">Highrise</a>.</li>
+</ul>
+
+<p>We use Highrise to keep track on leads and contacts. However I haven’t found any actionable
+insights to take actions from it, so I am looking for alternatives.</p>
+
+<p>Cost: 49$/Month</p>
+
+<hr />
+
+<p>Also,</p>
+
+<ol>
+  <li>We used to use <a href="http://www.efax.com/">Efax</a>, but nobody sent us fax, so we don’t use that anymore.</li>
+  <li>We used to use <a href="http://www.clicktale.com/">Clicktale</a>, but I could never figure out what to do with their data,
+and at 100$/month they are costly to keep around.</li>
+  <li>We use <a href="http://www.crazyegg.com/">Crazyegg</a>, as needed.</li>
+  <li>I used <a href="http://www.basecamphq.com">Basecamp</a> and <a href="http://assembla.com/">Assembla</a> but I much prefer Unfuddle.</li>
+  <li>We also use Google Analytics, Google Adword, <a href="http://www.flickr.com/photos/agiliq">Flickr</a>,
+<a href="http://twitter.com/agiliqdotcom">Twitter</a>, <a href="http://facebook.com/agiliq">Facebook</a>, Delicious …</li>
+</ol>
+
+
+  </div><a class="u-url" href="/business/2010/10/18/essential-web-apps-to-run-a.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

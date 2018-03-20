@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>How not knowing encoding can trip you | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="How not knowing encoding can trip you" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Our Scenario: You are provided with a link to a file on the internet. Download and read this file Insert read value into the database Make sure your terminal encoding is set to utf-8. Most probably that would be the default so you would not require any change. There could be other similar scenarios. Another collaborator on your project adds a file containing some data in version control. You have to read the file and insert this data in database. I have added one file to Dropbox. We will use this file in our example. Link for the file is https://www.dropbox.com/s/arcz0jsinipuixp/latin_encoded.txt?dl=0 You can’t read the contents of this file using ‘urllib’ or ‘requests’ because then you will get html page source for this link. So download the file on your machine. Read this file: &gt;&gt;&gt; f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) &gt;&gt;&gt; read_value = f.read() &gt;&gt;&gt; type(read_value) &lt;type &#39;str&#39;&gt; &gt;&gt;&gt; print read_value � As you are aware, reading a file gives a ‘str’ and doesn’t give a ‘unicode’. And remember, ‘str’ means encoded ‘unicode’? We try to print it. It seems the file content was encoded using a encoding scheme which our terminal doesn’t understand, that’s why it shows question mark. Terminal understands ‘utf-8’ encoded content by default. Seems file content was encoded with an encoding other that ‘utf-8’. And you don’t know what encoding that was. Anyways without caring about it, let’s try to write our read_value into PostgreSQL db. If you require help setting up the database, see database setup section at bottom. Let’s write the script to read from the file and insert in db. # You can save it in psyco.py import psycopg2 conn_string = &quot;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39;&quot; print &quot;Connecting to database\n -&gt;%s&quot; % (conn_string) conn = psycopg2.connect(conn_string) cursor = conn.cursor() print &quot;Connected!\n&quot; # You need to change file path to your ~/Downloads folder f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) read_value = f.read() f.close() cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) conn.commit() print &quot;Inserted\n&quot; Run the script: python psyco.py Boom! You must have got an error: (hack)/private/tmp $ python psyco.py Connecting to database -&gt;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39; Connected! Traceback (most recent call last): File &quot;psyco.py&quot;, line 15, in &lt;module&gt; cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) psycopg2.DataError: invalid byte sequence for encoding &quot;UTF8&quot;: 0xe4 0x27 0x29 So Python tried to insert read_value to db. read_value was encoded using some encoding scheme which we don’t know. Database’s default encoding scheme is UTF8. So db tries to decode whatever you are trying to insert with utf8. But in utf8 the byte sequence we are trying to insert doesn’t correspond to any codepoint and so decoding fails. And hence an error was raised. So we must know what is the encoding of read_value. After reading from file, read_value should be decoded using the known encoding scheme and then encoded back to utf8. It should be encoded back to utf8 because our db works with utf8. Now I tell you, the file which you have downloaded is encoded with encoding scheme ‘8859’. So we will have to make following change: decoded_read_value = read_value.decode(&#39;8859&#39;) read_value = decoded_read_value.encode(&#39;utf-8&#39;) So final script becomes: import psycopg2 conn_string = &quot;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39;&quot; print &quot;Connecting to database\n -&gt;%s&quot; % (conn_string) conn = psycopg2.connect(conn_string) cursor = conn.cursor() print &quot;Connected!\n&quot; f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) read_value = f.read() f.close() decoded_read_value = read_value.decode(&#39;8859&#39;) read_value = decoded_read_value.encode(&#39;utf-8&#39;) cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) conn.commit() print &quot;Inserted\n&quot; Run the script: (hack)/private/tmp $ python psyco.py Connecting to database -&gt;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39; Connected! Inserted Seems insert operation worked properly. Check db content now: hack=&gt; select * from names; name ------ ä (1 row) So you had to know the encoding of file to make it work. Unless you knew the encoding of file you wouldn’t have been able to decode it. Setting up the database. /private/tmp $ psql akshar=# create database hack; CREATE DATABASE akshar=# create user jack with password &#39;crack&#39;; CREATE ROLE akshar=# grant all privileges on database hack to jack; GRANT Close db connection. Connect to this db as ‘jack’ and create a table. You should create the table as user ‘jack’ otherwise you’ll not be able to insert into the table when connected as jack. /private/tmp $ psql hack --username=jack -W Password for user jack: crack hack=&gt; create table names(name varchar(10)); CREATE TABLE Close db connection." />
+<meta property="og:description" content="Our Scenario: You are provided with a link to a file on the internet. Download and read this file Insert read value into the database Make sure your terminal encoding is set to utf-8. Most probably that would be the default so you would not require any change. There could be other similar scenarios. Another collaborator on your project adds a file containing some data in version control. You have to read the file and insert this data in database. I have added one file to Dropbox. We will use this file in our example. Link for the file is https://www.dropbox.com/s/arcz0jsinipuixp/latin_encoded.txt?dl=0 You can’t read the contents of this file using ‘urllib’ or ‘requests’ because then you will get html page source for this link. So download the file on your machine. Read this file: &gt;&gt;&gt; f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) &gt;&gt;&gt; read_value = f.read() &gt;&gt;&gt; type(read_value) &lt;type &#39;str&#39;&gt; &gt;&gt;&gt; print read_value � As you are aware, reading a file gives a ‘str’ and doesn’t give a ‘unicode’. And remember, ‘str’ means encoded ‘unicode’? We try to print it. It seems the file content was encoded using a encoding scheme which our terminal doesn’t understand, that’s why it shows question mark. Terminal understands ‘utf-8’ encoded content by default. Seems file content was encoded with an encoding other that ‘utf-8’. And you don’t know what encoding that was. Anyways without caring about it, let’s try to write our read_value into PostgreSQL db. If you require help setting up the database, see database setup section at bottom. Let’s write the script to read from the file and insert in db. # You can save it in psyco.py import psycopg2 conn_string = &quot;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39;&quot; print &quot;Connecting to database\n -&gt;%s&quot; % (conn_string) conn = psycopg2.connect(conn_string) cursor = conn.cursor() print &quot;Connected!\n&quot; # You need to change file path to your ~/Downloads folder f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) read_value = f.read() f.close() cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) conn.commit() print &quot;Inserted\n&quot; Run the script: python psyco.py Boom! You must have got an error: (hack)/private/tmp $ python psyco.py Connecting to database -&gt;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39; Connected! Traceback (most recent call last): File &quot;psyco.py&quot;, line 15, in &lt;module&gt; cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) psycopg2.DataError: invalid byte sequence for encoding &quot;UTF8&quot;: 0xe4 0x27 0x29 So Python tried to insert read_value to db. read_value was encoded using some encoding scheme which we don’t know. Database’s default encoding scheme is UTF8. So db tries to decode whatever you are trying to insert with utf8. But in utf8 the byte sequence we are trying to insert doesn’t correspond to any codepoint and so decoding fails. And hence an error was raised. So we must know what is the encoding of read_value. After reading from file, read_value should be decoded using the known encoding scheme and then encoded back to utf8. It should be encoded back to utf8 because our db works with utf8. Now I tell you, the file which you have downloaded is encoded with encoding scheme ‘8859’. So we will have to make following change: decoded_read_value = read_value.decode(&#39;8859&#39;) read_value = decoded_read_value.encode(&#39;utf-8&#39;) So final script becomes: import psycopg2 conn_string = &quot;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39;&quot; print &quot;Connecting to database\n -&gt;%s&quot; % (conn_string) conn = psycopg2.connect(conn_string) cursor = conn.cursor() print &quot;Connected!\n&quot; f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) read_value = f.read() f.close() decoded_read_value = read_value.decode(&#39;8859&#39;) read_value = decoded_read_value.encode(&#39;utf-8&#39;) cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) conn.commit() print &quot;Inserted\n&quot; Run the script: (hack)/private/tmp $ python psyco.py Connecting to database -&gt;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39; Connected! Inserted Seems insert operation worked properly. Check db content now: hack=&gt; select * from names; name ------ ä (1 row) So you had to know the encoding of file to make it work. Unless you knew the encoding of file you wouldn’t have been able to decode it. Setting up the database. /private/tmp $ psql akshar=# create database hack; CREATE DATABASE akshar=# create user jack with password &#39;crack&#39;; CREATE ROLE akshar=# grant all privileges on database hack to jack; GRANT Close db connection. Connect to this db as ‘jack’ and create a table. You should create the table as user ‘jack’ otherwise you’ll not be able to insert into the table when connected as jack. /private/tmp $ psql hack --username=jack -W Password for user jack: crack hack=&gt; create table names(name varchar(10)); CREATE TABLE Close db connection." />
+<link rel="canonical" href="http://localhost:4000/python/2014/12/08/how-not-knowing-encoding-can-trip-you.html" />
+<meta property="og:url" content="http://localhost:4000/python/2014/12/08/how-not-knowing-encoding-can-trip-you.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-12-08T16:47:52+05:30" />
+<script type="application/ld+json">
+{"description":"Our Scenario: You are provided with a link to a file on the internet. Download and read this file Insert read value into the database Make sure your terminal encoding is set to utf-8. Most probably that would be the default so you would not require any change. There could be other similar scenarios. Another collaborator on your project adds a file containing some data in version control. You have to read the file and insert this data in database. I have added one file to Dropbox. We will use this file in our example. Link for the file is https://www.dropbox.com/s/arcz0jsinipuixp/latin_encoded.txt?dl=0 You can’t read the contents of this file using ‘urllib’ or ‘requests’ because then you will get html page source for this link. So download the file on your machine. Read this file: &gt;&gt;&gt; f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) &gt;&gt;&gt; read_value = f.read() &gt;&gt;&gt; type(read_value) &lt;type &#39;str&#39;&gt; &gt;&gt;&gt; print read_value � As you are aware, reading a file gives a ‘str’ and doesn’t give a ‘unicode’. And remember, ‘str’ means encoded ‘unicode’? We try to print it. It seems the file content was encoded using a encoding scheme which our terminal doesn’t understand, that’s why it shows question mark. Terminal understands ‘utf-8’ encoded content by default. Seems file content was encoded with an encoding other that ‘utf-8’. And you don’t know what encoding that was. Anyways without caring about it, let’s try to write our read_value into PostgreSQL db. If you require help setting up the database, see database setup section at bottom. Let’s write the script to read from the file and insert in db. # You can save it in psyco.py import psycopg2 conn_string = &quot;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39;&quot; print &quot;Connecting to database\\n -&gt;%s&quot; % (conn_string) conn = psycopg2.connect(conn_string) cursor = conn.cursor() print &quot;Connected!\\n&quot; # You need to change file path to your ~/Downloads folder f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) read_value = f.read() f.close() cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) conn.commit() print &quot;Inserted\\n&quot; Run the script: python psyco.py Boom! You must have got an error: (hack)/private/tmp $ python psyco.py Connecting to database -&gt;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39; Connected! Traceback (most recent call last): File &quot;psyco.py&quot;, line 15, in &lt;module&gt; cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) psycopg2.DataError: invalid byte sequence for encoding &quot;UTF8&quot;: 0xe4 0x27 0x29 So Python tried to insert read_value to db. read_value was encoded using some encoding scheme which we don’t know. Database’s default encoding scheme is UTF8. So db tries to decode whatever you are trying to insert with utf8. But in utf8 the byte sequence we are trying to insert doesn’t correspond to any codepoint and so decoding fails. And hence an error was raised. So we must know what is the encoding of read_value. After reading from file, read_value should be decoded using the known encoding scheme and then encoded back to utf8. It should be encoded back to utf8 because our db works with utf8. Now I tell you, the file which you have downloaded is encoded with encoding scheme ‘8859’. So we will have to make following change: decoded_read_value = read_value.decode(&#39;8859&#39;) read_value = decoded_read_value.encode(&#39;utf-8&#39;) So final script becomes: import psycopg2 conn_string = &quot;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39;&quot; print &quot;Connecting to database\\n -&gt;%s&quot; % (conn_string) conn = psycopg2.connect(conn_string) cursor = conn.cursor() print &quot;Connected!\\n&quot; f = open(&#39;/Users/akshar/Downloads/latin_encoded.txt&#39;) read_value = f.read() f.close() decoded_read_value = read_value.decode(&#39;8859&#39;) read_value = decoded_read_value.encode(&#39;utf-8&#39;) cursor.execute(&quot;insert into names values (&#39;%s&#39;)&quot; % (read_value,)) conn.commit() print &quot;Inserted\\n&quot; Run the script: (hack)/private/tmp $ python psyco.py Connecting to database -&gt;host=&#39;localhost&#39; dbname=&#39;hack&#39; user=&#39;jack&#39; password=&#39;crack&#39; Connected! Inserted Seems insert operation worked properly. Check db content now: hack=&gt; select * from names; name ------ ä (1 row) So you had to know the encoding of file to make it work. Unless you knew the encoding of file you wouldn’t have been able to decode it. Setting up the database. /private/tmp $ psql akshar=# create database hack; CREATE DATABASE akshar=# create user jack with password &#39;crack&#39;; CREATE ROLE akshar=# grant all privileges on database hack to jack; GRANT Close db connection. Connect to this db as ‘jack’ and create a table. You should create the table as user ‘jack’ otherwise you’ll not be able to insert into the table when connected as jack. /private/tmp $ psql hack --username=jack -W Password for user jack: crack hack=&gt; create table names(name varchar(10)); CREATE TABLE Close db connection.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/python/2014/12/08/how-not-knowing-encoding-can-trip-you.html","headline":"How not knowing encoding can trip you","dateModified":"2014-12-08T16:47:52+05:30","datePublished":"2014-12-08T16:47:52+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/python/2014/12/08/how-not-knowing-encoding-can-trip-you.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">How not knowing encoding can trip you</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-12-08T16:47:52+05:30" itemprop="datePublished">Dec 8, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Our Scenario:</p>
+
+<ul>
+  <li>You are provided with a link to a file on the internet.</li>
+  <li>Download and read this file</li>
+  <li>Insert read value into the database</li>
+</ul>
+
+<p>Make sure your terminal encoding is set to utf-8. Most probably that would be the default so you would not require any change.</p>
+
+<p>There could be other similar scenarios. Another collaborator on your project adds a file containing some data in version control. You have to read the file and insert this data in database.</p>
+
+<p>I have added one file to Dropbox. We will use this file in our example. Link for the file is <a href="https://www.dropbox.com/s/arcz0jsinipuixp/latin_encoded.txt?dl=0" target="_blank">https://www.dropbox.com/s/arcz0jsinipuixp/latin_encoded.txt?dl=0</a></p>
+
+<p>You can’t read the contents of this file using ‘urllib’ or ‘requests’ because then you will get html page source for this link. So download the file on your machine.</p>
+
+<p>Read this file:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; f = open('/Users/akshar/Downloads/latin_encoded.txt')
+&gt;&gt;&gt; read_value = f.read()
+&gt;&gt;&gt; type(read_value)
+&lt;type 'str'&gt;
+&gt;&gt;&gt; print read_value
+�
+</code></pre></div></div>
+
+<p>As you are aware, reading a file gives a ‘str’ and doesn’t give a ‘unicode’. And remember, ‘str’ means encoded ‘unicode’? We try to print it. It seems the file content was encoded using a encoding scheme which our terminal doesn’t understand, that’s why it shows question mark. Terminal understands ‘utf-8’ encoded content by default. Seems file content was encoded with an encoding other that ‘utf-8’. And you don’t know what encoding that was.</p>
+
+<p>Anyways without caring about it, let’s try to write our read_value into PostgreSQL db.</p>
+
+<p>If you require help setting up the database, see <a href="#database-setup">database setup section</a> at bottom.</p>
+
+<p>Let’s write the script to read from the file and insert in db.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># You can save it in psyco.py
+import psycopg2
+
+conn_string = "host='localhost' dbname='hack' user='jack' password='crack'"
+print "Connecting to database\n -&gt;%s" % (conn_string)
+conn = psycopg2.connect(conn_string)
+cursor = conn.cursor()
+print "Connected!\n"
+# You need to change file path to your ~/Downloads folder
+f = open('/Users/akshar/Downloads/latin_encoded.txt')
+read_value = f.read()
+f.close()
+cursor.execute("insert into names values ('%s')" % (read_value,))
+conn.commit()
+print "Inserted\n"
+</code></pre></div></div>
+
+<p>Run the script:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python psyco.py
+</code></pre></div></div>
+
+<p>Boom! You must have got an error:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(hack)/private/tmp $ python psyco.py
+Connecting to database
+ -&gt;host='localhost' dbname='hack' user='jack' password='crack'
+Connected!
+
+Traceback (most recent call last):
+  File "psyco.py", line 15, in &lt;module&gt;
+	cursor.execute("insert into names values ('%s')" % (read_value,))
+psycopg2.DataError: invalid byte sequence for encoding "UTF8": 0xe4 0x27 0x29
+</code></pre></div></div>
+
+<p>So Python tried to insert read_value to db. read_value was encoded using some encoding scheme which we don’t know. Database’s default encoding scheme is UTF8. So db tries to decode whatever you are trying to insert with utf8. But in utf8 the byte sequence we are trying to insert doesn’t correspond to any codepoint and so decoding fails. And hence an error was raised.</p>
+
+<p>So we must know what is the encoding of read_value. After reading from file, read_value should be decoded using the known encoding scheme and then encoded back to utf8. It should be encoded back to utf8 because our db works with utf8.</p>
+
+<p>Now I tell you, the file which you have downloaded is encoded with encoding scheme ‘8859’.</p>
+
+<p>So we will have to make following change:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>decoded_read_value = read_value.decode('8859')
+read_value = decoded_read_value.encode('utf-8')
+</code></pre></div></div>
+
+<p>So final script becomes:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import psycopg2
+
+conn_string = "host='localhost' dbname='hack' user='jack' password='crack'"
+print "Connecting to database\n -&gt;%s" % (conn_string)
+conn = psycopg2.connect(conn_string)
+cursor = conn.cursor()
+print "Connected!\n"
+f = open('/Users/akshar/Downloads/latin_encoded.txt')
+read_value = f.read()
+f.close()
+decoded_read_value = read_value.decode('8859')
+read_value = decoded_read_value.encode('utf-8')
+cursor.execute("insert into names values ('%s')" % (read_value,))
+conn.commit()
+print "Inserted\n"
+</code></pre></div></div>
+
+<p>Run the script:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(hack)/private/tmp $ python psyco.py
+Connecting to database
+ -&gt;host='localhost' dbname='hack' user='jack' password='crack'
+Connected!
+
+Inserted
+</code></pre></div></div>
+
+<p>Seems insert operation worked properly.</p>
+
+<p>Check db content now:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hack=&gt; select * from names;
+ name
+------
+ ä
+(1 row)
+</code></pre></div></div>
+
+<p>So you had to know the encoding of file to make it work. Unless you knew the encoding of file you wouldn’t have been able to decode it.</p>
+
+<h3><a name="database-setup">Setting up the database.</a></h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/private/tmp $ psql
+
+akshar=# create database hack;
+CREATE DATABASE
+
+akshar=# create user jack with password 'crack';
+CREATE ROLE
+
+akshar=# grant all privileges on database hack to jack;
+GRANT
+</code></pre></div></div>
+
+<p>Close db connection.</p>
+
+<p>Connect to this db as ‘jack’ and create a table. You should create the table as user ‘jack’ otherwise you’ll not be able to insert into the table when connected as jack.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/private/tmp $ psql hack --username=jack -W
+Password for user jack: crack
+
+hack=&gt; create table names(name varchar(10));
+CREATE TABLE
+</code></pre></div></div>
+
+<p>Close db connection.</p>
+
+
+  </div><a class="u-url" href="/python/2014/12/08/how-not-knowing-encoding-can-trip-you.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

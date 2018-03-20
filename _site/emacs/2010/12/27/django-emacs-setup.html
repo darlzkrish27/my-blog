@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Django emacs setup | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Django emacs setup" />
+<meta name="author" content="thejaswi" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="My colleague Javed had written a fantastic article a short while back on &quot;Seven reasons why you should switch to Vim&quot; and as an emacs user I thought I should share my setup too. One of the coolest things at Agiliq is that we are free to use the development tools of our choice. As a case to explain the point, everyone at agiliq uses a different editor and if someday a flame war would escalate to the third world war, I assure you it would start from Agiliq ;-)" />
+<meta property="og:description" content="My colleague Javed had written a fantastic article a short while back on &quot;Seven reasons why you should switch to Vim&quot; and as an emacs user I thought I should share my setup too. One of the coolest things at Agiliq is that we are free to use the development tools of our choice. As a case to explain the point, everyone at agiliq uses a different editor and if someday a flame war would escalate to the third world war, I assure you it would start from Agiliq ;-)" />
+<link rel="canonical" href="http://localhost:4000/emacs/2010/12/27/django-emacs-setup.html" />
+<meta property="og:url" content="http://localhost:4000/emacs/2010/12/27/django-emacs-setup.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2010-12-27T04:41:25+05:30" />
+<script type="application/ld+json">
+{"description":"My colleague Javed had written a fantastic article a short while back on &quot;Seven reasons why you should switch to Vim&quot; and as an emacs user I thought I should share my setup too. One of the coolest things at Agiliq is that we are free to use the development tools of our choice. As a case to explain the point, everyone at agiliq uses a different editor and if someday a flame war would escalate to the third world war, I assure you it would start from Agiliq ;-)","author":{"@type":"Person","name":"thejaswi"},"@type":"BlogPosting","url":"http://localhost:4000/emacs/2010/12/27/django-emacs-setup.html","headline":"Django emacs setup","dateModified":"2010-12-27T04:41:25+05:30","datePublished":"2010-12-27T04:41:25+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/emacs/2010/12/27/django-emacs-setup.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Django emacs setup</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2010-12-27T04:41:25+05:30" itemprop="datePublished">Dec 27, 2010
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">thejaswi</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>My colleague Javed had written a fantastic article a short while back on
+<a href="http://agiliq.com/blog/2010/11/seven-reasons-why-you-should-switch-to-vim-for-dja/">"Seven reasons why you should switch to
+Vim"</a>
+and as an <a href="http://en.wikipedia.org/wiki/emacs">emacs</a> user I thought I
+should share my setup too. One of the coolest things at
+<a href="http://agiliq.com/">Agiliq</a> is that we are free to use the development
+tools of our choice. As a case to explain the point, everyone at agiliq
+uses a different editor and if someday a flame war would escalate to the
+third world war, I assure you it would start from Agiliq ;-)</p>
+
+<p>Though I have been using <a href="http://en.wikipedia.org/wiki/emacs">emacs</a> for
+more than two years now, I still am an amateur. In this post, I am not
+going to exhort you to switch to emacs but explain my setup.</p>
+
+<p>If you are planning to give emacs a try, I would suggest you start with
+the inbuilt emacs tutorial (C-h t). After you've gone through the
+tutorial, start using emacs while noting your most repetitive actions.
+Later, bind these repetitive actions to suitable shortcuts so that you
+can maximize your productivity and reduce keystrokes. Whenever in doubt,
+refer to <a href="http://emacswiki.org">emacswiki</a> for clarifications. Another
+wonderful reference would be <a href="http://duckduckgo.com/?q=steve+yegge+emacs">Steve
+Yegge's</a> articles on emacs.</p>
+
+<p>Before I explain my setup, let me make it clear that most editors
+already have a lot of the functionality and I am not being judgemental
+in this post. If you've come here to see me bash other editors or
+proclaim that emacs is the best editor, you are going to be
+disappointed. Emacs has worked for me and a lot of other people and may
+work for you. Give a couple of editors out there in the market a try
+(atleast for a fortnight for each editor) and decide the one that you
+are most comfortable with.</p>
+
+<p>I use emacs without a window system (emacs -nw) and have an alias entry
+in my .bashrc to load it in this mode by default.</p>
+
+<p>Here are the contents on my .emacs.d/init.el file and I will explain
+them below line by line:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>;; .emacs
+
+;; enable visual feedback on selections
+(setq transient-mark-mode t)
+
+;;; interfacing with ELPA, the package archive.
+;;; Move this code earlier if you want to reference
+;;; packages in your .emacs.
+(when
+    (load
+     (expand-file-name "~/.emacs.d/elpa/package.el"))
+  (package-initialize))
+
+;; My customizations
+(ido-mode 1)
+(icomplete-mode 1)
+(column-number-mode 1)
+(menu-bar-mode 1)
+
+(setq tags-file-name "~/TAGS")
+(global-set-key (kbd "&lt;f5&gt;") 'find-tag)
+(global-set-key (kbd "&lt;f6&gt;") 'rgrep)
+(global-set-key (kbd "&lt;f7&gt;") 'magit-status)
+
+(setq yas/root-directory "~/.emacs.d/snippets")
+(yas/load-directory yas/root-directory)
+
+(load (expand-file-name "~/.emacs.d/multi-term.el"))
+(require 'multi-term)
+(setq multi-term-program "/bin/bash")
+(multi-term)
+(defalias 'term 'multi-term)
+
+(defun build-tags ()
+  (interactive)
+  (call-process-shell-command 
+      "find ~/django_projects/ -name '*.py' -print \" \
+      "|xargs etags -o ~/TAGS" 
+      nil (get-buffer-create "Etags Compile") 1)
+  )
+(defalias 'etb 'build-tags)
+
+(defalias 'yes-or-no-p 'y-or-n-p)
+</code></pre></div></div>
+
+<p>The transient-mark-mode symbol when enabled gives feedback while marking
+regions (highlighting selected regions).</p>
+
+<p>I use <a href="http://tromey.com/elpa/">ELPA</a> (Emacs Lisp Package Archive) for
+installing and managing my packages. Though currently, there are a few
+packages only in ELPA, they've been sufficient for me. There's another
+emacs package manager that I am looking forward to called
+<a href="https://github.com/emacsmirror/epkg">epkg</a> which will install packages
+from the <a href="https://github.com/emacsmirror">EmacsMirror</a>.</p>
+
+<p>I have a few modes enabled by default like
+<a href="http://www.emacswiki.org/emacs/InteractivelyDoThings">ido-mode</a> (for
+intelligent auto completion in the minibuffer),
+<a href="http://www.emacswiki.org/emacs/IcompleteMode">icomplete-mode</a> (for
+helping me complete commands in the minibuffer without remembering the
+full names), column-number-mode (to display the column number at which
+the point is currently located, useful if you follow PEP-8 for python)
+and disable the menu-bar as I hardly use it. The menu-bar is a
+distraction especially when you are using emacs on a separate display in
+a maximized state.</p>
+
+<p>I use <a href="http://www.emacswiki.org/emacs/EmacsTags">emacs tags</a> to jump
+between function calls and definitions very frequently and hence bound
+this invocation to the F5 key. One thing to note is that F5-F9 are
+generally unassigned and can be bound to your most frequently used
+actions.</p>
+
+<p>I also search very often for files or content within files and use
+<a href="http://www.emacswiki.org/emacs/GrepMode">rgrep</a> and this has been bound
+to the F6 key.</p>
+
+<p>I use git a lot and hence use
+<a href="http://www.emacswiki.org/emacs/Magit">magit</a>, a fantastic emacs mode to
+interact with <a href="http://git-scm.com">git</a>. This mode has been bound to the
+F7 key of the keyboard.</p>
+
+<p>I am not a big fan of auto-complete but use some snippet based
+auto-completion using <a href="http://code.google.com/p/yasnippet/">yasnippets</a>.
+It's very easy to write your own snippets and I've written lots of
+them for django and some dom elements.</p>
+
+<p>Whenever I start emacs, I also start a shell and
+<a href="http://www.emacswiki.org/emacs/download/multi-term.el">multi-term</a> is
+very useful in this regard. It handles unicode and ncurses based output
+very well. This is where I run the django development server or deploy
+using the fabric scripts.</p>
+
+<p>Apart from these elisp packages, I run
+<a href="http://www.emacswiki.org/emacs/ERC">erc</a> (an IRC client written for
+emacs) occasionally to lurk on
+<a href="irc://irc.freenode.net/django">#django</a>. I manage my tasks using the
+<a href="http://orgmode.org/org.html">org-mode</a> and synchronize these tasks with
+my home workstation using the <a href="http://mobileorg.ncogni.to/">mobileorg</a>
+android app and <a href="http://www.dropbox.com">dropbox</a>.</p>
+
+<p>As you would've observed my emacs setup is fairly minimal but suffices
+most of my django and python development. If you are an emacs user and
+have tips for me and other users, leave your comments. There's always a
+lot to learn in emacs :)</p>
+
+  </div><a class="u-url" href="/emacs/2010/12/27/django-emacs-setup.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

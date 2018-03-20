@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Continuous integration with travis and coveralls.io for Django apps | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Continuous integration with travis and coveralls.io for Django apps" />
+<meta name="author" content="Rakesh" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Maintaining a solid rapport with the ongoing software development process always turns out to be a walk on air. Ensuring a software build integrity and quality in every single commit makes it much more exciting. If the current software bulid is constantly available for testing, demo or release isn’t it a developer’s paradise on earth? Giving a cold shoulder to “Integration hell” the ‘Continuous integration’ process stands out to deliver all the above assets. What’s Continuous integration? Continuous integration is a development practice that requires a developer to integrate code into a shared repository in which isolated changes are immediately tested and reported on when they are added to a larger code base. Continuous integration (CI) originated from within the extreme programming paradigm, but the principles can be applied to any iterative programming model, such as agile programming. As critics noted several potential drawbacks on extreme programming many organizations have adopted CI without all of the extreme programming concepts. Principles of CI: Maintain a single source repository Automate the build Make the build self-testing Keep the build fast Everyone can see the results of the latest build Automate deployment Keywords: Build: All steps necessary to compile and create deliverables. Commit: The operation follows the validation of updates to existing code. Update: This operation allows the update from the repository of the configuration management tool. Checkout: This is the operation to extract a version of a project under development from the repository of the configuration manager. Spices for the recipe: Use of a version control tool (Git, SVN, etc.) An automated build and product release process. Instrumentation of the build process to trigger unit and acceptance tests for evey change that is commited A notifying process that notifies for every single test fail and alerts the team. The approach: The developer makes a commit to the repository The integration server detects the commit, makes a checkout, launches operations and testing. Eventually the repository may become so different from the developers baseline referred to as “Merge hell” In case of a failure in the testing process a notification is generated to the team. The developers may discard the changes or fix the bugs to make it progress successfully. So this makes us fancy trying out continuous integration. Let’s study a CI software now. Travis CI Travis CI is a distributed build system for the open source community. Its a CI service used to build and test projects hosted on Github. Travis is configured by adding a file named .travis.yml which is a YAML(a human-readable data serialization format) text file. It automatically detects when a commit has been made and pushed to a GitHub repository that is using Travis CI, and each time this happens, it will try to build the project and run tests. It also builds and runs pull requests and once it is completed it notifies the developer in the way it is configured. Steps to use Travis CI: Sign-in: To get started with Travis CI we should sign-in to our github account. Activate Github webhook: Once the Signup process gets completed we need to enable the service hook in the github profile page. Add .travis.yml: We should add the yml file to the project. Writing .travis.yml file: In order for Travis CI to build our project we need to tell the system a little bit about it. we will be needed to add a file named .travis.yml to the root of our repository. The basic options in the .travis.yml should contain are language key which tells which language environment to select for our project and other options include the version of the language and scripts to run the tests, etc. Example for travis.yml for python project: language: python python: - &quot;2.7&quot; # command to install dependencies install: - &quot;pip install -r requirements.txt&quot; # command to run tests script: python manage.py test Explanation: In the first line we have specified python as the language environment, the next specifies the version of python. Travis will then make sure that the project runs well with all the python versions. If we have any python dependencies Travis will test our code in a virtualenv, so all we need to write a requirments.txt and tell Travis to install it and the script command will run tests when excited. The complete Lifecycle before_install install after_install before_script script after_script after_success or after_failure Configuring .travis.yml Build only specific branches: Per default travis will build once we push to a branch on Github. That behavior can be annoying if we are committing often to development branches. We can restrict which branches Travis is monitoring for changes in the .travis.yml. Either we can blacklist the branches or whitelist them: .travis.yml # Whitelisting example branches: only: - master # Blacklisting example branches: except: - develop - feature Getting notified with lint errors: We can also get notified or make bulid fail if there are any lint errors in the commit. For this we can use the option before-script. We can create a lint.sh file and we can specify it in the before-script option so that the bulid fails and notifies when lint error occurs. .travis.yml before_script: -./lint.sh Using coveralls with travis CI: Coveralls is web service to help us track our code coverage over time and ensure that all our new code is fully covered. Steps to use coveralls: First, log in via Github and add your repo on Coveralls website. Add pip install coveralls to install section of .travis.yml Make sure you run your tests with coverage during the build in script part. script: coverage run –source=yourpackagename setup.py test Execute run coveralls in after_success section. after_success: coveralls Example: travis.yml language: python python: - 2.7 install: - pip install -r requirements.txt - pip install coveralls script: coverage run --source=moscowdjango,meetup manage.py test after_success: coveralls The above code makes custom report for data generated by coverage.py package and sends it to json API of coveralls.io service. All python files in our coverage analysis are posted to this service along with coverage stats" />
+<meta property="og:description" content="Maintaining a solid rapport with the ongoing software development process always turns out to be a walk on air. Ensuring a software build integrity and quality in every single commit makes it much more exciting. If the current software bulid is constantly available for testing, demo or release isn’t it a developer’s paradise on earth? Giving a cold shoulder to “Integration hell” the ‘Continuous integration’ process stands out to deliver all the above assets. What’s Continuous integration? Continuous integration is a development practice that requires a developer to integrate code into a shared repository in which isolated changes are immediately tested and reported on when they are added to a larger code base. Continuous integration (CI) originated from within the extreme programming paradigm, but the principles can be applied to any iterative programming model, such as agile programming. As critics noted several potential drawbacks on extreme programming many organizations have adopted CI without all of the extreme programming concepts. Principles of CI: Maintain a single source repository Automate the build Make the build self-testing Keep the build fast Everyone can see the results of the latest build Automate deployment Keywords: Build: All steps necessary to compile and create deliverables. Commit: The operation follows the validation of updates to existing code. Update: This operation allows the update from the repository of the configuration management tool. Checkout: This is the operation to extract a version of a project under development from the repository of the configuration manager. Spices for the recipe: Use of a version control tool (Git, SVN, etc.) An automated build and product release process. Instrumentation of the build process to trigger unit and acceptance tests for evey change that is commited A notifying process that notifies for every single test fail and alerts the team. The approach: The developer makes a commit to the repository The integration server detects the commit, makes a checkout, launches operations and testing. Eventually the repository may become so different from the developers baseline referred to as “Merge hell” In case of a failure in the testing process a notification is generated to the team. The developers may discard the changes or fix the bugs to make it progress successfully. So this makes us fancy trying out continuous integration. Let’s study a CI software now. Travis CI Travis CI is a distributed build system for the open source community. Its a CI service used to build and test projects hosted on Github. Travis is configured by adding a file named .travis.yml which is a YAML(a human-readable data serialization format) text file. It automatically detects when a commit has been made and pushed to a GitHub repository that is using Travis CI, and each time this happens, it will try to build the project and run tests. It also builds and runs pull requests and once it is completed it notifies the developer in the way it is configured. Steps to use Travis CI: Sign-in: To get started with Travis CI we should sign-in to our github account. Activate Github webhook: Once the Signup process gets completed we need to enable the service hook in the github profile page. Add .travis.yml: We should add the yml file to the project. Writing .travis.yml file: In order for Travis CI to build our project we need to tell the system a little bit about it. we will be needed to add a file named .travis.yml to the root of our repository. The basic options in the .travis.yml should contain are language key which tells which language environment to select for our project and other options include the version of the language and scripts to run the tests, etc. Example for travis.yml for python project: language: python python: - &quot;2.7&quot; # command to install dependencies install: - &quot;pip install -r requirements.txt&quot; # command to run tests script: python manage.py test Explanation: In the first line we have specified python as the language environment, the next specifies the version of python. Travis will then make sure that the project runs well with all the python versions. If we have any python dependencies Travis will test our code in a virtualenv, so all we need to write a requirments.txt and tell Travis to install it and the script command will run tests when excited. The complete Lifecycle before_install install after_install before_script script after_script after_success or after_failure Configuring .travis.yml Build only specific branches: Per default travis will build once we push to a branch on Github. That behavior can be annoying if we are committing often to development branches. We can restrict which branches Travis is monitoring for changes in the .travis.yml. Either we can blacklist the branches or whitelist them: .travis.yml # Whitelisting example branches: only: - master # Blacklisting example branches: except: - develop - feature Getting notified with lint errors: We can also get notified or make bulid fail if there are any lint errors in the commit. For this we can use the option before-script. We can create a lint.sh file and we can specify it in the before-script option so that the bulid fails and notifies when lint error occurs. .travis.yml before_script: -./lint.sh Using coveralls with travis CI: Coveralls is web service to help us track our code coverage over time and ensure that all our new code is fully covered. Steps to use coveralls: First, log in via Github and add your repo on Coveralls website. Add pip install coveralls to install section of .travis.yml Make sure you run your tests with coverage during the build in script part. script: coverage run –source=yourpackagename setup.py test Execute run coveralls in after_success section. after_success: coveralls Example: travis.yml language: python python: - 2.7 install: - pip install -r requirements.txt - pip install coveralls script: coverage run --source=moscowdjango,meetup manage.py test after_success: coveralls The above code makes custom report for data generated by coverage.py package and sends it to json API of coveralls.io service. All python files in our coverage analysis are posted to this service along with coverage stats" />
+<link rel="canonical" href="http://localhost:4000/travis/2014/05/01/continuous-integration-with-travis-and-coverallsio.html" />
+<meta property="og:url" content="http://localhost:4000/travis/2014/05/01/continuous-integration-with-travis-and-coverallsio.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-05-01T16:26:46+05:30" />
+<script type="application/ld+json">
+{"description":"Maintaining a solid rapport with the ongoing software development process always turns out to be a walk on air. Ensuring a software build integrity and quality in every single commit makes it much more exciting. If the current software bulid is constantly available for testing, demo or release isn’t it a developer’s paradise on earth? Giving a cold shoulder to “Integration hell” the ‘Continuous integration’ process stands out to deliver all the above assets. What’s Continuous integration? Continuous integration is a development practice that requires a developer to integrate code into a shared repository in which isolated changes are immediately tested and reported on when they are added to a larger code base. Continuous integration (CI) originated from within the extreme programming paradigm, but the principles can be applied to any iterative programming model, such as agile programming. As critics noted several potential drawbacks on extreme programming many organizations have adopted CI without all of the extreme programming concepts. Principles of CI: Maintain a single source repository Automate the build Make the build self-testing Keep the build fast Everyone can see the results of the latest build Automate deployment Keywords: Build: All steps necessary to compile and create deliverables. Commit: The operation follows the validation of updates to existing code. Update: This operation allows the update from the repository of the configuration management tool. Checkout: This is the operation to extract a version of a project under development from the repository of the configuration manager. Spices for the recipe: Use of a version control tool (Git, SVN, etc.) An automated build and product release process. Instrumentation of the build process to trigger unit and acceptance tests for evey change that is commited A notifying process that notifies for every single test fail and alerts the team. The approach: The developer makes a commit to the repository The integration server detects the commit, makes a checkout, launches operations and testing. Eventually the repository may become so different from the developers baseline referred to as “Merge hell” In case of a failure in the testing process a notification is generated to the team. The developers may discard the changes or fix the bugs to make it progress successfully. So this makes us fancy trying out continuous integration. Let’s study a CI software now. Travis CI Travis CI is a distributed build system for the open source community. Its a CI service used to build and test projects hosted on Github. Travis is configured by adding a file named .travis.yml which is a YAML(a human-readable data serialization format) text file. It automatically detects when a commit has been made and pushed to a GitHub repository that is using Travis CI, and each time this happens, it will try to build the project and run tests. It also builds and runs pull requests and once it is completed it notifies the developer in the way it is configured. Steps to use Travis CI: Sign-in: To get started with Travis CI we should sign-in to our github account. Activate Github webhook: Once the Signup process gets completed we need to enable the service hook in the github profile page. Add .travis.yml: We should add the yml file to the project. Writing .travis.yml file: In order for Travis CI to build our project we need to tell the system a little bit about it. we will be needed to add a file named .travis.yml to the root of our repository. The basic options in the .travis.yml should contain are language key which tells which language environment to select for our project and other options include the version of the language and scripts to run the tests, etc. Example for travis.yml for python project: language: python python: - &quot;2.7&quot; # command to install dependencies install: - &quot;pip install -r requirements.txt&quot; # command to run tests script: python manage.py test Explanation: In the first line we have specified python as the language environment, the next specifies the version of python. Travis will then make sure that the project runs well with all the python versions. If we have any python dependencies Travis will test our code in a virtualenv, so all we need to write a requirments.txt and tell Travis to install it and the script command will run tests when excited. The complete Lifecycle before_install install after_install before_script script after_script after_success or after_failure Configuring .travis.yml Build only specific branches: Per default travis will build once we push to a branch on Github. That behavior can be annoying if we are committing often to development branches. We can restrict which branches Travis is monitoring for changes in the .travis.yml. Either we can blacklist the branches or whitelist them: .travis.yml # Whitelisting example branches: only: - master # Blacklisting example branches: except: - develop - feature Getting notified with lint errors: We can also get notified or make bulid fail if there are any lint errors in the commit. For this we can use the option before-script. We can create a lint.sh file and we can specify it in the before-script option so that the bulid fails and notifies when lint error occurs. .travis.yml before_script: -./lint.sh Using coveralls with travis CI: Coveralls is web service to help us track our code coverage over time and ensure that all our new code is fully covered. Steps to use coveralls: First, log in via Github and add your repo on Coveralls website. Add pip install coveralls to install section of .travis.yml Make sure you run your tests with coverage during the build in script part. script: coverage run –source=yourpackagename setup.py test Execute run coveralls in after_success section. after_success: coveralls Example: travis.yml language: python python: - 2.7 install: - pip install -r requirements.txt - pip install coveralls script: coverage run --source=moscowdjango,meetup manage.py test after_success: coveralls The above code makes custom report for data generated by coverage.py package and sends it to json API of coveralls.io service. All python files in our coverage analysis are posted to this service along with coverage stats","author":{"@type":"Person","name":"Rakesh"},"@type":"BlogPosting","url":"http://localhost:4000/travis/2014/05/01/continuous-integration-with-travis-and-coverallsio.html","headline":"Continuous integration with travis and coveralls.io for Django apps","dateModified":"2014-05-01T16:26:46+05:30","datePublished":"2014-05-01T16:26:46+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/travis/2014/05/01/continuous-integration-with-travis-and-coverallsio.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Continuous integration with travis and coveralls.io for Django apps</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-05-01T16:26:46+05:30" itemprop="datePublished">May 1, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Rakesh</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Maintaining a solid rapport with the ongoing software development process always turns out to be a walk on air.
+Ensuring a software build integrity and quality in every single commit makes it much more exciting.</p>
+
+<p>If the current software bulid is constantly available for testing, demo or release isn’t it a developer’s paradise on earth?</p>
+
+<p>Giving a cold shoulder to “Integration hell” the ‘Continuous integration’ process stands out to deliver all the above assets.</p>
+
+<h2 id="whats-continuous-integration">What’s Continuous integration?</h2>
+
+<p>Continuous integration is a development practice that requires a developer to integrate code into a shared repository in which isolated changes are immediately tested and reported on when they are added to a larger code base.</p>
+
+<p>Continuous integration (CI) originated from within the extreme programming paradigm, but the principles can be applied to any iterative programming model, such as agile programming. As critics noted several potential drawbacks on extreme programming many organizations have adopted CI without all of the extreme programming concepts.</p>
+
+<h2 id="principles-of-ci">Principles of CI:</h2>
+
+<ul>
+  <li>Maintain a single source repository</li>
+  <li>Automate the build</li>
+  <li>Make the build self-testing</li>
+  <li>Keep the build fast</li>
+  <li>Everyone can see the results of the latest build</li>
+  <li>Automate deployment</li>
+</ul>
+
+<h2 id="keywords">Keywords:</h2>
+
+<ol>
+  <li>Build: All steps necessary to compile and create deliverables.</li>
+  <li>Commit: The operation follows the validation of updates to existing code.</li>
+  <li>Update: This operation allows the update from the repository of the configuration management tool.</li>
+  <li>Checkout: This is the operation to extract a version of a project under development from the repository of the configuration manager.</li>
+</ol>
+
+<h2 id="spices-for-the-recipe">Spices for the recipe:</h2>
+
+<ul>
+  <li>Use of a version control tool (Git, SVN, etc.)</li>
+  <li>An automated build and product release process.</li>
+  <li>Instrumentation of the build process to trigger unit and acceptance tests for evey change that is commited</li>
+  <li>A notifying process that notifies for every single test fail and alerts the team.</li>
+</ul>
+
+<h2 id="the-approach">The approach:</h2>
+<ol>
+  <li>The developer makes a commit to the repository</li>
+  <li>The integration server detects the commit, makes a checkout, launches operations and testing.</li>
+  <li>Eventually the repository may become so different from the developers baseline referred to as “Merge hell”</li>
+  <li>In case of a failure in the testing process a notification is generated to the team.</li>
+  <li>The developers may discard the changes or fix the bugs to make it progress successfully.</li>
+</ol>
+
+<p>So this makes us fancy trying out continuous integration. Let’s study a CI software now.</p>
+
+<h2 id="travis-ci">Travis CI</h2>
+
+<p>Travis CI is a distributed build system for the open source community. Its a CI service used to build and test projects hosted on Github.</p>
+
+<p>Travis is configured by adding a file named .travis.yml which is a YAML(a human-readable data serialization format) text file.
+It automatically detects when a commit has been made and pushed to a GitHub repository that is using Travis CI, and each time this happens, it will try to build the project and run tests. It also builds and runs pull requests and once it is completed it notifies the developer in the way it is configured.</p>
+
+<h2 id="steps-to-use-travis-ci">Steps to use Travis CI:</h2>
+<ol>
+  <li>Sign-in: To get started with Travis CI we should sign-in to our github account.</li>
+  <li>Activate Github webhook: Once the Signup process gets completed we need to enable the service hook in the github profile page.</li>
+  <li>Add .travis.yml: We should add the yml file to the project.</li>
+</ol>
+
+<h2 id="writing-travisyml-file">Writing .travis.yml file:</h2>
+
+<p>In order for Travis CI to build our project we need to tell the system a little bit about it. we will be needed to add a file named .travis.yml to the root of our repository.
+The basic options in the .travis.yml should contain are language key which tells which language environment to select for our project and other options include the version of the language and scripts to run the tests, etc.</p>
+
+<p>Example for travis.yml for python project:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>language: python
+python:
+  - "2.7"
+
+# command to install dependencies
+install:
+  - "pip install -r requirements.txt"
+
+# command to run tests
+script: python manage.py test
+</code></pre></div></div>
+
+<p>Explanation:</p>
+
+<p>In the first line we have specified python as the language environment, the next specifies the version of python. Travis will then make sure that the project runs well with all the python versions. If we have any python dependencies Travis will test our code in a virtualenv, so all we need to write a requirments.txt and tell Travis to install it and the script command will run tests when excited.</p>
+
+<h2 id="the-complete-lifecycle">The complete Lifecycle</h2>
+
+<ol>
+  <li><code class="highlighter-rouge">before_install</code></li>
+  <li><code class="highlighter-rouge">install</code></li>
+  <li><code class="highlighter-rouge">after_install</code></li>
+  <li><code class="highlighter-rouge">before_script</code></li>
+  <li><code class="highlighter-rouge">script</code></li>
+  <li><code class="highlighter-rouge">after_script</code></li>
+  <li><code class="highlighter-rouge">after_success or after_failure</code></li>
+</ol>
+
+<h2 id="configuring-travisyml">Configuring .travis.yml</h2>
+
+<p>Build only specific branches:</p>
+
+<p>Per default travis will build once we push to a branch on Github. That behavior can be annoying if we are committing often to development branches. We can restrict which branches Travis is monitoring for changes in the .travis.yml. Either we can blacklist the branches or whitelist them:</p>
+
+<p>.travis.yml</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Whitelisting example
+branches:
+  only:
+    - master
+
+# Blacklisting example
+branches:
+  except:
+    - develop
+    - feature
+</code></pre></div></div>
+
+<p>Getting notified with lint errors:</p>
+
+<p>We can also get notified or make bulid fail if there are any lint errors in the commit. For this we can use the option before-script.
+We can create a lint.sh file and we can specify it in the before-script option so that the bulid fails and notifies when lint error occurs.</p>
+
+<p>.travis.yml</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>before_script:
+    -./lint.sh
+</code></pre></div></div>
+
+<h2 id="using-coveralls-with-travis-ci">Using coveralls with travis CI:</h2>
+
+<p>Coveralls is web service to help us track our code coverage over time and ensure that all our new code is fully covered.</p>
+
+<p>Steps to use coveralls:</p>
+
+<ol>
+  <li>
+    <p>First, log in via Github and add your repo on Coveralls website.</p>
+  </li>
+  <li>
+    <p>Add pip install coveralls to install section of .travis.yml</p>
+  </li>
+  <li>
+    <p>Make sure you run your tests with coverage during the build in script part.</p>
+
+    <p>script:
+     coverage run –source=yourpackagename setup.py test</p>
+  </li>
+  <li>
+    <p>Execute run <code class="highlighter-rouge">coveralls</code> in <code class="highlighter-rouge">after_success</code> section.</p>
+
+    <p>after_success:
+     coveralls</p>
+  </li>
+</ol>
+
+<p>Example:</p>
+
+<p>travis.yml</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>language: python
+python:
+  - 2.7
+install:
+  - pip install -r requirements.txt
+  - pip install coveralls
+script:
+  coverage run --source=moscowdjango,meetup manage.py test
+after_success:
+  coveralls
+</code></pre></div></div>
+
+<p>The above code makes custom report for data generated by coverage.py package and sends it to json API of coveralls.io service. All python files in our coverage analysis are posted to this service along with coverage stats</p>
+
+<p>tats</p>
+
+
+  </div><a class="u-url" href="/travis/2014/05/01/continuous-integration-with-travis-and-coverallsio.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

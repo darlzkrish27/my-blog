@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Configure Django to log exceptions in production | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Configure Django to log exceptions in production" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Django default logging behaviour for unhandled exceptions is: With DEBUG=True (Development) Log the exception on console/stream. Show the exception on page, i.e in http response. With DEBUG=False (Production) Do not log the exception on console/stream. Do not show the exception in response. Send an email to admin if email settings are configured correctly. Usually not logging the exception on console isn’t a problem since an exception email is sent to you which can help you know the source of exception. But this assumes that email settings are configured correctly else you will not receive the exception email. You might not have email settings configured correctly and don’t want to get into that right away. You might instead want to log the exception on console even with DEBUG=False. This post would help you in such scenario. Default logging configuration Django’s default logging setting is: DEFAULT_LOGGING = { &#39;version&#39;: 1, &#39;disable_existing_loggers&#39;: False, &#39;filters&#39;: { &#39;require_debug_false&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugFalse&#39;, }, &#39;require_debug_true&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugTrue&#39;, }, }, &#39;formatters&#39;: { &#39;django.server&#39;: { &#39;()&#39;: &#39;django.utils.log.ServerFormatter&#39;, &#39;format&#39;: &#39;[%(server_time)s] %(message)s&#39;, } }, &#39;handlers&#39;: { &#39;console&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;filters&#39;: [&#39;require_debug_true&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;django.server&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;class&#39;: &#39;logging.StreamHandler&#39;, &#39;formatter&#39;: &#39;django.server&#39;, }, &#39;mail_admins&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;django.utils.log.AdminEmailHandler&#39; } }, &#39;loggers&#39;: { &#39;django&#39;: { &#39;handlers&#39;: [&#39;console&#39;, &#39;mail_admins&#39;], &#39;level&#39;: &#39;INFO&#39;, }, &#39;django.server&#39;: { &#39;handlers&#39;: [&#39;django.server&#39;], &#39;level&#39;: &#39;INFO&#39;, &#39;propagate&#39;: False, }, } } Without any explicit settings.LOGGING configured in settings.py, this is the default logging configuration Django works with. You can ignore django.server part. Any unhandled Django exception is handled in function handle_uncaught_exception. The relevant code is on Github Error is logged using logger.error in this function. This logger is an instance of django.request. Since logger django is a parent of django.request, so log records are propogated to logger django. As you can see from DEFAULT_LOGGING, logger django has two handlers. console mail_admins As you can see from DEFAULT_LOGGING, handler console has a filter called require_debug_true because of which this handler doesn’t handle log records in production, i.e when DEBUG=False. Logging to console in production So you can create a new handler which directs ERROR log records to Stream when DEBUG=False. This handler would look like &#39;console_debug_false&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, } And you can ask logger django to use this handler by adding this handler in loggers[&#39;django&#39;][&#39;handlers&#39;]. Your final settings.LOGGING would look like following: LOGGING = { &#39;version&#39;: 1, &#39;disable_existing_loggers&#39;: False, &#39;filters&#39;: { &#39;require_debug_false&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugFalse&#39;, }, &#39;require_debug_true&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugTrue&#39;, }, }, &#39;formatters&#39;: { &#39;django.server&#39;: { &#39;()&#39;: &#39;django.utils.log.ServerFormatter&#39;, &#39;format&#39;: &#39;[%(server_time)s] %(message)s&#39;, } }, &#39;handlers&#39;: { &#39;console&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;filters&#39;: [&#39;require_debug_true&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;console_debug_false&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;django.server&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;class&#39;: &#39;logging.StreamHandler&#39;, &#39;formatter&#39;: &#39;django.server&#39;, }, &#39;mail_admins&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;django.utils.log.AdminEmailHandler&#39; } }, &#39;loggers&#39;: { &#39;django&#39;: { &#39;handlers&#39;: [&#39;console&#39;, &#39;console_debug_false&#39;, &#39;mail_admins&#39;], &#39;level&#39;: &#39;INFO&#39;, }, &#39;django.server&#39;: { &#39;handlers&#39;: [&#39;django.server&#39;], &#39;level&#39;: &#39;INFO&#39;, &#39;propagate&#39;: False, } } } If you don’t want emails to be sent to admins, in case email settings aren’t configured correctly, then you should remove mail_admins from loggers[&#39;django&#39;][&#39;handlers&#39;]." />
+<meta property="og:description" content="Django default logging behaviour for unhandled exceptions is: With DEBUG=True (Development) Log the exception on console/stream. Show the exception on page, i.e in http response. With DEBUG=False (Production) Do not log the exception on console/stream. Do not show the exception in response. Send an email to admin if email settings are configured correctly. Usually not logging the exception on console isn’t a problem since an exception email is sent to you which can help you know the source of exception. But this assumes that email settings are configured correctly else you will not receive the exception email. You might not have email settings configured correctly and don’t want to get into that right away. You might instead want to log the exception on console even with DEBUG=False. This post would help you in such scenario. Default logging configuration Django’s default logging setting is: DEFAULT_LOGGING = { &#39;version&#39;: 1, &#39;disable_existing_loggers&#39;: False, &#39;filters&#39;: { &#39;require_debug_false&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugFalse&#39;, }, &#39;require_debug_true&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugTrue&#39;, }, }, &#39;formatters&#39;: { &#39;django.server&#39;: { &#39;()&#39;: &#39;django.utils.log.ServerFormatter&#39;, &#39;format&#39;: &#39;[%(server_time)s] %(message)s&#39;, } }, &#39;handlers&#39;: { &#39;console&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;filters&#39;: [&#39;require_debug_true&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;django.server&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;class&#39;: &#39;logging.StreamHandler&#39;, &#39;formatter&#39;: &#39;django.server&#39;, }, &#39;mail_admins&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;django.utils.log.AdminEmailHandler&#39; } }, &#39;loggers&#39;: { &#39;django&#39;: { &#39;handlers&#39;: [&#39;console&#39;, &#39;mail_admins&#39;], &#39;level&#39;: &#39;INFO&#39;, }, &#39;django.server&#39;: { &#39;handlers&#39;: [&#39;django.server&#39;], &#39;level&#39;: &#39;INFO&#39;, &#39;propagate&#39;: False, }, } } Without any explicit settings.LOGGING configured in settings.py, this is the default logging configuration Django works with. You can ignore django.server part. Any unhandled Django exception is handled in function handle_uncaught_exception. The relevant code is on Github Error is logged using logger.error in this function. This logger is an instance of django.request. Since logger django is a parent of django.request, so log records are propogated to logger django. As you can see from DEFAULT_LOGGING, logger django has two handlers. console mail_admins As you can see from DEFAULT_LOGGING, handler console has a filter called require_debug_true because of which this handler doesn’t handle log records in production, i.e when DEBUG=False. Logging to console in production So you can create a new handler which directs ERROR log records to Stream when DEBUG=False. This handler would look like &#39;console_debug_false&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, } And you can ask logger django to use this handler by adding this handler in loggers[&#39;django&#39;][&#39;handlers&#39;]. Your final settings.LOGGING would look like following: LOGGING = { &#39;version&#39;: 1, &#39;disable_existing_loggers&#39;: False, &#39;filters&#39;: { &#39;require_debug_false&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugFalse&#39;, }, &#39;require_debug_true&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugTrue&#39;, }, }, &#39;formatters&#39;: { &#39;django.server&#39;: { &#39;()&#39;: &#39;django.utils.log.ServerFormatter&#39;, &#39;format&#39;: &#39;[%(server_time)s] %(message)s&#39;, } }, &#39;handlers&#39;: { &#39;console&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;filters&#39;: [&#39;require_debug_true&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;console_debug_false&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;django.server&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;class&#39;: &#39;logging.StreamHandler&#39;, &#39;formatter&#39;: &#39;django.server&#39;, }, &#39;mail_admins&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;django.utils.log.AdminEmailHandler&#39; } }, &#39;loggers&#39;: { &#39;django&#39;: { &#39;handlers&#39;: [&#39;console&#39;, &#39;console_debug_false&#39;, &#39;mail_admins&#39;], &#39;level&#39;: &#39;INFO&#39;, }, &#39;django.server&#39;: { &#39;handlers&#39;: [&#39;django.server&#39;], &#39;level&#39;: &#39;INFO&#39;, &#39;propagate&#39;: False, } } } If you don’t want emails to be sent to admins, in case email settings aren’t configured correctly, then you should remove mail_admins from loggers[&#39;django&#39;][&#39;handlers&#39;]." />
+<link rel="canonical" href="http://localhost:4000/django/2017/12/02/configure-django-log-exceptions-production.html" />
+<meta property="og:url" content="http://localhost:4000/django/2017/12/02/configure-django-log-exceptions-production.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-12-02T08:19:18+05:30" />
+<script type="application/ld+json">
+{"description":"Django default logging behaviour for unhandled exceptions is: With DEBUG=True (Development) Log the exception on console/stream. Show the exception on page, i.e in http response. With DEBUG=False (Production) Do not log the exception on console/stream. Do not show the exception in response. Send an email to admin if email settings are configured correctly. Usually not logging the exception on console isn’t a problem since an exception email is sent to you which can help you know the source of exception. But this assumes that email settings are configured correctly else you will not receive the exception email. You might not have email settings configured correctly and don’t want to get into that right away. You might instead want to log the exception on console even with DEBUG=False. This post would help you in such scenario. Default logging configuration Django’s default logging setting is: DEFAULT_LOGGING = { &#39;version&#39;: 1, &#39;disable_existing_loggers&#39;: False, &#39;filters&#39;: { &#39;require_debug_false&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugFalse&#39;, }, &#39;require_debug_true&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugTrue&#39;, }, }, &#39;formatters&#39;: { &#39;django.server&#39;: { &#39;()&#39;: &#39;django.utils.log.ServerFormatter&#39;, &#39;format&#39;: &#39;[%(server_time)s] %(message)s&#39;, } }, &#39;handlers&#39;: { &#39;console&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;filters&#39;: [&#39;require_debug_true&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;django.server&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;class&#39;: &#39;logging.StreamHandler&#39;, &#39;formatter&#39;: &#39;django.server&#39;, }, &#39;mail_admins&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;django.utils.log.AdminEmailHandler&#39; } }, &#39;loggers&#39;: { &#39;django&#39;: { &#39;handlers&#39;: [&#39;console&#39;, &#39;mail_admins&#39;], &#39;level&#39;: &#39;INFO&#39;, }, &#39;django.server&#39;: { &#39;handlers&#39;: [&#39;django.server&#39;], &#39;level&#39;: &#39;INFO&#39;, &#39;propagate&#39;: False, }, } } Without any explicit settings.LOGGING configured in settings.py, this is the default logging configuration Django works with. You can ignore django.server part. Any unhandled Django exception is handled in function handle_uncaught_exception. The relevant code is on Github Error is logged using logger.error in this function. This logger is an instance of django.request. Since logger django is a parent of django.request, so log records are propogated to logger django. As you can see from DEFAULT_LOGGING, logger django has two handlers. console mail_admins As you can see from DEFAULT_LOGGING, handler console has a filter called require_debug_true because of which this handler doesn’t handle log records in production, i.e when DEBUG=False. Logging to console in production So you can create a new handler which directs ERROR log records to Stream when DEBUG=False. This handler would look like &#39;console_debug_false&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, } And you can ask logger django to use this handler by adding this handler in loggers[&#39;django&#39;][&#39;handlers&#39;]. Your final settings.LOGGING would look like following: LOGGING = { &#39;version&#39;: 1, &#39;disable_existing_loggers&#39;: False, &#39;filters&#39;: { &#39;require_debug_false&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugFalse&#39;, }, &#39;require_debug_true&#39;: { &#39;()&#39;: &#39;django.utils.log.RequireDebugTrue&#39;, }, }, &#39;formatters&#39;: { &#39;django.server&#39;: { &#39;()&#39;: &#39;django.utils.log.ServerFormatter&#39;, &#39;format&#39;: &#39;[%(server_time)s] %(message)s&#39;, } }, &#39;handlers&#39;: { &#39;console&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;filters&#39;: [&#39;require_debug_true&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;console_debug_false&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;logging.StreamHandler&#39;, }, &#39;django.server&#39;: { &#39;level&#39;: &#39;INFO&#39;, &#39;class&#39;: &#39;logging.StreamHandler&#39;, &#39;formatter&#39;: &#39;django.server&#39;, }, &#39;mail_admins&#39;: { &#39;level&#39;: &#39;ERROR&#39;, &#39;filters&#39;: [&#39;require_debug_false&#39;], &#39;class&#39;: &#39;django.utils.log.AdminEmailHandler&#39; } }, &#39;loggers&#39;: { &#39;django&#39;: { &#39;handlers&#39;: [&#39;console&#39;, &#39;console_debug_false&#39;, &#39;mail_admins&#39;], &#39;level&#39;: &#39;INFO&#39;, }, &#39;django.server&#39;: { &#39;handlers&#39;: [&#39;django.server&#39;], &#39;level&#39;: &#39;INFO&#39;, &#39;propagate&#39;: False, } } } If you don’t want emails to be sent to admins, in case email settings aren’t configured correctly, then you should remove mail_admins from loggers[&#39;django&#39;][&#39;handlers&#39;].","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/django/2017/12/02/configure-django-log-exceptions-production.html","headline":"Configure Django to log exceptions in production","dateModified":"2017-12-02T08:19:18+05:30","datePublished":"2017-12-02T08:19:18+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/django/2017/12/02/configure-django-log-exceptions-production.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Configure Django to log exceptions in production</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2017-12-02T08:19:18+05:30" itemprop="datePublished">Dec 2, 2017
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Django default logging behaviour for unhandled exceptions is:</p>
+
+<h4 id="with-debugtrue-development">With DEBUG=True (Development)</h4>
+
+<ul>
+  <li>Log the exception on console/stream.</li>
+  <li>Show the exception on page, i.e in http response.</li>
+</ul>
+
+<h4 id="with-debugfalse-production">With DEBUG=False (Production)</h4>
+
+<ul>
+  <li>Do not log the exception on console/stream.</li>
+  <li>Do not show the exception in response.</li>
+  <li>Send an email to admin if email settings are configured correctly.</li>
+</ul>
+
+<p>Usually not logging the exception on console isn’t a problem since an exception email is sent to you which can help you know the source of exception. But this assumes that email settings are configured correctly else you will not receive the exception email.</p>
+
+<p>You might not have email settings configured correctly and don’t want to get into that right away. You might instead want to log the exception on console even with DEBUG=False. This post would help you in such scenario.</p>
+
+<h4 id="default-logging-configuration">Default logging configuration</h4>
+
+<p>Django’s default logging setting is:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>DEFAULT_LOGGING = {
+	'version': 1,
+	'disable_existing_loggers': False,
+	'filters': {
+		'require_debug_false': {
+			'()': 'django.utils.log.RequireDebugFalse',
+		},
+		'require_debug_true': {
+			'()': 'django.utils.log.RequireDebugTrue',
+		},
+	},
+	'formatters': {
+		'django.server': {
+			'()': 'django.utils.log.ServerFormatter',
+			'format': '[%(server_time)s] %(message)s',
+		}
+	},
+	'handlers': {
+		'console': {
+			'level': 'INFO',
+			'filters': ['require_debug_true'],
+			'class': 'logging.StreamHandler',
+		},
+		'django.server': {
+			'level': 'INFO',
+			'class': 'logging.StreamHandler',
+			'formatter': 'django.server',
+		},
+		'mail_admins': {
+			'level': 'ERROR',
+			'filters': ['require_debug_false'],
+			'class': 'django.utils.log.AdminEmailHandler'
+		}
+	},
+	'loggers': {
+		'django': {
+			'handlers': ['console', 'mail_admins'],
+			'level': 'INFO',
+		},
+		'django.server': {
+			'handlers': ['django.server'],
+			'level': 'INFO',
+			'propagate': False,
+		},
+	}
+}
+</code></pre></div></div>
+
+<p>Without any explicit <code class="highlighter-rouge">settings.LOGGING</code> configured in settings.py, this is the default logging configuration Django works with. You can ignore <code class="highlighter-rouge">django.server</code> part.</p>
+
+<p>Any unhandled Django exception is handled in function <code class="highlighter-rouge">handle_uncaught_exception</code>. The relevant code is on <a href="https://github.com/django/django/blob/1.11.7/django/core/handlers/exception.py#L124" target="_blank">Github</a></p>
+
+<p>Error is logged using <code class="highlighter-rouge">logger.error</code> in this function. This logger is an instance of <code class="highlighter-rouge">django.request</code>. Since logger <code class="highlighter-rouge">django</code> is a parent of <code class="highlighter-rouge">django.request</code>, so log records are propogated to logger <code class="highlighter-rouge">django</code>.</p>
+
+<p>As you can see from <code class="highlighter-rouge">DEFAULT_LOGGING</code>, logger <code class="highlighter-rouge">django</code> has two handlers.</p>
+
+<ul>
+  <li>console</li>
+  <li>mail_admins</li>
+</ul>
+
+<p>As you can see from <code class="highlighter-rouge">DEFAULT_LOGGING</code>, handler <code class="highlighter-rouge">console</code> has a filter called <code class="highlighter-rouge">require_debug_true</code> because of which this handler doesn’t handle log records in production, i.e when DEBUG=False.</p>
+
+<h4 id="logging-to-console-in-production">Logging to console in production</h4>
+
+<p>So you can create a new handler which directs <code class="highlighter-rouge">ERROR</code> log records to Stream when DEBUG=False.</p>
+
+<p>This handler would look like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>'console_debug_false': {
+	'level': 'ERROR',
+	'filters': ['require_debug_false'],
+	'class': 'logging.StreamHandler',
+}
+</code></pre></div></div>
+
+<p>And you can ask logger <code class="highlighter-rouge">django</code> to use this handler by adding this handler in <code class="highlighter-rouge">loggers['django']['handlers']</code>.</p>
+
+<p>Your final <code class="highlighter-rouge">settings.LOGGING</code> would look like following:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LOGGING = {
+	'version': 1,
+	'disable_existing_loggers': False,
+	'filters': {
+		'require_debug_false': {
+			'()': 'django.utils.log.RequireDebugFalse',
+		},
+		'require_debug_true': {
+			'()': 'django.utils.log.RequireDebugTrue',
+		},
+	},
+	'formatters': {
+		'django.server': {
+			'()': 'django.utils.log.ServerFormatter',
+			'format': '[%(server_time)s] %(message)s',
+		}
+	},
+	'handlers': {
+		'console': {
+			'level': 'INFO',
+			'filters': ['require_debug_true'],
+			'class': 'logging.StreamHandler',
+		},
+		'console_debug_false': {
+			'level': 'ERROR',
+			'filters': ['require_debug_false'],
+			'class': 'logging.StreamHandler',
+		},
+		'django.server': {
+			'level': 'INFO',
+			'class': 'logging.StreamHandler',
+			'formatter': 'django.server',
+		},
+		'mail_admins': {
+			'level': 'ERROR',
+			'filters': ['require_debug_false'],
+			'class': 'django.utils.log.AdminEmailHandler'
+		}
+	},
+	'loggers': {
+		'django': {
+			'handlers': ['console', 'console_debug_false', 'mail_admins'],
+			'level': 'INFO',
+		},
+		'django.server': {
+			'handlers': ['django.server'],
+			'level': 'INFO',
+			'propagate': False,
+		}
+	}
+}
+</code></pre></div></div>
+
+<p>If you don’t want emails to be sent to admins, in case email settings aren’t configured correctly, then you should remove <code class="highlighter-rouge">mail_admins</code> from <code class="highlighter-rouge">loggers['django']['handlers']</code>.</p>
+
+
+  </div><a class="u-url" href="/django/2017/12/02/configure-django-log-exceptions-production.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Django Request Response processing | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Django Request Response processing" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Have you wondered the steps a users request goes through before being responded to by Django? The answer lies in reading django.core.handlers.base and django.core.handlers.wsgi. Here is a diagram explaining what happens. (Click to enlarge.) The steps are. (With Apache/Mod_wsgi, similar steps for other setup.) User’s request comes to Apache etc. Apache sends request to django.core.handlers.wsgi via mod_wsgi. A list of request and response middleware callables is created. Request middleware is applied. If it sends a response, it is returned to the user. urlresolvers.resolve finds the view funcion to use. View middleware is applied. If response comes, it is sent back to the user. View function is called. It talks to models to do business logic, and renders the templates. The response middleware is applied, and response is sent back to the users. This misses a lot of important steps (Exception middleware, request_context populating, …) but is a basic high level overview. Resources django/core/handlers/base.py django/core/handlers/wsgi.py .dia and other files for the image Do you twitter? Do you Github? Find us there." />
+<meta property="og:description" content="Have you wondered the steps a users request goes through before being responded to by Django? The answer lies in reading django.core.handlers.base and django.core.handlers.wsgi. Here is a diagram explaining what happens. (Click to enlarge.) The steps are. (With Apache/Mod_wsgi, similar steps for other setup.) User’s request comes to Apache etc. Apache sends request to django.core.handlers.wsgi via mod_wsgi. A list of request and response middleware callables is created. Request middleware is applied. If it sends a response, it is returned to the user. urlresolvers.resolve finds the view funcion to use. View middleware is applied. If response comes, it is sent back to the user. View function is called. It talks to models to do business logic, and renders the templates. The response middleware is applied, and response is sent back to the users. This misses a lot of important steps (Exception middleware, request_context populating, …) but is a basic high level overview. Resources django/core/handlers/base.py django/core/handlers/wsgi.py .dia and other files for the image Do you twitter? Do you Github? Find us there." />
+<link rel="canonical" href="http://localhost:4000/django/2009/06/25/django-request-response-processing.html" />
+<meta property="og:url" content="http://localhost:4000/django/2009/06/25/django-request-response-processing.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-06-25T09:59:56+05:30" />
+<script type="application/ld+json">
+{"description":"Have you wondered the steps a users request goes through before being responded to by Django? The answer lies in reading django.core.handlers.base and django.core.handlers.wsgi. Here is a diagram explaining what happens. (Click to enlarge.) The steps are. (With Apache/Mod_wsgi, similar steps for other setup.) User’s request comes to Apache etc. Apache sends request to django.core.handlers.wsgi via mod_wsgi. A list of request and response middleware callables is created. Request middleware is applied. If it sends a response, it is returned to the user. urlresolvers.resolve finds the view funcion to use. View middleware is applied. If response comes, it is sent back to the user. View function is called. It talks to models to do business logic, and renders the templates. The response middleware is applied, and response is sent back to the users. This misses a lot of important steps (Exception middleware, request_context populating, …) but is a basic high level overview. Resources django/core/handlers/base.py django/core/handlers/wsgi.py .dia and other files for the image Do you twitter? Do you Github? Find us there.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/django/2009/06/25/django-request-response-processing.html","headline":"Django Request Response processing","dateModified":"2009-06-25T09:59:56+05:30","datePublished":"2009-06-25T09:59:56+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/django/2009/06/25/django-request-response-processing.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Django Request Response processing</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-06-25T09:59:56+05:30" itemprop="datePublished">Jun 25, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Have you wondered the steps a users request goes through before being responded to by Django? The answer lies in reading <code class="highlighter-rouge">django.core.handlers.base</code> and <code class="highlighter-rouge">django.core.handlers.wsgi</code>. Here is a diagram explaining what happens. (<a href="http://uswaretech.com/blog/wp-content/uploads/2009/06/django_request_response_lifecycle.png">Click to enlarge</a>.)</p>
+
+<p><a href="http://uswaretech.com/blog/wp-content/uploads/2009/06/django_request_response_lifecycle.png"><img src="http://uswaretech.com/blog/wp-content/uploads/2009/06/django_request_response_lifecycle-300x207.png" alt="" title="django_request_response_lifecycle" width="300" height="207" class="alignnone size-medium wp-image-587" /></a></p>
+
+<p>The steps are.
+(With Apache/Mod_wsgi, similar steps for other setup.)</p>
+
+<ol>
+  <li>User’s request comes to Apache etc.</li>
+  <li>Apache sends request to <code class="highlighter-rouge">django.core.handlers.wsgi</code> via <code class="highlighter-rouge">mod_wsgi</code>.</li>
+  <li>A list of request and response middleware callables is created.</li>
+  <li>Request middleware is applied. If it sends a response, it is returned to the user.</li>
+  <li><code class="highlighter-rouge">urlresolvers.resolve</code> finds the view funcion to use.</li>
+  <li>View middleware is applied. If response comes, it is sent back to the user.</li>
+  <li>View function is called. It talks to models to do business logic, and renders the templates.</li>
+  <li>The response middleware is applied, and response is sent back to the users.</li>
+</ol>
+
+<p>This misses a lot of important steps (Exception middleware, request_context populating, …) but is a basic high level overview.</p>
+
+<p>Resources</p>
+
+<ul>
+  <li><a href="http://code.djangoproject.com/browser/django/trunk/django/core/handlers/base.py">django/core/handlers/base.py</a></li>
+  <li><a href="http://code.djangoproject.com/browser/django/trunk/django/core/handlers/wsgi.py">django/core/handlers/wsgi.py</a></li>
+  <li><a href="http://github.com/uswaretech/Django-Request-Response/tree/master">.dia and other files for the image</a></li>
+</ul>
+
+<hr />
+<p>Do you <a href="http://twitter.com/uswaretech">twitter</a>? Do you <a href="http://github.com/uswaretech">Github</a>? Find us there.</p>
+
+
+  </div><a class="u-url" href="/django/2009/06/25/django-request-response-processing.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

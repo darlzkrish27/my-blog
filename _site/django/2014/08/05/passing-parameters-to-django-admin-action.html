@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Passing parameters to Django admin action | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Passing parameters to Django admin action" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This post will show how to pass parameters to custom Django admin actions. This post assumes that you have an idea of Django actions. Django provides a default admin action which is ‘Delete selected rows’. Changelist page for all the models registered with admin has this action available. This action allows to select multiple rows and delete them in a single POST request. Problem statement We want to allow following Django action from admin. There is a model called Instrument. It has a field price Allow selecting multiple rows for this model and update the value of price for selected rows. Price should not be hardcoded. Admin should be able to enter the price. We should be able to achieve something like: Solution Setup the project first. Setup project Start a Django project inside virtual environment /tmp $ mkvirtualenv custom-actions (custom-actions)/tmp $ django-admin.py startproject actions (custom-actions)/tmp/actions $ python manage.py startapp instruments Writing the model in instruments/models.py class Instrument(models.Model): name = models.CharField(max_length=100) price = models.IntegerField() def __unicode__(self): return self.name Add instruments to INSTALLED_APPS Run syncdb (custom-actions)/tmp/actions $ python manage.py syncdb Register this model with admin in instruments/admin.py from django.contrib import admin from .models import Instrument admin.site.register(Instrument) You should be able to see Instrument changelist page at http://localhost:8000/admin/instruments/instrument/ Create few instrument instances. You can also use the fixture provided at the github repo accompanying this blog. python manage.py loaddata instruments/fixtures/instruments.json You should be able to see Action Delete selected instruments in dropdown of Instrument changelist page. Writing our custom action. We want to pass a parameter which will be used to set price on selected rows. This requires showing a Form field. When we customize the admin , like adding list_display, list_filter, inlines etc, we write a class which extends from ModelAdmin. ModelAdmin has an attribute called action_form which determines the form that gets used for action selection dropdown. See https://github.com/django/django/blob/1.6/django/contrib/admin/options.py#L396 action_form is django.contrib.admin.helpers.ActionForm. Instead of using Django provided ActionForm, we will use a custom form. This form should extend from Django provided ActionForm because we want to retain the functionality provided by Django while adding an additional field of our own. This form would be: from django.contrib.admin.helpers import ActionForm class UpdateActionForm(ActionForm): price = forms.IntegerField() Django provides a default action ‘Delete selected’ and this same form would be used for the default action too. So, we should be keeping the price field as optional so ‘Delete selected’ functionality keeps working even if we don’t input anything in price field. And we should be setting this form as action_form attribute of our ModelAdmin subclass. class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm And this InstrumentAdmin should be used while registering model Instrument with admin. admin.site.register(Instrument, InstrumentAdmin) Final content of instrument/admin.py becomes from django.contrib import admin from django.contrib.admin.helpers import ActionForm from django import forms from .models import Instrument class UpdateActionForm(ActionForm): price = forms.IntegerField(required=False) class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm admin.site.register(Instrument, InstrumentAdmin) With this your action form would contain a Price field. Verify it on Instrument changelist page. Confirm that you are still able to delete rows using ‘Delete selected instruments’ action without the Price fields interfering with the existing functionality. If you have written Django actions earlier, writing the function to handle our action should be a no brainer. def update_price(modeladmin, request, queryset): price = request.POST[&#39;price&#39;] price = int(price) queryset.update(price=price) update_price.short_description = &#39;Update price of selected rows&#39; And add it as actions of InstrumentAdmin. class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm actions = [update_price] With this you should get ‘Update price of selected rows’ in actions dropdown. You might argue, why did we use request.POST to get the price and not use action_form.cleaned_data. Have some patience, I will answer that. Now try selecting some rows and input a price in the form and verify if your code works properly. It must work. We used request.POST and not action_form.cleaned_data because we don’t have access to the instance of action_form, i.e instance of UpdateActionForm, in any way inside function update_price. If we try modeladmin.action_form, it will return us class UpdateActionForm and not instance of UpdateActionForm We can make update_price better by showing a message after the instances’ price has been updated. def update_price(modeladmin, request, queryset): price = request.POST[&#39;price&#39;] price = int(price) queryset.update(price=price) modeladmin.message_user(request, (&quot;Successfully updated price for %d rows&quot;) % (queryset.count(),), messages.SUCCESS) For message to display, Django message framework should be enabled. It is enabled by default, so unless you have played with settings.py, message will just work." />
+<meta property="og:description" content="This post will show how to pass parameters to custom Django admin actions. This post assumes that you have an idea of Django actions. Django provides a default admin action which is ‘Delete selected rows’. Changelist page for all the models registered with admin has this action available. This action allows to select multiple rows and delete them in a single POST request. Problem statement We want to allow following Django action from admin. There is a model called Instrument. It has a field price Allow selecting multiple rows for this model and update the value of price for selected rows. Price should not be hardcoded. Admin should be able to enter the price. We should be able to achieve something like: Solution Setup the project first. Setup project Start a Django project inside virtual environment /tmp $ mkvirtualenv custom-actions (custom-actions)/tmp $ django-admin.py startproject actions (custom-actions)/tmp/actions $ python manage.py startapp instruments Writing the model in instruments/models.py class Instrument(models.Model): name = models.CharField(max_length=100) price = models.IntegerField() def __unicode__(self): return self.name Add instruments to INSTALLED_APPS Run syncdb (custom-actions)/tmp/actions $ python manage.py syncdb Register this model with admin in instruments/admin.py from django.contrib import admin from .models import Instrument admin.site.register(Instrument) You should be able to see Instrument changelist page at http://localhost:8000/admin/instruments/instrument/ Create few instrument instances. You can also use the fixture provided at the github repo accompanying this blog. python manage.py loaddata instruments/fixtures/instruments.json You should be able to see Action Delete selected instruments in dropdown of Instrument changelist page. Writing our custom action. We want to pass a parameter which will be used to set price on selected rows. This requires showing a Form field. When we customize the admin , like adding list_display, list_filter, inlines etc, we write a class which extends from ModelAdmin. ModelAdmin has an attribute called action_form which determines the form that gets used for action selection dropdown. See https://github.com/django/django/blob/1.6/django/contrib/admin/options.py#L396 action_form is django.contrib.admin.helpers.ActionForm. Instead of using Django provided ActionForm, we will use a custom form. This form should extend from Django provided ActionForm because we want to retain the functionality provided by Django while adding an additional field of our own. This form would be: from django.contrib.admin.helpers import ActionForm class UpdateActionForm(ActionForm): price = forms.IntegerField() Django provides a default action ‘Delete selected’ and this same form would be used for the default action too. So, we should be keeping the price field as optional so ‘Delete selected’ functionality keeps working even if we don’t input anything in price field. And we should be setting this form as action_form attribute of our ModelAdmin subclass. class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm And this InstrumentAdmin should be used while registering model Instrument with admin. admin.site.register(Instrument, InstrumentAdmin) Final content of instrument/admin.py becomes from django.contrib import admin from django.contrib.admin.helpers import ActionForm from django import forms from .models import Instrument class UpdateActionForm(ActionForm): price = forms.IntegerField(required=False) class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm admin.site.register(Instrument, InstrumentAdmin) With this your action form would contain a Price field. Verify it on Instrument changelist page. Confirm that you are still able to delete rows using ‘Delete selected instruments’ action without the Price fields interfering with the existing functionality. If you have written Django actions earlier, writing the function to handle our action should be a no brainer. def update_price(modeladmin, request, queryset): price = request.POST[&#39;price&#39;] price = int(price) queryset.update(price=price) update_price.short_description = &#39;Update price of selected rows&#39; And add it as actions of InstrumentAdmin. class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm actions = [update_price] With this you should get ‘Update price of selected rows’ in actions dropdown. You might argue, why did we use request.POST to get the price and not use action_form.cleaned_data. Have some patience, I will answer that. Now try selecting some rows and input a price in the form and verify if your code works properly. It must work. We used request.POST and not action_form.cleaned_data because we don’t have access to the instance of action_form, i.e instance of UpdateActionForm, in any way inside function update_price. If we try modeladmin.action_form, it will return us class UpdateActionForm and not instance of UpdateActionForm We can make update_price better by showing a message after the instances’ price has been updated. def update_price(modeladmin, request, queryset): price = request.POST[&#39;price&#39;] price = int(price) queryset.update(price=price) modeladmin.message_user(request, (&quot;Successfully updated price for %d rows&quot;) % (queryset.count(),), messages.SUCCESS) For message to display, Django message framework should be enabled. It is enabled by default, so unless you have played with settings.py, message will just work." />
+<link rel="canonical" href="http://localhost:4000/django/2014/08/05/passing-parameters-to-django-admin-action.html" />
+<meta property="og:url" content="http://localhost:4000/django/2014/08/05/passing-parameters-to-django-admin-action.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-08-05T21:03:06+05:30" />
+<script type="application/ld+json">
+{"description":"This post will show how to pass parameters to custom Django admin actions. This post assumes that you have an idea of Django actions. Django provides a default admin action which is ‘Delete selected rows’. Changelist page for all the models registered with admin has this action available. This action allows to select multiple rows and delete them in a single POST request. Problem statement We want to allow following Django action from admin. There is a model called Instrument. It has a field price Allow selecting multiple rows for this model and update the value of price for selected rows. Price should not be hardcoded. Admin should be able to enter the price. We should be able to achieve something like: Solution Setup the project first. Setup project Start a Django project inside virtual environment /tmp $ mkvirtualenv custom-actions (custom-actions)/tmp $ django-admin.py startproject actions (custom-actions)/tmp/actions $ python manage.py startapp instruments Writing the model in instruments/models.py class Instrument(models.Model): name = models.CharField(max_length=100) price = models.IntegerField() def __unicode__(self): return self.name Add instruments to INSTALLED_APPS Run syncdb (custom-actions)/tmp/actions $ python manage.py syncdb Register this model with admin in instruments/admin.py from django.contrib import admin from .models import Instrument admin.site.register(Instrument) You should be able to see Instrument changelist page at http://localhost:8000/admin/instruments/instrument/ Create few instrument instances. You can also use the fixture provided at the github repo accompanying this blog. python manage.py loaddata instruments/fixtures/instruments.json You should be able to see Action Delete selected instruments in dropdown of Instrument changelist page. Writing our custom action. We want to pass a parameter which will be used to set price on selected rows. This requires showing a Form field. When we customize the admin , like adding list_display, list_filter, inlines etc, we write a class which extends from ModelAdmin. ModelAdmin has an attribute called action_form which determines the form that gets used for action selection dropdown. See https://github.com/django/django/blob/1.6/django/contrib/admin/options.py#L396 action_form is django.contrib.admin.helpers.ActionForm. Instead of using Django provided ActionForm, we will use a custom form. This form should extend from Django provided ActionForm because we want to retain the functionality provided by Django while adding an additional field of our own. This form would be: from django.contrib.admin.helpers import ActionForm class UpdateActionForm(ActionForm): price = forms.IntegerField() Django provides a default action ‘Delete selected’ and this same form would be used for the default action too. So, we should be keeping the price field as optional so ‘Delete selected’ functionality keeps working even if we don’t input anything in price field. And we should be setting this form as action_form attribute of our ModelAdmin subclass. class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm And this InstrumentAdmin should be used while registering model Instrument with admin. admin.site.register(Instrument, InstrumentAdmin) Final content of instrument/admin.py becomes from django.contrib import admin from django.contrib.admin.helpers import ActionForm from django import forms from .models import Instrument class UpdateActionForm(ActionForm): price = forms.IntegerField(required=False) class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm admin.site.register(Instrument, InstrumentAdmin) With this your action form would contain a Price field. Verify it on Instrument changelist page. Confirm that you are still able to delete rows using ‘Delete selected instruments’ action without the Price fields interfering with the existing functionality. If you have written Django actions earlier, writing the function to handle our action should be a no brainer. def update_price(modeladmin, request, queryset): price = request.POST[&#39;price&#39;] price = int(price) queryset.update(price=price) update_price.short_description = &#39;Update price of selected rows&#39; And add it as actions of InstrumentAdmin. class InstrumentAdmin(admin.ModelAdmin): action_form = UpdateActionForm actions = [update_price] With this you should get ‘Update price of selected rows’ in actions dropdown. You might argue, why did we use request.POST to get the price and not use action_form.cleaned_data. Have some patience, I will answer that. Now try selecting some rows and input a price in the form and verify if your code works properly. It must work. We used request.POST and not action_form.cleaned_data because we don’t have access to the instance of action_form, i.e instance of UpdateActionForm, in any way inside function update_price. If we try modeladmin.action_form, it will return us class UpdateActionForm and not instance of UpdateActionForm We can make update_price better by showing a message after the instances’ price has been updated. def update_price(modeladmin, request, queryset): price = request.POST[&#39;price&#39;] price = int(price) queryset.update(price=price) modeladmin.message_user(request, (&quot;Successfully updated price for %d rows&quot;) % (queryset.count(),), messages.SUCCESS) For message to display, Django message framework should be enabled. It is enabled by default, so unless you have played with settings.py, message will just work.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/django/2014/08/05/passing-parameters-to-django-admin-action.html","headline":"Passing parameters to Django admin action","dateModified":"2014-08-05T21:03:06+05:30","datePublished":"2014-08-05T21:03:06+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/django/2014/08/05/passing-parameters-to-django-admin-action.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Passing parameters to Django admin action</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-08-05T21:03:06+05:30" itemprop="datePublished">Aug 5, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This post will show how to pass parameters to custom Django admin actions.</p>
+
+<p>This post assumes that you have an idea of <a href="https://docs.djangoproject.com/en/dev/ref/contrib/admin/actions/" target="_blank">Django actions.</a></p>
+
+<p>Django provides a default admin action which is ‘Delete selected rows’. Changelist page for all the models registered with admin has this action available. This action allows to select multiple rows and delete them in a single POST request.</p>
+
+<h3 id="problem-statement">Problem statement</h3>
+
+<p>We want to allow following Django action from admin.</p>
+
+<ul>
+  <li>There is a model called <strong>Instrument</strong>. It has a field <strong>price</strong></li>
+  <li>Allow selecting multiple rows for this model and update the value of <code class="highlighter-rouge">price</code> for selected rows.</li>
+  <li>Price should not be hardcoded. Admin should be able to enter the price.</li>
+</ul>
+
+<p>We should be able to achieve something like:</p>
+
+<p><img src="http://agiliq.com/dumps/images/20140806/final-action.png" style="width: 443px;" /></p>
+
+<h3 id="solution">Solution</h3>
+
+<p>Setup the project first.</p>
+
+<h4 id="setup-project">Setup project</h4>
+
+<p>Start a Django project inside virtual environment</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/tmp $ mkvirtualenv custom-actions
+
+(custom-actions)/tmp $ django-admin.py startproject actions
+(custom-actions)/tmp/actions $ python manage.py startapp instruments
+</code></pre></div></div>
+
+<p>Writing the model in instruments/models.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Instrument(models.Model):
+	name = models.CharField(max_length=100)
+	price = models.IntegerField()
+
+	def __unicode__(self):
+		return self.name
+</code></pre></div></div>
+
+<p>Add <strong>instruments</strong> to INSTALLED_APPS</p>
+
+<p>Run syncdb</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(custom-actions)/tmp/actions $ python manage.py syncdb
+</code></pre></div></div>
+
+<p>Register this model with admin in instruments/admin.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.contrib import admin
+
+from .models import Instrument
+
+admin.site.register(Instrument)
+</code></pre></div></div>
+
+<p>You should be able to see Instrument changelist page at <a href="http://localhost:8000/admin/instruments/instrument/" target="_blank">http://localhost:8000/admin/instruments/instrument/</a></p>
+
+<p>Create few instrument instances. You can also use the fixture provided at the <a href="https://github.com/akshar-raaj/django-custom-actions" target="_blank">github repo</a> accompanying this blog.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python manage.py loaddata instruments/fixtures/instruments.json
+</code></pre></div></div>
+
+<p>You should be able to see Action <strong>Delete selected instruments</strong> in dropdown of Instrument changelist page.</p>
+
+<p><img src="http://agiliq.com/dumps/images/20140806/delete-selected.png" alt="Default delete selected instruments" style="width: 443px;" /></p>
+
+<h4 id="writing-our-custom-action">Writing our custom action.</h4>
+
+<p>We want to pass a parameter which will be used to set price on selected rows. This requires showing a Form field.</p>
+
+<p>When we <a href="https://docs.djangoproject.com/en/dev/ref/contrib/admin/" target="_blank">customize the admin </a>, like adding list_display, list_filter, inlines etc, we write a class which extends from ModelAdmin. ModelAdmin has an attribute called <strong>action_form</strong> which determines the form that gets used for action selection dropdown.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>See https://github.com/django/django/blob/1.6/django/contrib/admin/options.py#L396
+</code></pre></div></div>
+
+<p>action_form is django.contrib.admin.helpers.ActionForm.</p>
+
+<p>Instead of using Django provided <strong>ActionForm</strong>, we will use a custom form. This form should extend from Django provided ActionForm because we want to retain the functionality provided by Django while adding an additional field of our own.</p>
+
+<p>This form would be:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.contrib.admin.helpers import ActionForm
+
+class UpdateActionForm(ActionForm):
+	price = forms.IntegerField()
+</code></pre></div></div>
+
+<p>Django provides a default action ‘Delete selected’ and this same form would be used for the default action too. So, we should be keeping the <strong>price</strong> field as optional so ‘Delete selected’ functionality keeps working even if we don’t input anything in <strong>price</strong> field.</p>
+
+<p>And we should be setting this form as <strong>action_form</strong> attribute of our ModelAdmin subclass.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class InstrumentAdmin(admin.ModelAdmin):
+	action_form = UpdateActionForm
+</code></pre></div></div>
+
+<p>And this InstrumentAdmin should be used while registering model Instrument with admin.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>admin.site.register(Instrument, InstrumentAdmin)
+</code></pre></div></div>
+
+<p>Final content of instrument/admin.py becomes</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.contrib import admin
+from django.contrib.admin.helpers import ActionForm
+from django import forms
+
+from .models import Instrument
+
+class UpdateActionForm(ActionForm):
+	price = forms.IntegerField(required=False)
+
+class InstrumentAdmin(admin.ModelAdmin):
+	action_form = UpdateActionForm
+
+admin.site.register(Instrument, InstrumentAdmin)
+</code></pre></div></div>
+
+<p>With this your action form would contain a <strong>Price</strong> field. Verify it on Instrument changelist page.</p>
+
+<p><img src="http://agiliq.com/dumps/images/20140806/added-price-field.png" style="width: 443px;" /></p>
+
+<p>Confirm that you are still able to delete rows using ‘Delete selected instruments’ action without the Price fields interfering with the existing functionality.</p>
+
+<p>If you have written Django actions earlier, writing the function to handle our action should be a no brainer.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def update_price(modeladmin, request, queryset):
+	price = request.POST['price']
+	price = int(price)
+	queryset.update(price=price)
+update_price.short_description = 'Update price of selected rows'
+</code></pre></div></div>
+
+<p>And add it as <strong>actions</strong> of InstrumentAdmin.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class InstrumentAdmin(admin.ModelAdmin):
+	action_form = UpdateActionForm
+	actions = [update_price]
+</code></pre></div></div>
+
+<p>With this you should get ‘Update price of selected rows’ in actions dropdown.</p>
+
+<p><img src="http://agiliq.com/dumps/images/20140806/update-price-in-dropdown.png" style="width: 443px;" /></p>
+
+<p>You might argue, why did we use request.POST to get the price and not use action_form.cleaned_data. Have some patience, I will answer that.</p>
+
+<p>Now try selecting some rows and input a price in the form and verify if your code works properly. It must work.</p>
+
+<p><img src="http://agiliq.com/dumps/images/20140806/input-update-price.png" style="width: 443px;" /></p>
+
+<p>We used request.POST and not action_form.cleaned_data because we don’t have access to the instance of action_form, i.e instance of UpdateActionForm, in any way inside function update_price. If we try modeladmin.action_form, it will return us class UpdateActionForm and not instance of UpdateActionForm</p>
+
+<p>We can make update_price better by showing a message after the instances’ price has been updated.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def update_price(modeladmin, request, queryset):
+	price = request.POST['price']
+	price = int(price)
+	queryset.update(price=price)
+	modeladmin.message_user(request, ("Successfully updated price for %d rows") % (queryset.count(),), messages.SUCCESS)
+</code></pre></div></div>
+
+<p>For message to display, Django message framework should be enabled. It is enabled by default, so unless you have played with settings.py, message will just work.</p>
+
+
+  </div><a class="u-url" href="/django/2014/08/05/passing-parameters-to-django-admin-action.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

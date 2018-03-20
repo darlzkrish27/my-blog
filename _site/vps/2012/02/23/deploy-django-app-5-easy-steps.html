@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Deploy Django App in 5 Easy Steps | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Deploy Django App in 5 Easy Steps" />
+<meta name="author" content="saket" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="So you just bought a new VPS, have installed Ubuntu and want to deploy your django app, GREAT!! We shall get your app, up and running in 5 easy steps, using best(arguably) of tools available. The post is targeted to audience who are new to deployment arena, but assumes you are comfortable with developing basic django apps. We shall be using gunicorn as our server and nginx nginx as our reverse proxy and static hanlder. Here we go: 1. Login and OS Updation: $ ssh root@{your_ip} # apt-get update # apt-get upgrade # apt-get dist-upgrade # dpkg-reconfigure tzdata #choose your time zone 2. Setup Users and Permissions: # useradd agiliq # mkdir /home/agiliq # chown agiliq:agiliq /home/agiliq # passwd agiliq #choose a password # chsh agiliq -s /bin/bash #choose a shell # visudo #lets give sudo access to the user agiliq root ALL=(ALL) ALL agiliq ALL=(ALL) ALL # su agiliq # switch from root to agiliq 3. Install necessary stuff and create a dev environment: $ sudo apt-get install python-pip git mysql-client mysql-server $ python-mysqldb nginx emacs(you might choose vim or stick to default vi/nano) $ pip install virtualenv #please refer to documentation of virtualenv $ virtualenv projhq # creates a project directory, $ cd projhq $ projhq source /bin/activate (projhq)$ pip install django gunicorn 4. Deploy some code for test you may clone this polls application for the sake of testing $ cd ~/projhq #your project directory (projhq)$ git clone git://github.com/bitaVersion/Hello-Django.git 5. Necessary Configurations i) nginx $ cd /etc/nginx/sites-enabled/ $ touch nginx.conf and inside the file place the following snippet, make sure to change your servername, username and static files directory. server { listen 80; server_name “your server name”; access_log /home/username/access.log; error_log /home/username/error.log; location /static { root /home/path_to_proj_directory_containing static_files; } location / { proxy_pass http://127.0.0.1:8000; } } ii)gunicorn configuration cd into project directory/app touch gunicorn_cfg.py place the following snippet: bind = &quot;127.0.0.1:8000&quot; logfile = &quot;/var/log/gunicorn.log&quot; workers = 3 pid = projhq/pid/gunicorn.pid iii)server restart script make a directory called scripts parallel to project root and place the following snippet in some file(i name start.sh): PROJDIR=&quot;/path/to/proj/&quot; #directory which contains settings.py PIDFILE=&quot;$PROJDIR/pid/gunicorn.pid&quot; #create a directory called pid inside projdir cd $PROJDIR source /path/to/bin/activate if [ -f $PIDFILE ]; then kill `cat -- $PIDFILE` rm -f -- $PIDFILE fi gunicorn_django -c path_to_gunicorn_file/gunicorn_cfg.py Few checks if you have missed them: create mysql db: create a database with the name matching your settings.py Start nginx: sudo service nginx restart Start server: go to scripts directory: chmod +x start.sh(only for the first time) bash start.sh The above post was a general introduction of how you can begin using lightweight yet scalable tools, in the next post we shall be talking about tools as fabric, supervisor and Monit, which makes things far easier and more secure. Experienced admins can point out flaws in the approach and suggest improvements." />
+<meta property="og:description" content="So you just bought a new VPS, have installed Ubuntu and want to deploy your django app, GREAT!! We shall get your app, up and running in 5 easy steps, using best(arguably) of tools available. The post is targeted to audience who are new to deployment arena, but assumes you are comfortable with developing basic django apps. We shall be using gunicorn as our server and nginx nginx as our reverse proxy and static hanlder. Here we go: 1. Login and OS Updation: $ ssh root@{your_ip} # apt-get update # apt-get upgrade # apt-get dist-upgrade # dpkg-reconfigure tzdata #choose your time zone 2. Setup Users and Permissions: # useradd agiliq # mkdir /home/agiliq # chown agiliq:agiliq /home/agiliq # passwd agiliq #choose a password # chsh agiliq -s /bin/bash #choose a shell # visudo #lets give sudo access to the user agiliq root ALL=(ALL) ALL agiliq ALL=(ALL) ALL # su agiliq # switch from root to agiliq 3. Install necessary stuff and create a dev environment: $ sudo apt-get install python-pip git mysql-client mysql-server $ python-mysqldb nginx emacs(you might choose vim or stick to default vi/nano) $ pip install virtualenv #please refer to documentation of virtualenv $ virtualenv projhq # creates a project directory, $ cd projhq $ projhq source /bin/activate (projhq)$ pip install django gunicorn 4. Deploy some code for test you may clone this polls application for the sake of testing $ cd ~/projhq #your project directory (projhq)$ git clone git://github.com/bitaVersion/Hello-Django.git 5. Necessary Configurations i) nginx $ cd /etc/nginx/sites-enabled/ $ touch nginx.conf and inside the file place the following snippet, make sure to change your servername, username and static files directory. server { listen 80; server_name “your server name”; access_log /home/username/access.log; error_log /home/username/error.log; location /static { root /home/path_to_proj_directory_containing static_files; } location / { proxy_pass http://127.0.0.1:8000; } } ii)gunicorn configuration cd into project directory/app touch gunicorn_cfg.py place the following snippet: bind = &quot;127.0.0.1:8000&quot; logfile = &quot;/var/log/gunicorn.log&quot; workers = 3 pid = projhq/pid/gunicorn.pid iii)server restart script make a directory called scripts parallel to project root and place the following snippet in some file(i name start.sh): PROJDIR=&quot;/path/to/proj/&quot; #directory which contains settings.py PIDFILE=&quot;$PROJDIR/pid/gunicorn.pid&quot; #create a directory called pid inside projdir cd $PROJDIR source /path/to/bin/activate if [ -f $PIDFILE ]; then kill `cat -- $PIDFILE` rm -f -- $PIDFILE fi gunicorn_django -c path_to_gunicorn_file/gunicorn_cfg.py Few checks if you have missed them: create mysql db: create a database with the name matching your settings.py Start nginx: sudo service nginx restart Start server: go to scripts directory: chmod +x start.sh(only for the first time) bash start.sh The above post was a general introduction of how you can begin using lightweight yet scalable tools, in the next post we shall be talking about tools as fabric, supervisor and Monit, which makes things far easier and more secure. Experienced admins can point out flaws in the approach and suggest improvements." />
+<link rel="canonical" href="http://localhost:4000/vps/2012/02/23/deploy-django-app-5-easy-steps.html" />
+<meta property="og:url" content="http://localhost:4000/vps/2012/02/23/deploy-django-app-5-easy-steps.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2012-02-23T04:59:50+05:30" />
+<script type="application/ld+json">
+{"description":"So you just bought a new VPS, have installed Ubuntu and want to deploy your django app, GREAT!! We shall get your app, up and running in 5 easy steps, using best(arguably) of tools available. The post is targeted to audience who are new to deployment arena, but assumes you are comfortable with developing basic django apps. We shall be using gunicorn as our server and nginx nginx as our reverse proxy and static hanlder. Here we go: 1. Login and OS Updation: $ ssh root@{your_ip} # apt-get update # apt-get upgrade # apt-get dist-upgrade # dpkg-reconfigure tzdata #choose your time zone 2. Setup Users and Permissions: # useradd agiliq # mkdir /home/agiliq # chown agiliq:agiliq /home/agiliq # passwd agiliq #choose a password # chsh agiliq -s /bin/bash #choose a shell # visudo #lets give sudo access to the user agiliq root ALL=(ALL) ALL agiliq ALL=(ALL) ALL # su agiliq # switch from root to agiliq 3. Install necessary stuff and create a dev environment: $ sudo apt-get install python-pip git mysql-client mysql-server $ python-mysqldb nginx emacs(you might choose vim or stick to default vi/nano) $ pip install virtualenv #please refer to documentation of virtualenv $ virtualenv projhq # creates a project directory, $ cd projhq $ projhq source /bin/activate (projhq)$ pip install django gunicorn 4. Deploy some code for test you may clone this polls application for the sake of testing $ cd ~/projhq #your project directory (projhq)$ git clone git://github.com/bitaVersion/Hello-Django.git 5. Necessary Configurations i) nginx $ cd /etc/nginx/sites-enabled/ $ touch nginx.conf and inside the file place the following snippet, make sure to change your servername, username and static files directory. server { listen 80; server_name “your server name”; access_log /home/username/access.log; error_log /home/username/error.log; location /static { root /home/path_to_proj_directory_containing static_files; } location / { proxy_pass http://127.0.0.1:8000; } } ii)gunicorn configuration cd into project directory/app touch gunicorn_cfg.py place the following snippet: bind = &quot;127.0.0.1:8000&quot; logfile = &quot;/var/log/gunicorn.log&quot; workers = 3 pid = projhq/pid/gunicorn.pid iii)server restart script make a directory called scripts parallel to project root and place the following snippet in some file(i name start.sh): PROJDIR=&quot;/path/to/proj/&quot; #directory which contains settings.py PIDFILE=&quot;$PROJDIR/pid/gunicorn.pid&quot; #create a directory called pid inside projdir cd $PROJDIR source /path/to/bin/activate if [ -f $PIDFILE ]; then kill `cat -- $PIDFILE` rm -f -- $PIDFILE fi gunicorn_django -c path_to_gunicorn_file/gunicorn_cfg.py Few checks if you have missed them: create mysql db: create a database with the name matching your settings.py Start nginx: sudo service nginx restart Start server: go to scripts directory: chmod +x start.sh(only for the first time) bash start.sh The above post was a general introduction of how you can begin using lightweight yet scalable tools, in the next post we shall be talking about tools as fabric, supervisor and Monit, which makes things far easier and more secure. Experienced admins can point out flaws in the approach and suggest improvements.","author":{"@type":"Person","name":"saket"},"@type":"BlogPosting","url":"http://localhost:4000/vps/2012/02/23/deploy-django-app-5-easy-steps.html","headline":"Deploy Django App in 5 Easy Steps","dateModified":"2012-02-23T04:59:50+05:30","datePublished":"2012-02-23T04:59:50+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/vps/2012/02/23/deploy-django-app-5-easy-steps.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Deploy Django App in 5 Easy Steps</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2012-02-23T04:59:50+05:30" itemprop="datePublished">Feb 23, 2012
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">saket</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>So you just bought a new VPS, have installed <a href="http://www.ubuntu.com/">Ubuntu</a> and want to deploy
+your <a href="www.djangoproject.com">django</a> app, GREAT!! We shall get your app, up and running in 5 easy steps, using best(arguably) of tools available. The post is targeted to audience who are new to deployment arena, but assumes you are comfortable with developing basic django apps. We shall be using <a href="http://gunicorn.org/">gunicorn</a> as our server and <a href="http://nginx.org/en/">nginx</a> nginx as our reverse proxy and static hanlder. Here we go:</p>
+
+<h3 id="1-login-and-os-updation">1. Login and OS Updation:</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ssh root@{your_ip}
+
+# apt-get update  
+
+# apt-get upgrade
+
+# apt-get dist-upgrade
+
+# dpkg-reconfigure tzdata #choose your time zone
+</code></pre></div></div>
+
+<h3 id="2-setup-users-and-permissions">2. Setup Users and Permissions:</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># useradd agiliq
+
+# mkdir /home/agiliq
+
+# chown agiliq:agiliq /home/agiliq
+
+# passwd agiliq  #choose a password
+
+# chsh agiliq -s /bin/bash  #choose a shell
+
+# visudo #lets give sudo access to the user agiliq
+
+	root     ALL=(ALL) ALL 
+	agiliq   ALL=(ALL) ALL 
+	
+# su agiliq # switch from root to agiliq
+</code></pre></div></div>
+
+<h3 id="3-install-necessary-stuff-and-create-a-dev-environment">3. Install necessary stuff and create a dev environment:</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo apt-get install python-pip git mysql-client mysql-server  
+
+$ python-mysqldb nginx emacs(you might choose vim or stick to default vi/nano)
+
+$ pip install virtualenv #please refer to documentation of virtualenv
+
+$ virtualenv projhq # creates a project directory, 
+
+$ cd projhq
+
+$ projhq source /bin/activate
+
+(projhq)$ pip install django gunicorn 
+</code></pre></div></div>
+
+<h3 id="4-deploy-some-code-for-test">4. Deploy some code for test</h3>
+
+<p>you may clone this polls application for the sake of testing</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    $ cd ~/projhq #your project directory
+    (projhq)$ git clone git://github.com/bitaVersion/Hello-Django.git
+</code></pre></div></div>
+
+<h3 id="5-necessary-configurations">5. Necessary Configurations</h3>
+
+<h5 id="i-nginx">i) nginx</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    $ cd /etc/nginx/sites-enabled/
+    $ touch nginx.conf
+</code></pre></div></div>
+
+<p>and inside the file place the following snippet, make sure to change your 
+servername, username and static files directory.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+		listen 80;
+		server_name “your server name”;
+		access_log /home/username/access.log;
+		error_log /home/username/error.log;
+		location /static {
+    		root /home/path_to_proj_directory_containing static_files;
+		}
+
+		location / {
+    		proxy_pass http://127.0.0.1:8000;
+		}
+}
+</code></pre></div></div>
+
+<h5 id="iigunicorn-configuration">ii)gunicorn configuration</h5>
+
+<p>cd into project directory/app 
+touch gunicorn_cfg.py 
+place the following snippet:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bind = "127.0.0.1:8000"
+logfile = "/var/log/gunicorn.log"
+workers = 3
+pid = projhq/pid/gunicorn.pid
+</code></pre></div></div>
+
+<h5 id="iiiserver-restart-script">iii)server restart script</h5>
+
+<p>make a directory called scripts parallel to project root
+and place the following snippet in some file(i name start.sh):</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PROJDIR="/path/to/proj/" #directory which contains settings.py
+PIDFILE="$PROJDIR/pid/gunicorn.pid" #create a directory called pid inside projdir
+cd $PROJDIR
+source /path/to/bin/activate
+if [ -f $PIDFILE ]; then
+  		kill `cat -- $PIDFILE`
+  		rm -f -- $PIDFILE
+fi
+gunicorn_django -c path_to_gunicorn_file/gunicorn_cfg.py
+</code></pre></div></div>
+
+<p>Few checks if you have missed them:</p>
+
+<h5 id="create-mysql-db">create mysql db:</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   create a database with the name matching your settings.py 
+</code></pre></div></div>
+
+<h5 id="start-nginx">Start nginx:</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  sudo service nginx restart
+</code></pre></div></div>
+
+<h5 id="start-server">Start server:</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go to scripts directory: 
+chmod +x start.sh(only for the first time)
+bash start.sh 
+</code></pre></div></div>
+
+<p>The above post was a general introduction of how you can begin using lightweight yet scalable tools, in the next post we shall be talking about tools as <a href="http://docs.fabfile.org/en/1.4.0/index.html">fabric</a>, <a href="http://pypi.python.org/pypi/supervisor">supervisor</a> and <a href="http://pypi.python.org/pypi/MonitManager">Monit</a>, which makes things far easier and more secure. Experienced admins can point out flaws in the approach and suggest improvements.</p>
+
+
+  </div><a class="u-url" href="/vps/2012/02/23/deploy-django-app-5-easy-steps.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

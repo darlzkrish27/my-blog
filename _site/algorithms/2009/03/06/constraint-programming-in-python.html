@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Constraint programming in Python | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Constraint programming in Python" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Imagine this, you want to solve a problem, the algorithm for which you do not know. You just know the problem. From wikipedia, Constraints differ from the common primitives of imperative programming languages in that they do not specify a step or sequence of steps to execute, but rather the properties of a solution to be found. Assume that there exists an alternate world where you only need to specify the problem, the computer will find out an algorithm to find it, even better if could you write it in Python. Stop assuming it hapens every day, and this is the magic of constraint programming. Example to solve a + b = 5, a*b=6, don’t explain algebra, just tell the relations between variables. Here is the complete program. from constraint import * problem = Problem() problem.addVariable(&#39;a&#39;, range(5)) problem.addVariable(&#39;b&#39;, range(5)) problem.addConstraint(lambda a, b: a + b == 5) problem.addConstraint(lambda a, b: a * b == 6) problem.getSolutions() Don’t worry if this doesn’t make sense yet, we will explain it in a lot of detail. Also we cheated a little, by assuming that the solutions are positive integers. Files required You need a constraint library, which allows ypu to do constraint programming. python-constraints from Gustavo Niemeyer is an excellent library to do constraint programming, which we will use here. Download and install python-constraint from here. After you setup, you should be able to do import constraint on a python shell On to our program Ok lets see the same program with cpomments. from constraint import * #imports problem = Problem() #Create a blank problem where we can add solutions. problem.addVariable(&#39;a&#39;, range(5+1)) #Add a variable named a, and specify its domain. Since a+b=5, a is a positive integer less than 5 problem.addVariable(&#39;b&#39;, range(5+1)) #Same thing with b problem.addConstraint(lambda a, b: a + b == 5) # Tell the computer that a+b=5 problem.addConstraint(lambda a, b: a * b == 6) #tell the computer that a*b=6 print problem.getSolutions() #We are done, get the solutions. Not much to explain after you see it with comments. We created two variables, and relation between them and got the answer. Ok something better Ok so the last example was cute, but can constraint programming can solve any harder problems? Lets try something harder, like umm, magic square. (How, original!) So lets think, how can we represent our problem. We have a n*n board. Start with 3, So our board is [(0,0), (0,1) …., (2,1), (2,2) Rows have a sum of sum(1 …. n*n+1)/size Cols have a sum of sum(1 …. n*n+1)/size Diagonals have a sum of sum(1 …. n*n+1)/size Thats all, So without further ado, lets see the code. from constraint import * def solve_magic_square(size = 3): &quot;Get the magic square solution for any numbered square.&quot; magic = Problem()#create a blank problem rows = range(size)#Rows indices eg[0, 1, 2] cols = range(size)#cols indices eg [0, 1, 2] board_line_sum = sum(range(1, size*size+1))/size # What does each row, col and diag sum up to? Eg 15, for size 3 board = [(row, col) for row in rows for col in cols] # Cartesan of rows and col, eg [(0, 0), (0, 1), (1, 0), (1, 1)] for size = 2 row_set = [zip([el]*len(cols), cols) for el in rows]#A list of all the rows, eg [[(0, 0), (0, 1)], [(1, 0), (1, 1)]] col_set = [zip(rows, [el]*len(rows)) for el in cols]#A list of all the columns, eg [[(0, 0), (1, 0)], [(0, 1), (1, 1)]] diag1 = zip(rows, cols)#One of the diagonals, eg [(0,0), (0,1)] diag2 = zip(rows, cols[::-1])#Other diagonal, eg [(0,1), (1,0)] magic.addVariables(board, range(1, size*size+1))#add Each block of square as a variable. There range is between [1..n*n+1] magic.addConstraint(ExactSumConstraint(board_line_sum), diag1)#Add diagonals as a constraint, they must sum to board_line_sum magic.addConstraint(ExactSumConstraint(board_line_sum), diag2)#Add other diagonal as constraint. for row in row_set: magic.addConstraint(ExactSumConstraint(board_line_sum), row)#Add each row as constraint, they must sum to board_line_sum for col in col_set: magic.addConstraint(ExactSumConstraint(board_line_sum), col)#Similarly add each column as constraint. magic.addConstraint(AllDifferentConstraint(), board)#Every block has a different number. return magic.getSolution()Retutn the solution. if __name__ == &#39;__main__&#39;: print solve_magic_square() Not much to explain again after you see the commented code. We created a board, added constraints and got solution. Labix has a different implementation if how to solve the magic square. What more can I do? Constraint programming has a wide application, wherever you can specify the problem as relation between variables you can use constraint programming. Next step for you is to write a function, which takes a Sudoku board as input and returns a solved Sudoku board. SO get cracking. Want to build an Amazing Web application? We can help? Contact us today!" />
+<meta property="og:description" content="Imagine this, you want to solve a problem, the algorithm for which you do not know. You just know the problem. From wikipedia, Constraints differ from the common primitives of imperative programming languages in that they do not specify a step or sequence of steps to execute, but rather the properties of a solution to be found. Assume that there exists an alternate world where you only need to specify the problem, the computer will find out an algorithm to find it, even better if could you write it in Python. Stop assuming it hapens every day, and this is the magic of constraint programming. Example to solve a + b = 5, a*b=6, don’t explain algebra, just tell the relations between variables. Here is the complete program. from constraint import * problem = Problem() problem.addVariable(&#39;a&#39;, range(5)) problem.addVariable(&#39;b&#39;, range(5)) problem.addConstraint(lambda a, b: a + b == 5) problem.addConstraint(lambda a, b: a * b == 6) problem.getSolutions() Don’t worry if this doesn’t make sense yet, we will explain it in a lot of detail. Also we cheated a little, by assuming that the solutions are positive integers. Files required You need a constraint library, which allows ypu to do constraint programming. python-constraints from Gustavo Niemeyer is an excellent library to do constraint programming, which we will use here. Download and install python-constraint from here. After you setup, you should be able to do import constraint on a python shell On to our program Ok lets see the same program with cpomments. from constraint import * #imports problem = Problem() #Create a blank problem where we can add solutions. problem.addVariable(&#39;a&#39;, range(5+1)) #Add a variable named a, and specify its domain. Since a+b=5, a is a positive integer less than 5 problem.addVariable(&#39;b&#39;, range(5+1)) #Same thing with b problem.addConstraint(lambda a, b: a + b == 5) # Tell the computer that a+b=5 problem.addConstraint(lambda a, b: a * b == 6) #tell the computer that a*b=6 print problem.getSolutions() #We are done, get the solutions. Not much to explain after you see it with comments. We created two variables, and relation between them and got the answer. Ok something better Ok so the last example was cute, but can constraint programming can solve any harder problems? Lets try something harder, like umm, magic square. (How, original!) So lets think, how can we represent our problem. We have a n*n board. Start with 3, So our board is [(0,0), (0,1) …., (2,1), (2,2) Rows have a sum of sum(1 …. n*n+1)/size Cols have a sum of sum(1 …. n*n+1)/size Diagonals have a sum of sum(1 …. n*n+1)/size Thats all, So without further ado, lets see the code. from constraint import * def solve_magic_square(size = 3): &quot;Get the magic square solution for any numbered square.&quot; magic = Problem()#create a blank problem rows = range(size)#Rows indices eg[0, 1, 2] cols = range(size)#cols indices eg [0, 1, 2] board_line_sum = sum(range(1, size*size+1))/size # What does each row, col and diag sum up to? Eg 15, for size 3 board = [(row, col) for row in rows for col in cols] # Cartesan of rows and col, eg [(0, 0), (0, 1), (1, 0), (1, 1)] for size = 2 row_set = [zip([el]*len(cols), cols) for el in rows]#A list of all the rows, eg [[(0, 0), (0, 1)], [(1, 0), (1, 1)]] col_set = [zip(rows, [el]*len(rows)) for el in cols]#A list of all the columns, eg [[(0, 0), (1, 0)], [(0, 1), (1, 1)]] diag1 = zip(rows, cols)#One of the diagonals, eg [(0,0), (0,1)] diag2 = zip(rows, cols[::-1])#Other diagonal, eg [(0,1), (1,0)] magic.addVariables(board, range(1, size*size+1))#add Each block of square as a variable. There range is between [1..n*n+1] magic.addConstraint(ExactSumConstraint(board_line_sum), diag1)#Add diagonals as a constraint, they must sum to board_line_sum magic.addConstraint(ExactSumConstraint(board_line_sum), diag2)#Add other diagonal as constraint. for row in row_set: magic.addConstraint(ExactSumConstraint(board_line_sum), row)#Add each row as constraint, they must sum to board_line_sum for col in col_set: magic.addConstraint(ExactSumConstraint(board_line_sum), col)#Similarly add each column as constraint. magic.addConstraint(AllDifferentConstraint(), board)#Every block has a different number. return magic.getSolution()Retutn the solution. if __name__ == &#39;__main__&#39;: print solve_magic_square() Not much to explain again after you see the commented code. We created a board, added constraints and got solution. Labix has a different implementation if how to solve the magic square. What more can I do? Constraint programming has a wide application, wherever you can specify the problem as relation between variables you can use constraint programming. Next step for you is to write a function, which takes a Sudoku board as input and returns a solved Sudoku board. SO get cracking. Want to build an Amazing Web application? We can help? Contact us today!" />
+<link rel="canonical" href="http://localhost:4000/algorithms/2009/03/06/constraint-programming-in-python.html" />
+<meta property="og:url" content="http://localhost:4000/algorithms/2009/03/06/constraint-programming-in-python.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-03-06T18:47:53+05:30" />
+<script type="application/ld+json">
+{"description":"Imagine this, you want to solve a problem, the algorithm for which you do not know. You just know the problem. From wikipedia, Constraints differ from the common primitives of imperative programming languages in that they do not specify a step or sequence of steps to execute, but rather the properties of a solution to be found. Assume that there exists an alternate world where you only need to specify the problem, the computer will find out an algorithm to find it, even better if could you write it in Python. Stop assuming it hapens every day, and this is the magic of constraint programming. Example to solve a + b = 5, a*b=6, don’t explain algebra, just tell the relations between variables. Here is the complete program. from constraint import * problem = Problem() problem.addVariable(&#39;a&#39;, range(5)) problem.addVariable(&#39;b&#39;, range(5)) problem.addConstraint(lambda a, b: a + b == 5) problem.addConstraint(lambda a, b: a * b == 6) problem.getSolutions() Don’t worry if this doesn’t make sense yet, we will explain it in a lot of detail. Also we cheated a little, by assuming that the solutions are positive integers. Files required You need a constraint library, which allows ypu to do constraint programming. python-constraints from Gustavo Niemeyer is an excellent library to do constraint programming, which we will use here. Download and install python-constraint from here. After you setup, you should be able to do import constraint on a python shell On to our program Ok lets see the same program with cpomments. from constraint import * #imports problem = Problem() #Create a blank problem where we can add solutions. problem.addVariable(&#39;a&#39;, range(5+1)) #Add a variable named a, and specify its domain. Since a+b=5, a is a positive integer less than 5 problem.addVariable(&#39;b&#39;, range(5+1)) #Same thing with b problem.addConstraint(lambda a, b: a + b == 5) # Tell the computer that a+b=5 problem.addConstraint(lambda a, b: a * b == 6) #tell the computer that a*b=6 print problem.getSolutions() #We are done, get the solutions. Not much to explain after you see it with comments. We created two variables, and relation between them and got the answer. Ok something better Ok so the last example was cute, but can constraint programming can solve any harder problems? Lets try something harder, like umm, magic square. (How, original!) So lets think, how can we represent our problem. We have a n*n board. Start with 3, So our board is [(0,0), (0,1) …., (2,1), (2,2) Rows have a sum of sum(1 …. n*n+1)/size Cols have a sum of sum(1 …. n*n+1)/size Diagonals have a sum of sum(1 …. n*n+1)/size Thats all, So without further ado, lets see the code. from constraint import * def solve_magic_square(size = 3): &quot;Get the magic square solution for any numbered square.&quot; magic = Problem()#create a blank problem rows = range(size)#Rows indices eg[0, 1, 2] cols = range(size)#cols indices eg [0, 1, 2] board_line_sum = sum(range(1, size*size+1))/size # What does each row, col and diag sum up to? Eg 15, for size 3 board = [(row, col) for row in rows for col in cols] # Cartesan of rows and col, eg [(0, 0), (0, 1), (1, 0), (1, 1)] for size = 2 row_set = [zip([el]*len(cols), cols) for el in rows]#A list of all the rows, eg [[(0, 0), (0, 1)], [(1, 0), (1, 1)]] col_set = [zip(rows, [el]*len(rows)) for el in cols]#A list of all the columns, eg [[(0, 0), (1, 0)], [(0, 1), (1, 1)]] diag1 = zip(rows, cols)#One of the diagonals, eg [(0,0), (0,1)] diag2 = zip(rows, cols[::-1])#Other diagonal, eg [(0,1), (1,0)] magic.addVariables(board, range(1, size*size+1))#add Each block of square as a variable. There range is between [1..n*n+1] magic.addConstraint(ExactSumConstraint(board_line_sum), diag1)#Add diagonals as a constraint, they must sum to board_line_sum magic.addConstraint(ExactSumConstraint(board_line_sum), diag2)#Add other diagonal as constraint. for row in row_set: magic.addConstraint(ExactSumConstraint(board_line_sum), row)#Add each row as constraint, they must sum to board_line_sum for col in col_set: magic.addConstraint(ExactSumConstraint(board_line_sum), col)#Similarly add each column as constraint. magic.addConstraint(AllDifferentConstraint(), board)#Every block has a different number. return magic.getSolution()Retutn the solution. if __name__ == &#39;__main__&#39;: print solve_magic_square() Not much to explain again after you see the commented code. We created a board, added constraints and got solution. Labix has a different implementation if how to solve the magic square. What more can I do? Constraint programming has a wide application, wherever you can specify the problem as relation between variables you can use constraint programming. Next step for you is to write a function, which takes a Sudoku board as input and returns a solved Sudoku board. SO get cracking. Want to build an Amazing Web application? We can help? Contact us today!","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/algorithms/2009/03/06/constraint-programming-in-python.html","headline":"Constraint programming in Python","dateModified":"2009-03-06T18:47:53+05:30","datePublished":"2009-03-06T18:47:53+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/algorithms/2009/03/06/constraint-programming-in-python.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Constraint programming in Python</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-03-06T18:47:53+05:30" itemprop="datePublished">Mar 6, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Imagine this, you want to solve a problem, the algorithm for which you do not know. You just know the problem.</p>
+
+<p>From wikipedia,<br />
+    <code class="highlighter-rouge">Constraints differ from the common primitives of imperative programming languages in that they do not specify a step or sequence of steps to execute, but rather the properties of a solution to be found.</code></p>
+
+<p>Assume that there exists an alternate world where you only need to specify the problem, the computer will find out 
+an algorithm to find it, even better if could you write it in Python.</p>
+
+<p>Stop assuming it hapens every day, and this is the magic of constraint programming.</p>
+
+<p>Example to solve  a + b = 5, a*b=6, don’t explain algebra, just tell the relations between variables. Here is the complete program.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from constraint import *
+problem = Problem()
+problem.addVariable('a', range(5))
+problem.addVariable('b', range(5))
+problem.addConstraint(lambda a, b: a + b == 5)
+problem.addConstraint(lambda a, b: a * b == 6)
+problem.getSolutions()
+</code></pre></div></div>
+
+<p>Don’t worry if this doesn’t make sense yet, we will explain it in a lot of detail. Also we cheated a little, by assuming that the solutions are positive integers.</p>
+
+<h2 id="files-required">Files required</h2>
+
+<p>You need a constraint library, which allows ypu to do constraint programming. <a href="http://labix.org/python-constraint">python-constraints</a> from <a href="http://labix.org/">Gustavo Niemeyer</a> is an excellent library to do constraint programming, which we will use here. Download and install python-constraint from <a href="http://labix.org/python-constraint">here</a>.</p>
+
+<p>After you setup, you should be able to do <code class="highlighter-rouge">import constraint</code> on a python shell</p>
+
+<h2 id="on-to-our-program">On to our program</h2>
+
+<p>Ok lets see the same program with cpomments.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from constraint import * #imports
+problem = Problem()  #Create a blank problem where we can add solutions.
+problem.addVariable('a', range(5+1)) #Add a variable named a, and specify its domain. Since a+b=5, a is a positive integer less than 5
+problem.addVariable('b', range(5+1)) #Same thing with b
+problem.addConstraint(lambda a, b: a + b == 5) # Tell the computer that a+b=5
+problem.addConstraint(lambda a, b: a * b == 6) #tell the computer that a*b=6
+print problem.getSolutions() #We are done, get the solutions.
+</code></pre></div></div>
+
+<p>Not much to explain after you see it with comments. We created two variables, and relation between them and got the answer.</p>
+
+<h2 id="ok-something-better">Ok something better</h2>
+
+<p>Ok so the last example was cute, but can constraint programming can solve any harder problems? Lets try something harder, like umm, magic square. (How, original!)</p>
+
+<p>So lets think, how can we represent our problem.</p>
+
+<ol>
+  <li>We have a n*n board. Start with 3, So our board is [(0,0), (0,1) …., (2,1), (2,2)</li>
+  <li>Rows have a sum of sum(1 …. n*n+1)/size</li>
+  <li>Cols have a sum of sum(1 …. n*n+1)/size</li>
+  <li>Diagonals have a sum of sum(1 …. n*n+1)/size</li>
+  <li>Thats all,</li>
+</ol>
+
+<p>So without further ado, lets see the code.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from constraint import *
+
+def solve_magic_square(size = 3):
+            "Get the magic square solution for any numbered square."
+	magic = Problem()#create a blank problem
+	rows = range(size)#Rows indices eg[0, 1, 2]
+	cols = range(size)#cols indices eg [0, 1, 2]
+	board_line_sum = sum(range(1, size*size+1))/size # What does each row, col and diag sum up to? Eg 15, for size 3
+	board = [(row, col) for row in rows for col in cols] # Cartesan of rows and col, eg [(0, 0), (0, 1), (1, 0), (1, 1)] for size = 2
+	row_set = [zip([el]*len(cols), cols) for el in rows]#A list of all the rows, eg [[(0, 0), (0, 1)], [(1, 0), (1, 1)]]
+	col_set = [zip(rows, [el]*len(rows)) for el in cols]#A list of all the columns, eg [[(0, 0), (1, 0)], [(0, 1), (1, 1)]]
+	diag1 = zip(rows, cols)#One of the diagonals, eg [(0,0), (0,1)]
+	diag2 = zip(rows, cols[::-1])#Other diagonal, eg [(0,1), (1,0)]
+
+	magic.addVariables(board, range(1, size*size+1))#add Each block of square as a variable. There range is between [1..n*n+1]
+	magic.addConstraint(ExactSumConstraint(board_line_sum), diag1)#Add diagonals as a constraint, they must sum to board_line_sum
+	magic.addConstraint(ExactSumConstraint(board_line_sum), diag2)#Add other diagonal as constraint.
+	for row in row_set:
+	    magic.addConstraint(ExactSumConstraint(board_line_sum), row)#Add each row as constraint, they must sum to board_line_sum
+	for col in col_set:
+	    magic.addConstraint(ExactSumConstraint(board_line_sum), col)#Similarly add each column as constraint.
+	magic.addConstraint(AllDifferentConstraint(), board)#Every block has a different number.
+	return magic.getSolution()Retutn the solution.
+
+if __name__ == '__main__':
+    print solve_magic_square()
+</code></pre></div></div>
+
+<p>Not much to explain again after you see the commented code. We created a board, added constraints and got solution.</p>
+
+<p><a href="http://labix.org/python-constraint">Labix</a> has a different implementation if how to solve the magic square.</p>
+
+<h2 id="what-more-can-i-do">What more can I do?</h2>
+<p>Constraint programming has a wide application, wherever you can specify the problem as relation between variables you can use constraint programming. Next step for you is to write a function, which takes a Sudoku board as input and returns a solved Sudoku board. SO get cracking.</p>
+
+<hr />
+
+<p>Want to build an <a href="http://www.uswaretech.com/">Amazing Web application</a>? We can help? <a href="http://www.uswaretech.com/contact/">Contact us today</a>!</p>
+
+
+  </div><a class="u-url" href="/algorithms/2009/03/06/constraint-programming-in-python.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

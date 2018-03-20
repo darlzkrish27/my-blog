@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Python-requests | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Python-requests" />
+<meta name="author" content="Rakesh" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="When we want to fetch internet resources we tend to use urllib2 but when dealing with “HTTP basic Auth” urllib2 is pretty unintuitive and painful. We can use urllib2.urlopen() to open the URL which can be a string or a request object, but the factor of the matter is that implementing anything beyond that is a bit troublesome. Wouldn’t it be a delightment, if we can use the GET, POST, PUT, DELETE with a single function call with the URL and auth data as parameters? So Python-requests brings this delightment to life by extending the HTTP capabilities. Python-requests Module The Requests module is a an elegant and simple HTTP library for Python. It’s HTTP for Humans. Python-requests take all of the work out of Python HTTP/1.1 making our integaration with web services seamless. There will be no need to manually add query strings to our URLs, or to form-encode our POST data. Efficiency of Python-requests Python-requests allows us to send HTTP/1.1 requests. We can add headers, form data, multipart files and parameters with simple Python dictionaries and also we can access the response data in the same way. Python-requests is the perfect module if we want to repeatedly interact with a RESTful API. Example for urllib2 vs requests If we try to fetch data with urllib2 the code would look like: #!/usr/bin/env python # -*- coding: utf-8 -*- import urllib2 gh_url = &#39;https://api.github.com&#39; req = urllib2.Request(gh_url) password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm() password_manager.add_password(None, gh_url, &#39;user&#39;, &#39;pass&#39;) auth_manager = urllib2.HTTPBasicAuthHandler(password_manager) opener = urllib2.build_opener(auth_manager) urllib2.install_opener(opener) handler = urllib2.urlopen(req) print handler.getcode() print handler.headers.getheader(&#39;content-type&#39;) The same functionality implemented by Python-requests looks like: #!/usr/bin/env python # -*- coding: utf-8 -*- import requests r = requests.get(&#39;https://api.github.com&#39;, auth=(&#39;user&#39;, &#39;pass&#39;)) print r.status_code print r.headers[&#39;content-type&#39;] The above code shows how simple the code turns to if we use Python-requests. Module installation: To install requests, simply: `pip install requests` Or, if you absolutely must: `easy_install requests` Procedure: To make a request Example request to let us get GitHub’s public timeline import requests r = requests.get(&#39;https://github.com/timeline.json&#39;) Response object ‘r’ helps to get all the information we need from the object. To make a POST request: r = requests.post(“http://httpbin.org/post”) We can use the other HTTP request types: PUT, DELETE, HEAD and OPTIONS in the same way: r = requests.put(&quot;http://httpbin.org/put&quot;) r = requests.delete(&quot;http://httpbin.org/delete&quot;) r = requests.head(&quot;http://httpbin.org/get&quot;) r = requests.options(&quot;http://httpbin.org/get&quot;) Reading the response content: Let’s consider the GitHub timeline: import requests r = requests.get(&#39;https://github.com/timeline.json&#39;) r.text &#39;[{&quot;repository&quot;:{&quot;open_issues&quot;:0,&quot;url&quot;:&quot;https://github.com/... Requests will automatically decode content from the server. We can also find out what encoding Requests, by using the r.encoding property: r.encoding &#39;utf-8&#39; Passing parameters in Urls: If you wanted to pass key1=value1 and key2=value2 to httpbin.org/get we can do it with the following code: payload = {&#39;key1&#39;: &#39;value1&#39;, &#39;key2&#39;: &#39;value2&#39;} r = requests.get(&quot;http://httpbin.org/get&quot;, params=payload) Dealing with Binary Response Content We can also access the response body as bytes, for non-text requests. &gt;&gt;&gt; r.content b&#39;[{&quot;repository&quot;:{&quot;open_issues&quot;:0,&quot;url&quot;:&quot;https://github.com/... Dealing with JSON Response Content: There’s also a builtin JSON decoder, in case we are dealing with JSON data: &gt;&gt;&gt; import requests &gt;&gt;&gt; r = requests.get(&#39;https://github.com/timeline.json&#39;) &gt;&gt;&gt; r.json [{u&#39;repository&#39;: {u&#39;open_issues&#39;: 0, u&#39;url&#39;: &#39;https://github.com/... Dealing with Response Headers: We can view the server’s response headers using a Python dictionary: `r.headers` Authentication While trying to fetch resources from webservices many of them expect us to undergo authentication. There are many types of authentication, but the most common is HTTP Basic Authentication. Basic Authentication Here is an example to make requests with Basic Authentication. from requests.auth import HTTPBasicAuth requests.get(&#39;https://api.github.com/user&#39;, auth=HTTPBasicAuth(&#39;user&#39;, &#39;pass&#39;)) # Due to the prevalence of HTTP Basic Auth, # requests provides a shorthand for this authentication method: requests.get(&#39;https://api.github.com/user&#39;, auth=(&#39;user&#39;, &#39;pass&#39;)) Digest Authentication: Another very popular form of HTTP Authentication. from requests.auth import HTTPDigestAuth url = &#39;http://httpbin.org/digest-auth/auth/user/pass&#39; requests.get(url, auth=HTTPDigestAuth(&#39;user&#39;, &#39;pass&#39;)) OAuth 1 Authentication A common form of authentication for several web APIs is OAuth. The requests-oauthlib library allows Requests users to easily make OAuth authenticated requests: import requests from requests_oauthlib import OAuth1 url = &#39;https://api.twitter.com/1.1/account/verify_credentials.json&#39; auth = OAuth1(&#39;YOUR_APP_KEY&#39;, &#39;YOUR_APP_SECRET&#39;, &#39;USER_OAUTH_TOKEN&#39;, &#39;USER_OAUTH_TOKEN_SECRET&#39;) requests.get(url, auth=auth) Timeouts We can tell requests to stop waiting after a given number of seconds with timeout parameter: `requests.get(&#39;http://github.com&#39;, timeout=0.001)` Errors and Exceptions If there is any network problem (e.g. DNS failure, refused connection, etc), Requests will raise a ConnectionError exception and in the event of the rare invalid HTTP response, Requests will raise an HTTPError exception. If a request times out, a Timeout exception is raised. If a request exceeds the configured number of maximum redirections, a TooManyRedirects exception is raised. All exceptions that Requests explicitly raises inherit from “requests.exceptions.RequestException”." />
+<meta property="og:description" content="When we want to fetch internet resources we tend to use urllib2 but when dealing with “HTTP basic Auth” urllib2 is pretty unintuitive and painful. We can use urllib2.urlopen() to open the URL which can be a string or a request object, but the factor of the matter is that implementing anything beyond that is a bit troublesome. Wouldn’t it be a delightment, if we can use the GET, POST, PUT, DELETE with a single function call with the URL and auth data as parameters? So Python-requests brings this delightment to life by extending the HTTP capabilities. Python-requests Module The Requests module is a an elegant and simple HTTP library for Python. It’s HTTP for Humans. Python-requests take all of the work out of Python HTTP/1.1 making our integaration with web services seamless. There will be no need to manually add query strings to our URLs, or to form-encode our POST data. Efficiency of Python-requests Python-requests allows us to send HTTP/1.1 requests. We can add headers, form data, multipart files and parameters with simple Python dictionaries and also we can access the response data in the same way. Python-requests is the perfect module if we want to repeatedly interact with a RESTful API. Example for urllib2 vs requests If we try to fetch data with urllib2 the code would look like: #!/usr/bin/env python # -*- coding: utf-8 -*- import urllib2 gh_url = &#39;https://api.github.com&#39; req = urllib2.Request(gh_url) password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm() password_manager.add_password(None, gh_url, &#39;user&#39;, &#39;pass&#39;) auth_manager = urllib2.HTTPBasicAuthHandler(password_manager) opener = urllib2.build_opener(auth_manager) urllib2.install_opener(opener) handler = urllib2.urlopen(req) print handler.getcode() print handler.headers.getheader(&#39;content-type&#39;) The same functionality implemented by Python-requests looks like: #!/usr/bin/env python # -*- coding: utf-8 -*- import requests r = requests.get(&#39;https://api.github.com&#39;, auth=(&#39;user&#39;, &#39;pass&#39;)) print r.status_code print r.headers[&#39;content-type&#39;] The above code shows how simple the code turns to if we use Python-requests. Module installation: To install requests, simply: `pip install requests` Or, if you absolutely must: `easy_install requests` Procedure: To make a request Example request to let us get GitHub’s public timeline import requests r = requests.get(&#39;https://github.com/timeline.json&#39;) Response object ‘r’ helps to get all the information we need from the object. To make a POST request: r = requests.post(“http://httpbin.org/post”) We can use the other HTTP request types: PUT, DELETE, HEAD and OPTIONS in the same way: r = requests.put(&quot;http://httpbin.org/put&quot;) r = requests.delete(&quot;http://httpbin.org/delete&quot;) r = requests.head(&quot;http://httpbin.org/get&quot;) r = requests.options(&quot;http://httpbin.org/get&quot;) Reading the response content: Let’s consider the GitHub timeline: import requests r = requests.get(&#39;https://github.com/timeline.json&#39;) r.text &#39;[{&quot;repository&quot;:{&quot;open_issues&quot;:0,&quot;url&quot;:&quot;https://github.com/... Requests will automatically decode content from the server. We can also find out what encoding Requests, by using the r.encoding property: r.encoding &#39;utf-8&#39; Passing parameters in Urls: If you wanted to pass key1=value1 and key2=value2 to httpbin.org/get we can do it with the following code: payload = {&#39;key1&#39;: &#39;value1&#39;, &#39;key2&#39;: &#39;value2&#39;} r = requests.get(&quot;http://httpbin.org/get&quot;, params=payload) Dealing with Binary Response Content We can also access the response body as bytes, for non-text requests. &gt;&gt;&gt; r.content b&#39;[{&quot;repository&quot;:{&quot;open_issues&quot;:0,&quot;url&quot;:&quot;https://github.com/... Dealing with JSON Response Content: There’s also a builtin JSON decoder, in case we are dealing with JSON data: &gt;&gt;&gt; import requests &gt;&gt;&gt; r = requests.get(&#39;https://github.com/timeline.json&#39;) &gt;&gt;&gt; r.json [{u&#39;repository&#39;: {u&#39;open_issues&#39;: 0, u&#39;url&#39;: &#39;https://github.com/... Dealing with Response Headers: We can view the server’s response headers using a Python dictionary: `r.headers` Authentication While trying to fetch resources from webservices many of them expect us to undergo authentication. There are many types of authentication, but the most common is HTTP Basic Authentication. Basic Authentication Here is an example to make requests with Basic Authentication. from requests.auth import HTTPBasicAuth requests.get(&#39;https://api.github.com/user&#39;, auth=HTTPBasicAuth(&#39;user&#39;, &#39;pass&#39;)) # Due to the prevalence of HTTP Basic Auth, # requests provides a shorthand for this authentication method: requests.get(&#39;https://api.github.com/user&#39;, auth=(&#39;user&#39;, &#39;pass&#39;)) Digest Authentication: Another very popular form of HTTP Authentication. from requests.auth import HTTPDigestAuth url = &#39;http://httpbin.org/digest-auth/auth/user/pass&#39; requests.get(url, auth=HTTPDigestAuth(&#39;user&#39;, &#39;pass&#39;)) OAuth 1 Authentication A common form of authentication for several web APIs is OAuth. The requests-oauthlib library allows Requests users to easily make OAuth authenticated requests: import requests from requests_oauthlib import OAuth1 url = &#39;https://api.twitter.com/1.1/account/verify_credentials.json&#39; auth = OAuth1(&#39;YOUR_APP_KEY&#39;, &#39;YOUR_APP_SECRET&#39;, &#39;USER_OAUTH_TOKEN&#39;, &#39;USER_OAUTH_TOKEN_SECRET&#39;) requests.get(url, auth=auth) Timeouts We can tell requests to stop waiting after a given number of seconds with timeout parameter: `requests.get(&#39;http://github.com&#39;, timeout=0.001)` Errors and Exceptions If there is any network problem (e.g. DNS failure, refused connection, etc), Requests will raise a ConnectionError exception and in the event of the rare invalid HTTP response, Requests will raise an HTTPError exception. If a request times out, a Timeout exception is raised. If a request exceeds the configured number of maximum redirections, a TooManyRedirects exception is raised. All exceptions that Requests explicitly raises inherit from “requests.exceptions.RequestException”." />
+<link rel="canonical" href="http://localhost:4000/python/2014/05/05/python-requests.html" />
+<meta property="og:url" content="http://localhost:4000/python/2014/05/05/python-requests.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-05-05T15:28:08+05:30" />
+<script type="application/ld+json">
+{"description":"When we want to fetch internet resources we tend to use urllib2 but when dealing with “HTTP basic Auth” urllib2 is pretty unintuitive and painful. We can use urllib2.urlopen() to open the URL which can be a string or a request object, but the factor of the matter is that implementing anything beyond that is a bit troublesome. Wouldn’t it be a delightment, if we can use the GET, POST, PUT, DELETE with a single function call with the URL and auth data as parameters? So Python-requests brings this delightment to life by extending the HTTP capabilities. Python-requests Module The Requests module is a an elegant and simple HTTP library for Python. It’s HTTP for Humans. Python-requests take all of the work out of Python HTTP/1.1 making our integaration with web services seamless. There will be no need to manually add query strings to our URLs, or to form-encode our POST data. Efficiency of Python-requests Python-requests allows us to send HTTP/1.1 requests. We can add headers, form data, multipart files and parameters with simple Python dictionaries and also we can access the response data in the same way. Python-requests is the perfect module if we want to repeatedly interact with a RESTful API. Example for urllib2 vs requests If we try to fetch data with urllib2 the code would look like: #!/usr/bin/env python # -*- coding: utf-8 -*- import urllib2 gh_url = &#39;https://api.github.com&#39; req = urllib2.Request(gh_url) password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm() password_manager.add_password(None, gh_url, &#39;user&#39;, &#39;pass&#39;) auth_manager = urllib2.HTTPBasicAuthHandler(password_manager) opener = urllib2.build_opener(auth_manager) urllib2.install_opener(opener) handler = urllib2.urlopen(req) print handler.getcode() print handler.headers.getheader(&#39;content-type&#39;) The same functionality implemented by Python-requests looks like: #!/usr/bin/env python # -*- coding: utf-8 -*- import requests r = requests.get(&#39;https://api.github.com&#39;, auth=(&#39;user&#39;, &#39;pass&#39;)) print r.status_code print r.headers[&#39;content-type&#39;] The above code shows how simple the code turns to if we use Python-requests. Module installation: To install requests, simply: `pip install requests` Or, if you absolutely must: `easy_install requests` Procedure: To make a request Example request to let us get GitHub’s public timeline import requests r = requests.get(&#39;https://github.com/timeline.json&#39;) Response object ‘r’ helps to get all the information we need from the object. To make a POST request: r = requests.post(“http://httpbin.org/post”) We can use the other HTTP request types: PUT, DELETE, HEAD and OPTIONS in the same way: r = requests.put(&quot;http://httpbin.org/put&quot;) r = requests.delete(&quot;http://httpbin.org/delete&quot;) r = requests.head(&quot;http://httpbin.org/get&quot;) r = requests.options(&quot;http://httpbin.org/get&quot;) Reading the response content: Let’s consider the GitHub timeline: import requests r = requests.get(&#39;https://github.com/timeline.json&#39;) r.text &#39;[{&quot;repository&quot;:{&quot;open_issues&quot;:0,&quot;url&quot;:&quot;https://github.com/... Requests will automatically decode content from the server. We can also find out what encoding Requests, by using the r.encoding property: r.encoding &#39;utf-8&#39; Passing parameters in Urls: If you wanted to pass key1=value1 and key2=value2 to httpbin.org/get we can do it with the following code: payload = {&#39;key1&#39;: &#39;value1&#39;, &#39;key2&#39;: &#39;value2&#39;} r = requests.get(&quot;http://httpbin.org/get&quot;, params=payload) Dealing with Binary Response Content We can also access the response body as bytes, for non-text requests. &gt;&gt;&gt; r.content b&#39;[{&quot;repository&quot;:{&quot;open_issues&quot;:0,&quot;url&quot;:&quot;https://github.com/... Dealing with JSON Response Content: There’s also a builtin JSON decoder, in case we are dealing with JSON data: &gt;&gt;&gt; import requests &gt;&gt;&gt; r = requests.get(&#39;https://github.com/timeline.json&#39;) &gt;&gt;&gt; r.json [{u&#39;repository&#39;: {u&#39;open_issues&#39;: 0, u&#39;url&#39;: &#39;https://github.com/... Dealing with Response Headers: We can view the server’s response headers using a Python dictionary: `r.headers` Authentication While trying to fetch resources from webservices many of them expect us to undergo authentication. There are many types of authentication, but the most common is HTTP Basic Authentication. Basic Authentication Here is an example to make requests with Basic Authentication. from requests.auth import HTTPBasicAuth requests.get(&#39;https://api.github.com/user&#39;, auth=HTTPBasicAuth(&#39;user&#39;, &#39;pass&#39;)) # Due to the prevalence of HTTP Basic Auth, # requests provides a shorthand for this authentication method: requests.get(&#39;https://api.github.com/user&#39;, auth=(&#39;user&#39;, &#39;pass&#39;)) Digest Authentication: Another very popular form of HTTP Authentication. from requests.auth import HTTPDigestAuth url = &#39;http://httpbin.org/digest-auth/auth/user/pass&#39; requests.get(url, auth=HTTPDigestAuth(&#39;user&#39;, &#39;pass&#39;)) OAuth 1 Authentication A common form of authentication for several web APIs is OAuth. The requests-oauthlib library allows Requests users to easily make OAuth authenticated requests: import requests from requests_oauthlib import OAuth1 url = &#39;https://api.twitter.com/1.1/account/verify_credentials.json&#39; auth = OAuth1(&#39;YOUR_APP_KEY&#39;, &#39;YOUR_APP_SECRET&#39;, &#39;USER_OAUTH_TOKEN&#39;, &#39;USER_OAUTH_TOKEN_SECRET&#39;) requests.get(url, auth=auth) Timeouts We can tell requests to stop waiting after a given number of seconds with timeout parameter: `requests.get(&#39;http://github.com&#39;, timeout=0.001)` Errors and Exceptions If there is any network problem (e.g. DNS failure, refused connection, etc), Requests will raise a ConnectionError exception and in the event of the rare invalid HTTP response, Requests will raise an HTTPError exception. If a request times out, a Timeout exception is raised. If a request exceeds the configured number of maximum redirections, a TooManyRedirects exception is raised. All exceptions that Requests explicitly raises inherit from “requests.exceptions.RequestException”.","author":{"@type":"Person","name":"Rakesh"},"@type":"BlogPosting","url":"http://localhost:4000/python/2014/05/05/python-requests.html","headline":"Python-requests","dateModified":"2014-05-05T15:28:08+05:30","datePublished":"2014-05-05T15:28:08+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/python/2014/05/05/python-requests.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Python-requests</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-05-05T15:28:08+05:30" itemprop="datePublished">May 5, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Rakesh</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>When we want to fetch internet resources we tend to use urllib2 but when dealing with “HTTP basic Auth” urllib2 is pretty unintuitive and painful.</p>
+
+<p>We can use urllib2.urlopen() to open the URL which can be a string or a request object, but the factor of the matter is that implementing anything beyond that is a bit troublesome.</p>
+
+<p>Wouldn’t it be a delightment, if we can use the GET, POST, PUT, DELETE with a single function call with the URL and auth data as parameters?</p>
+
+<p>So Python-requests brings this delightment to life by extending the HTTP capabilities.</p>
+
+<h2 id="python-requests-module">Python-requests Module</h2>
+<p>The Requests module is a an elegant and simple HTTP library for Python. It’s HTTP for Humans.</p>
+
+<p>Python-requests take all of the work out of Python HTTP/1.1 making our integaration with web services seamless. There will be no need to manually add query strings to our URLs, or to form-encode our POST data.</p>
+
+<h2 id="efficiency-of-python-requests">Efficiency of Python-requests</h2>
+
+<p>Python-requests allows us to send HTTP/1.1 requests. We can add headers, form data, multipart files and parameters with simple Python dictionaries and also we can access the response data in the same way. Python-requests is the perfect module if we want to repeatedly interact with a RESTful API.</p>
+
+<h2 id="example-for-urllib2-vs-requests">Example for urllib2 vs requests</h2>
+
+<p>If we try to fetch data with urllib2 the code would look like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">urllib2</span>
+
+<span class="n">gh_url</span> <span class="o">=</span> <span class="s">'https://api.github.com'</span>
+
+<span class="n">req</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">gh_url</span><span class="p">)</span>
+
+<span class="n">password_manager</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPPasswordMgrWithDefaultRealm</span><span class="p">()</span>
+<span class="n">password_manager</span><span class="o">.</span><span class="n">add_password</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">gh_url</span><span class="p">,</span> <span class="s">'user'</span><span class="p">,</span> <span class="s">'pass'</span><span class="p">)</span>
+
+<span class="n">auth_manager</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPBasicAuthHandler</span><span class="p">(</span><span class="n">password_manager</span><span class="p">)</span>
+<span class="n">opener</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">build_opener</span><span class="p">(</span><span class="n">auth_manager</span><span class="p">)</span>
+
+<span class="n">urllib2</span><span class="o">.</span><span class="n">install_opener</span><span class="p">(</span><span class="n">opener</span><span class="p">)</span>
+
+<span class="n">handler</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="n">handler</span><span class="o">.</span><span class="n">getcode</span><span class="p">()</span>
+<span class="k">print</span> <span class="n">handler</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">getheader</span><span class="p">(</span><span class="s">'content-type'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The same functionality implemented by Python-requests looks like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">'https://api.github.com'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s">'user'</span><span class="p">,</span> <span class="s">'pass'</span><span class="p">))</span>
+
+<span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span>
+<span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s">'content-type'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>The above code shows how simple the code turns to if we use Python-requests.</p>
+
+<h2 id="module-installation">Module installation:</h2>
+
+<p>To install requests, simply:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>`pip install requests`
+</code></pre></div></div>
+
+<p>Or, if you absolutely must:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>`easy_install requests`
+</code></pre></div></div>
+
+<h2 id="procedure">Procedure:</h2>
+
+<ul>
+  <li>To make a request</li>
+</ul>
+
+<p>Example request to let us get GitHub’s public timeline</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import requests
+r = requests.get('https://github.com/timeline.json')
+</code></pre></div></div>
+
+<p>Response object ‘r’ helps to get all the information we need from the object.</p>
+
+<ul>
+  <li>
+    <p>To make a POST request:</p>
+
+    <p>r = requests.post(“http://httpbin.org/post”)</p>
+  </li>
+</ul>
+
+<p>We can use the other HTTP request types: PUT, DELETE, HEAD and OPTIONS in the same way:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r = requests.put("http://httpbin.org/put")
+r = requests.delete("http://httpbin.org/delete")
+r = requests.head("http://httpbin.org/get")
+r = requests.options("http://httpbin.org/get")
+</code></pre></div></div>
+
+<ul>
+  <li>Reading the response content:</li>
+</ul>
+
+<p>Let’s consider the GitHub timeline:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import requests
+r = requests.get('https://github.com/timeline.json')
+r.text
+'[{"repository":{"open_issues":0,"url":"https://github.com/...
+</code></pre></div></div>
+
+<p>Requests will automatically decode content from the server.
+We can also find out what encoding Requests, by using the
+r.encoding property:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r.encoding
+'utf-8'
+</code></pre></div></div>
+
+<ul>
+  <li>Passing parameters in Urls:</li>
+</ul>
+
+<p>If you wanted to pass key1=value1 and key2=value2 to httpbin.org/get we can do it with the following code:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>payload = {'key1': 'value1', 'key2': 'value2'}
+r = requests.get("http://httpbin.org/get", params=payload)
+</code></pre></div></div>
+
+<ul>
+  <li>Dealing with Binary Response Content</li>
+</ul>
+
+<p>We can also access the response body as bytes, for non-text requests.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.content
+b'[{"repository":{"open_issues":0,"url":"https://github.com/...
+</code></pre></div></div>
+
+<ul>
+  <li>Dealing with JSON Response Content:</li>
+</ul>
+
+<p>There’s also a builtin JSON decoder, in case we are dealing with JSON data:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; import requests
+&gt;&gt;&gt; r = requests.get('https://github.com/timeline.json')
+&gt;&gt;&gt; r.json
+[{u'repository': {u'open_issues': 0, u'url': 'https://github.com/...
+</code></pre></div></div>
+
+<ul>
+  <li>Dealing with Response Headers:</li>
+</ul>
+
+<p>We can view the server’s response headers using a Python dictionary:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>`r.headers`
+</code></pre></div></div>
+
+<h2 id="authentication">Authentication</h2>
+
+<p>While trying to fetch resources from webservices many of them expect us to undergo authentication.</p>
+
+<p>There are many types of authentication, but the most common is HTTP Basic Authentication.</p>
+
+<ul>
+  <li>Basic Authentication</li>
+</ul>
+
+<p>Here is an example to make requests with Basic Authentication.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from requests.auth import HTTPBasicAuth
+requests.get('https://api.github.com/user', auth=HTTPBasicAuth('user', 'pass'))
+
+
+# Due to the prevalence of HTTP Basic Auth,
+# requests provides a shorthand for this authentication method:
+
+requests.get('https://api.github.com/user', auth=('user', 'pass'))
+</code></pre></div></div>
+
+<ul>
+  <li>Digest Authentication:</li>
+</ul>
+
+<p>Another very popular form of HTTP Authentication.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from requests.auth import HTTPDigestAuth
+url = 'http://httpbin.org/digest-auth/auth/user/pass'
+requests.get(url, auth=HTTPDigestAuth('user', 'pass'))
+</code></pre></div></div>
+
+<ul>
+  <li>OAuth 1 Authentication</li>
+</ul>
+
+<p>A common form of authentication for several web APIs is OAuth. The requests-oauthlib library allows Requests users to easily make OAuth authenticated requests:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import requests
+from requests_oauthlib import OAuth1
+
+url = 'https://api.twitter.com/1.1/account/verify_credentials.json'
+auth = OAuth1('YOUR_APP_KEY', 'YOUR_APP_SECRET',
+                  'USER_OAUTH_TOKEN', 'USER_OAUTH_TOKEN_SECRET')
+
+requests.get(url, auth=auth)
+</code></pre></div></div>
+
+<h2 id="timeouts">Timeouts</h2>
+
+<p>We can tell requests to stop waiting after a given number of seconds with timeout parameter:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>`requests.get('http://github.com', timeout=0.001)`
+</code></pre></div></div>
+
+<h2 id="errors-and-exceptions">Errors and Exceptions</h2>
+
+<p>If there is any network problem (e.g. DNS failure, refused connection, etc), Requests will raise a ConnectionError exception and in the event of the rare invalid HTTP response, Requests will raise an HTTPError exception. If a request times out, a Timeout exception is raised.</p>
+
+<p>If a request exceeds the configured number of maximum redirections, a TooManyRedirects exception is raised.</p>
+
+<p>All exceptions that Requests explicitly raises inherit from “requests.exceptions.RequestException”.</p>
+
+
+  </div><a class="u-url" href="/python/2014/05/05/python-requests.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

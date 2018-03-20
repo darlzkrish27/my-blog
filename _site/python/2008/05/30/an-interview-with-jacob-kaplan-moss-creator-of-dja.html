@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>An Interview with Jacob Kaplan-Moss - Creator of Django | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="An Interview with Jacob Kaplan-Moss - Creator of Django" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Jacob Kaplan-Moss is the co-creator of Django along with Adrian Holovaty, as well as the author of the Django Book. He has been involved with Django since before it was called Django. He is currently employed at Whiskey Media where his job is hacking at Django. He blogs on Jacobian.org. He graciously agreed to be interviewed at the 42topics blog." />
+<meta property="og:description" content="Jacob Kaplan-Moss is the co-creator of Django along with Adrian Holovaty, as well as the author of the Django Book. He has been involved with Django since before it was called Django. He is currently employed at Whiskey Media where his job is hacking at Django. He blogs on Jacobian.org. He graciously agreed to be interviewed at the 42topics blog." />
+<link rel="canonical" href="http://localhost:4000/python/2008/05/30/an-interview-with-jacob-kaplan-moss-creator-of-dja.html" />
+<meta property="og:url" content="http://localhost:4000/python/2008/05/30/an-interview-with-jacob-kaplan-moss-creator-of-dja.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2008-05-30T12:03:18+05:30" />
+<script type="application/ld+json">
+{"description":"Jacob Kaplan-Moss is the co-creator of Django along with Adrian Holovaty, as well as the author of the Django Book. He has been involved with Django since before it was called Django. He is currently employed at Whiskey Media where his job is hacking at Django. He blogs on Jacobian.org. He graciously agreed to be interviewed at the 42topics blog.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/python/2008/05/30/an-interview-with-jacob-kaplan-moss-creator-of-dja.html","headline":"An Interview with Jacob Kaplan-Moss - Creator of Django","dateModified":"2008-05-30T12:03:18+05:30","datePublished":"2008-05-30T12:03:18+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/python/2008/05/30/an-interview-with-jacob-kaplan-moss-creator-of-dja.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">An Interview with Jacob Kaplan-Moss - Creator of Django</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2008-05-30T12:03:18+05:30" itemprop="datePublished">May 30, 2008
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><img src="http://uswaretech.com/blog/wp-content/uploads/2008/05/jacob_headshot2.png" alt="Jacob Kaplan-Moss" title="jacob_headshot2" width="225" height="232" class="right frame" />
+<a href="http://djangopeople.net/jacobian/">Jacob Kaplan-Moss</a> is the co-creator of Django along with Adrian Holovaty, as well as the author of <a href="http://www.amazon.com/Definitive-Guide-Django-Development-Right/dp/1590597257">the Django Book</a>. He has been involved with Django since before it was called Django. He is currently employed at Whiskey Media where his job is hacking at Django. He blogs on <a href="http://www.jacobian.org/">Jacobian.org</a>. He graciously agreed to be interviewed at the 42topics blog.</p>
+
+<hr />
+
+<p><strong>Shabda:</strong> Would you tell a little about yourself? How did you get started with Django? What other software/applications have you worked with. (Both OSS and otherwise)?</p>
+
+<p><strong>Jacob:</strong> So a bit about me: I grew up in Silicon Valley, so like many other geeks I got started with computers really early; I was programming professionally before I graduated high school. I didn’t start out doing web development; in college I worked on video surveillance systems for airports, harbors, marinas, and highways.   That’s where I found Python: I rewrote a Java-based camera controller in Python and haven’t looked back since.
+I started doing web development pretty seriously when I moved to New York and took a job for a design firm there. The job was pretty terrible, and the technologies were worse: the good sites were PHP, and there was a bunch of WebLogic crap that was absolute hell to maintain.
+So in 2004 I saw the <a href="http://www.holovaty.com/blog/archive/2004/06/29/1135">job opening</a> that <a href="http://simonwillison.net/">Simon</a> and <a href="http://www.holovaty.com/">Adrian</a> posted on their blogs  – and jumped on it. Web development in Python seemed like a dream job, and it really was.
+So that’s how I ended up in Kansas working for the local paper. At that point I suppose I was using Django, though we didn’t have a name for it yet: we just called it “The CMS”.
+I’d been getting more into Open Source all along, though I’d barely contributed (I think I got a single line into Python at one point years ago – that was my largest contribution).</p>
+
+<p><strong>Shabda:</strong> What areas of Django have you worked most in? What are you current areas of focus?</p>
+
+<p><strong>Jacob:</strong> Well, at this point I’ve touched pretty much every part of Django at some point weather in the form of improvements, refactoring, or just small patches and bug fixes. I’m far from an expert in any particular area, though, so I’d say my main role is more holistic: I’m most concerned with making sure that Django “feels” correct and that APIs and conventions match across the framework.
+Right now my current focus is documentation: I’ve been working on improving the structure and organization of the documentation so that it’s easier to find what you’re looking for. We’ve got something like 40,000 lines of documentation so organization and metadata is critical.
+Now that I’m lucky enough to get to work on Django at work, I’ll probably be able to take on some more big tasks like that in the future.</p>
+
+<p><strong>Shabda:</strong> One of the most loved things about Django is its <a href="http://www.djangoproject.com/documentation/">comprehensive documentation</a>. What is the motivation behind refactoring this? What is going to be the new organization? How is this progressing?</p>
+
+<p><strong>Jacob:</strong> Thanks – I’ve always thought that Django’s documentation set us apart from most Open Source projects, and I’ve been really proud of what we’ve done there. However, over the past year or so as the size of the documentation (and Django itself) grew I think we’ve slipped from “outstanding” to merely “above average.” To us (the core maintainers and I) that’s not acceptable.
+The best place to read up on the project and goals is in a <a href="http://groups.google.com/group/django-developers/msg/d31fa312da5a9ec3">post</a> I made to <a href="http://groups.google.com/group/django-developers/">Django-dev</a> a couple of months ago. In a nutshell, I’m breaking up the documentation into smaller, more manageable chunks – the current DB API is almost sixty printed pages! I’m also separating more high-level how-to’s and topical guides from the detailed API references that get in the way when you’re just learning.
+There’s some tool improvements going on under the hood that’ll make the documentation easier to write, edit, maintain, and contribute to; hopefully that’ll help decrease the number of undocumented features.
+The work’s pretty close to done, actually. I was trying to finish before I went on vacation a month ago, but didn’t quite get there. So that means I need to roll in a month’s worth of documentation improvements that happened to the current docs while I was gone, but that shouldn’t take much time. You can expect to see the new docs rolled out online very soon.</p>
+
+<p><strong>Shabda:</strong> What does Whiskey Media, the startup you are currently associated with do? Is your role there developing Django, or are you associated with other day to day activities as well?</p>
+
+<p><strong>Jacob:</strong> I think I’ll have to be a bit coy and not say very much about Whiskey Media; we’d rather let our actions speak for themselves than try to build some sort of artificial hype. I’ll just say that we’re trying to solve some of the big problems in web publishing; you can probably see why Django’s the best technical bet for a company trying to be the on the cutting edge of content publishing.
+Most of my time at Whiskey is devoted to working on Django – coding, but also community management, evangelism, and organization. I also have some internal responsibilities, of course, but those are more nebulous: mostly I just help out wherever I’m needed.</p>
+
+<p><strong>Shabda:</strong> As you said “we’d rather let our actions speak for themselves than try to build some sort of artificial hype”. Do you see Django taking a potential hit in marketing due to similar belief of Django community? Does Django need to market itself differently than it has been doing till now? What can Django community do for this?</p>
+
+<p><strong>Jacob:</strong> Huh, that’s a tricky one. Well, let me break down the question a bit and look at a few different angles.
+So first, I’ve always been a bit uncomfortable with the idea – pervasive in Open Source – that this is some sort of popularity contest. People are always comparing traffic figures, or numbers of job postings, or numbers of Google results, or whatever. I think the idea’s supposed to be that if Project Foo has more users than Project Bar that Foo somehow “wins”. But I don’t see it that way at all.
+I mean, I moved from New York City to Lawrence, KS. New York City has a population of, what, 8 million or so? Lawrence has a population of around 80,000. Does that mean New York City is “better”? To most of those 8 million, sure… but to me? Hell no.
+As in most areas, there’s no accounting for taste: one of my good friends here in Lawrence is a die-hard Perl fan, and though it makes him a bit twisted it doesn’t mean that I’m somehow “better” than him – we just have different needs and different ways of thinking.
+All that said, though, there is undeniably a value in popularity.
+Only a tiny number of people who use a given piece of Open Source software become involved in the community, and only a tiny fraction of those contribute back to the project, and only a tiny fraction of those contributors become long-term committers. So more users translates directly to more contributors, and more contributors brings more “value” to the project.
+(By “value” I’m referring to code, good ideas, etc.)
+So as you can probably tell this is something we struggle with. On one hand I think Django’s great, and it’s in the project’s best interest to persuade others to give it a shot. But on the other hand there’s a huge amount of bullshitting that goes on where software is concerned, and I try my best to not add to the pile.
+It’s hard to tell when you’ve crossed the line from evangelism to hype, and hype can be toxic. Witness the recent backlash against Ruby on Rails: do you think they’d get such violent vitriol if they’d been more modest in their promotion?</p>
+
+<p><strong>Shabda:</strong> Talking of <acronym title="Ruby on Rails">ROR</acronym>, a lot of people these days have to evaluate between Django and ROR. What questions should they ask themselves to answer this question? (Well apart from “do you know Python better or Ruby better?”). To make this more interesting when would YOU choose ROR over Django, if you knew both Ruby and Python equally well?</p>
+
+<p><strong>Jacob:</strong> So first let me back up a step – I’ll answer directly in a moment – and make a quick point about web development in general. The past couple-three years have seen a radical improvement in the quality of tools available to web developers. It really wasn’t that long ago that CGI represented the state-of-the-art in web development.
+Today, though, there’s really some fantastic tools available. <a href="http://rubyonrails.com/">Rails</a>, <a href="http://djangoproject.com/">Django</a>, <a href="http://www.symfony-project.org/">Symfony</a>, <a href="http://pylonshq.com/">Pylons</a>, <a href="http://turbogears.org/">TurboGears</a>, <a href="http://www.seaside.st/">Seaside</a>… any of these tools represent a major improvement over the CGI/PHP model of web development. If you’re still writing web sites the way you did five years ago, you’re missing out.
+When it comes to which of these tools to choose, of course, we’re back to that question of taste. Each tool comes from a different world, and has a different “attitude” towards web development. The cool part, though, is that most new web development tools emphasize a quick start as a key feature: you could probably evaluate a dozen web development frameworks in just a couple of days. So my best advice is to to try a few and see what “clicks”.
+It’s probably important to also pay attention to the language that the framework uses. One of the real pleasures of writing Django apps is that you get to take advantage of the awesome Python community. I’ve got a set of libraries in Python that I can’t imagine developing web apps without; many of those libraries don’t have analogues in any other environment.
+So if I knew Python and Ruby equally well – I don’t – I’d still probably lean towards Python, and towards Django. However, there’s one place I can think of where Rails is far superior: Rails runs on the JVM. This is a big deal: there’s any number of large corporate environments where the JVM is the only game in town. And obviously if I had to choose between Java and Ruby I’d choose Ruby!
+I’ll mention, though, that <a href="http://www.jython.org/">Jython</a> (Python on the JVM) is improving by leaps and bounds, and that getting Django working perfectly on the JVM is one of the <a href="http://code.google.com/soc/2008/psf/appinfo.html?csaid=DA6AC3DE94E157E">Google Summer of Code projects</a> the Jython team is sponsoring.</p>
+
+<p><strong>Shabda:</strong> Coming back to the marketing question.. For most of non hackers choosing the framework to use is a big question, and the decision they will make depend on various non-tech factors, such as availability of capable skilled people. You mentioned that you would choose Django over Rails due to the awesome Python libraries. For the long term survival and growth of Django, do you not think that an early capture of mindshare in developer community is important? For example I have pitched Django to a fair number of people, and I always have to start with “Django, what?” as compared to “Yeah, we are evaluating Rails for our requirements.”</p>
+
+<p><strong>Jacob:</strong> Sure, there’s definitely a value of having Django be familiar to your friendly local Pointy Haired Boss, so in that context a certain amount of advertising is important. There’s nothing worse than being forced by management to use the wrong tool for the job. Keep in mind, though, that this cuts both ways: I’d feel pretty unhappy if there was a team using Django because someone read about it in CTO Monthly. I’d agree that we could be doing more in terms of “brand awareness” or something, but all in all I’m pretty happy with the size and quality of Django’s community.</p>
+
+<p><strong>Shabda:</strong> There is not much information about the early days of Django, so a little about that. How did the move at <a href="http://www2.ljworld.com/">WorldOnline</a> from PHP to Python happen? Why did you create a new framework, instead of reusing something like Zope?</p>
+
+<p><strong>Jacob:</strong> I wasn’t yet at World Online when we moved from PHP to Python, but from what I understand it was a pretty typical change. Adrian and Simon got fed up with the pain and suffering wrought by PHP, and wanted something cleaner and – most importantly – something that would be easy to maintain. Python really shines here.
+The main reason we ended up building our own framework was that we didn’t know we were building a framework. We just wanted to “build cool shit” and, over time, we built tools to help us do that. It wasn’t until we started showing it off that we realized we had something that could be used by other people.
+This, by the way, is one of the reasons I think Django turned out so great. If you sit down one day and say, “I’m going to develop a framework!” you’re almost certainly going to become an Architecture Astronaut, and if you ever actually finish the thing’ll be so over designed nobody will want to use it. If, on the other hand, you simply try to solve real-world problems in a clean, obvious way, you’ll eventually end up with a great tool.
+Look at Rails, TurboGears, even PHP; they all started as simple libraries written by frustrated programmers just trying to get the job done.</p>
+
+<p><strong>Shabda:</strong> What are the overarching goals of Django? Again to make this more interesting, Here is a <a href="http://www.linkedin.com/in/jacobian">quote from you</a>. “My work as a core developer of Django focuses on giving anyone – even (especially) non-programmers – the tools to create dynamic, content-driven websites.” Should not that be the job of something like <a href="http://wordpress.org/">Wordpress</a>, while Django should aim to give “programmers, but not non-programmers – the tools to create dynamic, content-driven websites.”</p>
+
+<p><strong>Jacob:</strong> Wordpress is great if you want to publish a blog, but what if you want a website to track a book collection, or sell tickets to concerts, or organize a local farmer’s market? There’s a great deal that Wordpress (and other single-purpose tools) can do, but the amazing thing about the web is just how wide-open the possibilities are. There’s a whole world of possibilities out there, and the end-goal is to help anyone self-publish anything they can dream up.
+One of the most fascinating aspects of the history of communication is how intertwined literacy is with social controls. For most of the history of humankind, literacy was strictly available to the elite. The Web created the greatest democratization of publishing ability in history, and has almost immediately turned into a battleground between traditional, centralized publishing and decentralized democratic publishing.
+As a programmer, we don’t personally play much of a role in this sea change, but I do see the lowering of the barrier to self-publishing as something we ought to continuously think about.</p>
+
+<p><strong>Shabda:</strong> If Django’s goal is “and the end-goal is to help anyone self-publish “, does not that mean Django is trying to fill the niche of an Extensible CMS like <a href="http://drupal.org/">Drupal</a>, as compared to filling the gap left by PHP? Are non programmers really using Django, or are they using apps built with Django?</p>
+
+<p><strong>Jacob:</strong> No, you’re right that Django’s lower-level than something like Drupal. Django’s not trying to be a CMS but to be a tool you could use to build your own CMS. It’s easier to design your own content models than to shoehorn your publishing into a CMS limited by the ideas of its developers.
+There are indeed quite a few non-programmers using Django, though in the long run I think the interesting trend is that more and more computer users are learning a little bit of programming – enough to develop a site with Django, say.</p>
+
+<p><strong>Shabda:</strong> (Since I ask this to everyone!) What is one thing about Django which you absolutely love, and one thing which you think Django should do differently?</p>
+
+<p><strong>Jacob:</strong> I only get to choose one thing I love?
+I think my favorite bit of Django is the <a href="http://www.djangoproject.com/documentation/url_dispatch/">URLconf</a> system. I love that Django forces me to think about URL design as part of my application instead of some byproduct; I’ve always hated web tools that try to someone pretend that you’re writing a desktop app. I’ll admit to obsession over my URL design from time-to-time, but I really enjoy clean, semantic URLs.
+As for something we should do differently: the assumption that you’ll only use a <a href="http://code.djangoproject.com/wiki/MultipleDatabaseSupport">single database</a> is a bad one, and needs to be fixed. Unfortunately, it’s an assumption that we made really early on, which means that fixing it is going to be tricky. There’s some smart people working on it right now so I’ve got high hopes, but I wish we’d not made that assumption to begin with.</p>
+
+<p><strong>Shabda:</strong> Django started as a in house project and was later open sourced. At your
+current startup your major job is with Django itself. The Django book which
+you wrote was released under a permissive license. How difficult is it to
+convince people outside the hacker culture of the business value of open
+source? What are the best ways to do this? How difficult was doing this at
+World online?</p>
+
+<p><strong>Jacob:</strong>
+These days, thankfully, the business value of Open Source is pretty
+well-established. There really hasn’t been a lot of “convincing”
+necessary. For example, Apress didn’t just agree to release the Django
+Book under a permissive license: they actively encouraged it. You’d
+have to ask them if it was “worth it” in terms of sales, but I’m sure
+that being the first Google hit for “django book” didn’t hurt!
+Releasing Django at World Online is actually an interesting story. We
+decided at the 2005 PyCon that we should Open Source some of our
+software, and started building a business case for doing so. We
+prepared a series of arguments – open source will increase our
+visibility and lead to easier sales and easier hiring, open source
+will improve the quality of our software, etc. – and took them to our
+management. All of those things turnned out to be true, by the way,
+but o our surprise, the argument that was the most effective was
+actually a “moral” one. We talked about how Open Source had helped our
+business (Apache, Linux, Python, etc.) and argued that it was time to
+“give back” to the community. The World Company has always been a
+company that’s tried to be a conscientious part of our local community
+here in Lawrence, and they really jumped at the chance to participate
+in the global Open Source community.
+I like to tell this story, by the way, because it really makes me
+hopeful that this “hacker culture” is in fact compatible with business
+culture. Fact is that most businesses <em>are</em> in fact concerned with
+doing the “right thing” – they just often don’t know what that is
+when it comes to technology. Of course the business case for Open
+Source needs to be there, too – and it is – but I think there are a
+lot of companies that’ll jump on the chance to “give back.”</p>
+
+<p><strong>Shabda:</strong> Before we close would you like to share any tips with us?
+<strong>Jacob:</strong> If you don’t read the <a href="http://www.djangoproject.com/community/">Django community aggregator</a> you really should: there are some incredibly smart people blogging about Django and you’ll learn something new from all of them.</p>
+
+<hr />
+<p>This was the interview of <a href="http://www.jacobian.org/">Jacob Kaplan-Moss</a>. We have a few more Django interviews coming, before we close this series of Django interviews, so <a href="http://42topics.com/blog/feed/">stay tuned</a>.</p>
+
+<p>).</p>
+
+
+  </div><a class="u-url" href="/python/2008/05/30/an-interview-with-jacob-kaplan-moss-creator-of-dja.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

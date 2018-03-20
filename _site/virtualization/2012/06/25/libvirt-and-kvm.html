@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Libvirt and KVM | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Libvirt and KVM" />
+<meta name="author" content="thejaswi" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Libvirt and KVM" />
+<meta property="og:description" content="Libvirt and KVM" />
+<link rel="canonical" href="http://localhost:4000/virtualization/2012/06/25/libvirt-and-kvm.html" />
+<meta property="og:url" content="http://localhost:4000/virtualization/2012/06/25/libvirt-and-kvm.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2012-06-25T05:30:00+05:30" />
+<script type="application/ld+json">
+{"description":"Libvirt and KVM","author":{"@type":"Person","name":"thejaswi"},"@type":"BlogPosting","url":"http://localhost:4000/virtualization/2012/06/25/libvirt-and-kvm.html","headline":"Libvirt and KVM","dateModified":"2012-06-25T05:30:00+05:30","datePublished":"2012-06-25T05:30:00+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/virtualization/2012/06/25/libvirt-and-kvm.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Libvirt and KVM</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2012-06-25T05:30:00+05:30" itemprop="datePublished">Jun 25, 2012
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">thejaswi</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="libvirt-and-kvm">Libvirt and KVM</h2>
+
+<p><em>"But it works on my local setup!"</em> We have heard or probably said
+this tens of times after something that we deployed to the production
+server breaks. After fire fighting for hours we learn that a particular
+package's version varies from the local setup. This is a fairly common
+problem that plagues every developer. Off late, quite a lot of interest
+and work is going into maximizing the <a href="http://www.12factor.net/dev-prod-parity">dev/prod
+parity</a> to prevent such
+problems.</p>
+
+<p>Software like virtualenv help a great deal in compartmentalizing python
+dependencies but most web applications nowadays have to deal with loads
+of other dependencies like web servers, application servers etc.</p>
+
+<p>We use Ubuntu at work (not a rigid requirement) and they have biannual
+releases with long term releases LTS every two years. We use LTS
+releases for our servers and the general releases as our development
+desktops.</p>
+
+<p>In such a case, how do we reduce the parity with our server setup? This
+was already explained in a blog post
+<a href="http://agiliq.com/blog/2012/01/brief-overview-vagrant/">earlier</a> by
+Dheeraj. While Vagrant is a fine piece of software, Virtualbox on Linux
+based operating systems tends to be very problematic. There are a lot of
+random crashes, kernel dumps, disk corruptions etc and you spend a lot
+of time repairing it rather than concentrating on developing. This is
+where libvirt and KVM come in.</p>
+
+<p><a href="http://libvirt.org/">Libvirt</a> is a common API that helps manage
+virtualization platforms (or hypervisors in it's terminology). Through
+this single API, you will be able to talk to a host of hypervisors like
+Virtualbox, KVM, Xen, LXC, OpenVZ, VMware based hypervisors and also
+Microsoft Hyper-V. Libvirt also provides for network and disk
+management, authentication and access control etc.</p>
+
+<p><a href="http://linux-kvm.org/">KVM</a> (Kernel Virtual Machine) is a Linux kernel
+module (requires no compilation like Xen) that supports native
+(hardware) virtualization. KVM based guests almost perform as well as
+the host and since it is part of the mainline kernel since 2.6.20, you
+may consider it the 'official' virtualization platform on most Linux
+based distros.</p>
+
+<p><a href="http://qemu.org/">Qemu</a> is a userspace program that talks to the KVM
+module and emulates some hardware devices.</p>
+
+<p>A guest (or client/domain as some may refer) is a virtual machine
+running on top of a host (or server).</p>
+
+<p>So far we have just dealt with the definitions, let's install something
+to play around with. But before that, here's the customary disclaimer.</p>
+
+<p>::: {.note}
+::: {.admonition-title}
+Note
+:::</p>
+
+<p>KVM works <strong>only</strong> on Linux based distributions and virtualization ready
+hardware.
+:::</p>
+
+<p>Installing software on ubuntu is fairly easy thanks to apt-get.</p>
+
+<ul>
+  <li>
+    <p>Let's install libvirt and qemu-kvm (the userspace program mentioned
+above) first:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo apt-get install libvirt-bin qemu-kvm
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>You will have to add the user who can access libvirt to the libvirtd
+group:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo adduser &lt;username&gt; libvirtd
+</code></pre></div>    </div>
+
+    <p>If you have added the current user (specified by &lt;username&gt;), log
+out and login to have the groups addition to get refreshed:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ groups &lt;username&gt;
+&lt;username&gt; : &lt;username&gt; libvirtd
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>After you have successfully installed libvirt, check if virsh
+(virtualization shell) works fine:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ virsh
+virsh # 
+</code></pre></div>    </div>
+  </li>
+  <li>Now, you may create your guest VM in either of the two ways
+specified below, through the CLI tool (virsh) or the graphical
+interface (virt-manager).</li>
+  <li>
+    <p>If you prefer a graphical interface over `virsh`:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo apt-get install virt-manager
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>If you are using virsh (<strong>note:</strong> not applicable if you are using
+virt-manager), you need the virt-install package to create a new
+guest and virt-viewer to view the VNC console:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo apt-get install python-virtinst virt-viewer
+$ sudo virt-install -n guest_vm -r 512 --disk path=/path/to/store/vm,size=1 -c /path/to/guest_vm.iso -v --virt-type=kvm --connect=qemu:///system --vnc
+</code></pre></div>    </div>
+
+    <p>The virt-install command creates a VM with the name guest_vm,
+assigns it 512 MB RAM and creates an associated disk using the
+arguments provided to --disk path (size 1GB here). For
+installation, it makes use of the ISO file provided. This ISO may be
+any OS image that you may have downloaded or generated. The -v
+option instructs to make the guest 'fully' virtualized with the
+'kvm' hypervisor and start the VNC console. There are a multitude
+of options (like setting the network etc) and you may want to check
+the man page.</p>
+  </li>
+  <li>
+    <p>In virt-manager (<strong>note:</strong> not applicable if you are using virsh),
+go to File &gt; Add Connection and set the Hypervisor as Qemu (or KVM)
+and save the connection.</p>
+
+    <p><a href="http://agiliq.com/static/dumps/images/20120625/libvirt_screen_1.png"><img src="http://agiliq.com/static/dumps/images/20120625/libvirt_screen_1.png" alt="Virt-manager screen" />{.align-center
+width=”90.0%”}</a></p>
+
+    <p>Then, let's create a guest VM. Right click on the just created
+connection in the host summary window and create a new VM by right
+clicking on your connection and selecting 'New'.</p>
+
+    <p><a href="http://agiliq.com/static/dumps/images/20120625/libvirt_screen_2.png"><img src="http://agiliq.com/static/dumps/images/20120625/libvirt_screen_2.png" alt="Creating a new VM" />{.align-center
+width=”90.0%”}</a></p>
+
+    <p>Select the method of your choice to install a new VM. I selected the
+Local install
+media (ISO image or CDROM) option, set the name of the VM as
+guest_vm and provided the path to the ISO image in the next screen.
+The steps 3 and 4 are fairly straightforward and you can safely use
+the defaults. In the step 5, you may modify the network (the default
+should be fine) and have the ability to customize the hardware
+emulated by the hypervisor. I prefer not to fiddle with those and
+click on Finish and wait for the VM to get created.</p>
+  </li>
+  <li>
+    <p>Now we are done creating a new guest VM and installing it. We can
+start the guest using virsh (<strong>note</strong>: Not applicable if you are
+using virt-manager):</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ virsh start guest_vm
+$ virt-viewer -c qemu:///system guest_vm
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>If you want to start the VM using virt-manager, right click on the
+VM and click on Run.</p>
+
+    <p><a href="http://agiliq.com/static/dumps/images/20120625/libvirt_screen_3.png"><img src="http://agiliq.com/static/dumps/images/20120625/libvirt_screen_3.png" alt="Running a VM" />{.align-center
+width=”90.0%”}</a></p>
+  </li>
+  <li>
+    <p>After running the VM, right click on the running VM and select Open
+to view the console.</p>
+
+    <p><a href="http://agiliq.com/static/dumps/images/20120625/libvirt_screen_4.png"><img src="http://agiliq.com/static/dumps/images/20120625/libvirt_screen_4.png" alt="Running a VM" />{.align-center
+width=”90.0%”}</a></p>
+  </li>
+</ul>
+
+<p>So now we have guest VMs running and a way to install an OS of our
+choice. For example, you can install the LTS release of ubuntu in a VM
+and use it for development or Windows XP (or Windows 7) to test against
+Internet Explorer or create one VM per project and manage your
+dependencies easily.</p>
+
+  </div><a class="u-url" href="/virtualization/2012/06/25/libvirt-and-kvm.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

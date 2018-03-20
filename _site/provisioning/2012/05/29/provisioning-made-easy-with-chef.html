@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Provisioning Made Easy With Chef | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Provisioning Made Easy With Chef" />
+<meta name="author" content="saket" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Managing Servers and scaling at will is hard. The bigger web players have put in years of effort, brute-forcing at times and re-iterating their methodologies, have come up with the secret sauce which they use to keep their cloud cool. The article is meant to be introductory rather than comprehensive. Chef has a steep learning curve, and in this post I wish to simplify few of the basic concepts. So, instead of going to the Chef Docs, finding searching, reading and re-reading, few of the beginner concepts are put at one place, which will help you get started on your own. SysAdmins have started adopting programming paradigms to manage infrastructure. Infrastructure is managed as code. Preparing a server is just running few codes, that’s how easy it becomes with a provisioning tool as chef. Chef is a library for configuration management its an API for your entire infrastructure. Using Chef helps you improve scalability and manageability. It helps you save time, money and the pains of doing the same repetitive tasks time and again. The Chef Architecture: Chef Server: Central Store of your infrastructure’s configuration data. It stores data necessary to configure your nodes, a REST API makes this data accessible to the nodes. Optionally, it has a WebUI which helps you manage your infrastructure via a web interface. Nodes: Systems managed by Chef Servers. A node is any host that is configured using chef-client. Chef-client runs on your node which contacts the server for information necessary to configure the node. In simple terms nodes are your servers in the cloud which you want to configure using chef. They can be your webservers, database server etc. Workstations - The machine where the sysadmin works. Cookbooks are maintained at the workstation. The workstation has two key components: the knife executable - helps upload data to chef server or individual nodes using ssh. a repository containing cookbooks, data bags, roles etc.(infrastructure’s configuration documents) Few Basic Definitions: Lets look at few of the basic definitions which we will use later: Resources are a cross platform abstraction of the things you are configuring on the host. Parameters are the piece of data that the resources contain. Action in a resource is what you want to do with the resource. Providers are the specific implementation of what the resource abstracts. They run the system commands. Roles provide a way to describe a particular function or type of node. Roles have run_lists and attributes. Templates are all the files with all the important data substituted with code, so we can fill them later. Recipes are where you write your resources. The execution is done in top down order. Mentioned below is how a cookbook folder looks like: . |-- attributes | -- default.rb |-- CHANGELOG.md |-- CONTRIBUTING |-- LICENSE |-- metadata.rb |-- README.md -- recipes -- default.rb Cookbooks can be found at Github, they are actively maintained by opsCode and the community support. This was a basic intro to Chef, in later posts we will see about the flavors of chef, and which one to use when. This shall act as a building block to the next series of posts. Stay Tuned!" />
+<meta property="og:description" content="Managing Servers and scaling at will is hard. The bigger web players have put in years of effort, brute-forcing at times and re-iterating their methodologies, have come up with the secret sauce which they use to keep their cloud cool. The article is meant to be introductory rather than comprehensive. Chef has a steep learning curve, and in this post I wish to simplify few of the basic concepts. So, instead of going to the Chef Docs, finding searching, reading and re-reading, few of the beginner concepts are put at one place, which will help you get started on your own. SysAdmins have started adopting programming paradigms to manage infrastructure. Infrastructure is managed as code. Preparing a server is just running few codes, that’s how easy it becomes with a provisioning tool as chef. Chef is a library for configuration management its an API for your entire infrastructure. Using Chef helps you improve scalability and manageability. It helps you save time, money and the pains of doing the same repetitive tasks time and again. The Chef Architecture: Chef Server: Central Store of your infrastructure’s configuration data. It stores data necessary to configure your nodes, a REST API makes this data accessible to the nodes. Optionally, it has a WebUI which helps you manage your infrastructure via a web interface. Nodes: Systems managed by Chef Servers. A node is any host that is configured using chef-client. Chef-client runs on your node which contacts the server for information necessary to configure the node. In simple terms nodes are your servers in the cloud which you want to configure using chef. They can be your webservers, database server etc. Workstations - The machine where the sysadmin works. Cookbooks are maintained at the workstation. The workstation has two key components: the knife executable - helps upload data to chef server or individual nodes using ssh. a repository containing cookbooks, data bags, roles etc.(infrastructure’s configuration documents) Few Basic Definitions: Lets look at few of the basic definitions which we will use later: Resources are a cross platform abstraction of the things you are configuring on the host. Parameters are the piece of data that the resources contain. Action in a resource is what you want to do with the resource. Providers are the specific implementation of what the resource abstracts. They run the system commands. Roles provide a way to describe a particular function or type of node. Roles have run_lists and attributes. Templates are all the files with all the important data substituted with code, so we can fill them later. Recipes are where you write your resources. The execution is done in top down order. Mentioned below is how a cookbook folder looks like: . |-- attributes | -- default.rb |-- CHANGELOG.md |-- CONTRIBUTING |-- LICENSE |-- metadata.rb |-- README.md -- recipes -- default.rb Cookbooks can be found at Github, they are actively maintained by opsCode and the community support. This was a basic intro to Chef, in later posts we will see about the flavors of chef, and which one to use when. This shall act as a building block to the next series of posts. Stay Tuned!" />
+<link rel="canonical" href="http://localhost:4000/provisioning/2012/05/29/provisioning-made-easy-with-chef.html" />
+<meta property="og:url" content="http://localhost:4000/provisioning/2012/05/29/provisioning-made-easy-with-chef.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2012-05-29T13:30:00+05:30" />
+<script type="application/ld+json">
+{"description":"Managing Servers and scaling at will is hard. The bigger web players have put in years of effort, brute-forcing at times and re-iterating their methodologies, have come up with the secret sauce which they use to keep their cloud cool. The article is meant to be introductory rather than comprehensive. Chef has a steep learning curve, and in this post I wish to simplify few of the basic concepts. So, instead of going to the Chef Docs, finding searching, reading and re-reading, few of the beginner concepts are put at one place, which will help you get started on your own. SysAdmins have started adopting programming paradigms to manage infrastructure. Infrastructure is managed as code. Preparing a server is just running few codes, that’s how easy it becomes with a provisioning tool as chef. Chef is a library for configuration management its an API for your entire infrastructure. Using Chef helps you improve scalability and manageability. It helps you save time, money and the pains of doing the same repetitive tasks time and again. The Chef Architecture: Chef Server: Central Store of your infrastructure’s configuration data. It stores data necessary to configure your nodes, a REST API makes this data accessible to the nodes. Optionally, it has a WebUI which helps you manage your infrastructure via a web interface. Nodes: Systems managed by Chef Servers. A node is any host that is configured using chef-client. Chef-client runs on your node which contacts the server for information necessary to configure the node. In simple terms nodes are your servers in the cloud which you want to configure using chef. They can be your webservers, database server etc. Workstations - The machine where the sysadmin works. Cookbooks are maintained at the workstation. The workstation has two key components: the knife executable - helps upload data to chef server or individual nodes using ssh. a repository containing cookbooks, data bags, roles etc.(infrastructure’s configuration documents) Few Basic Definitions: Lets look at few of the basic definitions which we will use later: Resources are a cross platform abstraction of the things you are configuring on the host. Parameters are the piece of data that the resources contain. Action in a resource is what you want to do with the resource. Providers are the specific implementation of what the resource abstracts. They run the system commands. Roles provide a way to describe a particular function or type of node. Roles have run_lists and attributes. Templates are all the files with all the important data substituted with code, so we can fill them later. Recipes are where you write your resources. The execution is done in top down order. Mentioned below is how a cookbook folder looks like: . |-- attributes | -- default.rb |-- CHANGELOG.md |-- CONTRIBUTING |-- LICENSE |-- metadata.rb |-- README.md -- recipes -- default.rb Cookbooks can be found at Github, they are actively maintained by opsCode and the community support. This was a basic intro to Chef, in later posts we will see about the flavors of chef, and which one to use when. This shall act as a building block to the next series of posts. Stay Tuned!","author":{"@type":"Person","name":"saket"},"@type":"BlogPosting","url":"http://localhost:4000/provisioning/2012/05/29/provisioning-made-easy-with-chef.html","headline":"Provisioning Made Easy With Chef","dateModified":"2012-05-29T13:30:00+05:30","datePublished":"2012-05-29T13:30:00+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/provisioning/2012/05/29/provisioning-made-easy-with-chef.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Provisioning Made Easy With Chef</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2012-05-29T13:30:00+05:30" itemprop="datePublished">May 29, 2012
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">saket</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Managing Servers and scaling at will is hard. The bigger web players
+have put in years of effort, brute-forcing at times and re-iterating
+their methodologies, have come up with the secret sauce which they use
+to keep their cloud cool. The article is meant to be introductory rather than
+comprehensive. Chef has a steep learning curve, and in this post I
+wish to simplify few of the basic concepts. So, instead of going to
+the Chef Docs, finding searching, reading and re-reading, few of the beginner
+concepts are put at one place, which will help you get started on your
+own.</p>
+
+<p>SysAdmins have started adopting programming paradigms to manage
+infrastructure. Infrastructure is managed as code. Preparing a server
+is just running few codes, that’s how easy it becomes with a
+provisioning tool as chef. Chef is a  library for configuration
+management its an API for your entire infrastructure. Using Chef helps
+you improve scalability and manageability. It helps you save time,
+money and the pains of doing the same repetitive tasks time and
+again.</p>
+
+<h2 id="the-chef-architecture">The Chef Architecture:</h2>
+
+<p>Chef Server:  Central Store of your infrastructure’s configuration
+data. It stores data necessary to configure your nodes, a REST API
+makes this data accessible to the nodes.  Optionally, it has a WebUI
+which helps you manage your infrastructure via a web interface.</p>
+
+<p>Nodes: Systems managed by Chef Servers. A node is any host that is
+configured using chef-client. Chef-client runs on your node which
+contacts the server for information necessary to configure the node. 
+In simple terms nodes are your servers in the cloud which you want to
+configure using chef. They can be your webservers, database server
+etc.</p>
+
+<p>Workstations - The machine where the sysadmin works. Cookbooks are
+maintained at the workstation. The workstation has two key components:</p>
+
+<ul>
+  <li>the knife executable - helps upload data to chef server or individual nodes using ssh.</li>
+  <li>a repository containing cookbooks, data bags, roles etc.(infrastructure’s configuration documents)</li>
+</ul>
+
+<h3 id="few-basic-definitions">Few Basic Definitions:</h3>
+
+<p>Lets look at few of the basic definitions which we will use later:</p>
+
+<p>Resources are  a cross platform abstraction of the things you are
+configuring on the host.</p>
+
+<p>Parameters are the piece of data that the resources contain.</p>
+
+<p>Action in a resource is what you want to do with the resource.</p>
+
+<p>Providers are the specific implementation of what the resource
+abstracts. They run the system commands.</p>
+
+<p>Roles provide a way to describe a particular function or type of
+node. Roles have run_lists and attributes.</p>
+
+<p>Templates are all the files with all the important data substituted
+with code, so we can fill them later.</p>
+
+<p>Recipes are where you write your resources. The execution is done in
+top down order.</p>
+
+<p>Mentioned below is how a cookbook folder looks like:</p>
+<pre>
+.
+|-- attributes
+|   -- default.rb
+|-- CHANGELOG.md
+|-- CONTRIBUTING
+|-- LICENSE
+|-- metadata.rb
+|-- README.md
+-- recipes
+   -- default.rb
+</pre>
+
+<p>Cookbooks can be found at Github, they are actively maintained by
+opsCode and the community support. This was a basic intro to Chef, in
+later posts we will see about the flavors of chef, and which one to
+use when. This shall act as a building block to the next series of
+posts. Stay Tuned!</p>
+
+
+  </div><a class="u-url" href="/provisioning/2012/05/29/provisioning-made-easy-with-chef.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

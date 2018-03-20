@@ -1,0 +1,2708 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-03-20T19:03:02+05:30</updated><id>http://localhost:4000/</id><title type="html">Agiliq Blogs</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><entry><title type="html">Finding a prime number whose binary representation is a giraffe (or a T-Rex)</title><link href="http://localhost:4000/python/2018/01/21/prime-number-binary-trex.html" rel="alternate" type="text/html" title="Finding a prime number whose binary representation is a giraffe (or a T-Rex)" /><published>2018-01-21T19:41:32+05:30</published><updated>2018-01-21T19:41:32+05:30</updated><id>http://localhost:4000/python/2018/01/21/prime-number-binary-trex</id><content type="html" xml:base="http://localhost:4000/python/2018/01/21/prime-number-binary-trex.html">&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/shabda/experiments/master/prime_dinos/odd-number-theorists.jpg&quot; alt=&quot;Odd Number Theorists&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;First, here is a prime number whose binary representation is a T-Rex.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/shabda/a3fce10a702f9a48c0e7989ac5802739.js&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Math with bad drawings &lt;a href=&quot;https://mathwithbaddrawings.com/2017/10/09/insatiable-for-updates/&quot;&gt;asked&lt;/a&gt; for a prime number whose binary representation is a giraffe. This lead to discussion on &lt;a href=&quot;https://www.reddit.com/r/math/comments/7qpfls/does_there_exist_a_prime_number_whose/&quot;&gt;Math.reddit&lt;/a&gt; and &lt;a href=&quot;https://news.ycombinator.com/item?id=16192608&quot;&gt;Hacker news&lt;/a&gt; which led to finding such a prime number.&lt;/p&gt;
+
+&lt;p&gt;342581792649127676198127791406119644054852809184750511204770992210601825938383173228625368612512343524580568135765381129832784929140287102447656231670490278371618738040053550924844754083137995849927287014555199009052294292243605111352278964229602623894816760629354416193979550552423279842373621548435137856781153105076831681645952473068169294190544029391463758663828828100567003458546392021905815042131115480711892076216081858013250696070743624005842779807059777397154653840706692288630135185563366228931093496037459868457738024280865863648682544327375771172685872176976999577303715645442779935499071380556380855234358517399907184246818275843840363379983214925406281243183361618849192180391506653641933784053451121171160334712857092937535606122822893204604775038632348974223351004456787673186165100098223897371450275291114458983950607846718107603195397991880820766444935587675531082421404505700110617860358142315360174185418283092141238404865012380329781867103175076882601367389664213176688432343205501275425887396821357210158983064167712232404771958406106398750988506833703615072967113838953&lt;/p&gt;
+
+&lt;p&gt;You can see the binary representation on reddit.&lt;/p&gt;
+
+&lt;p&gt;As Nathaniel Borenstein &lt;a href=&quot;https://en.wikiquote.org/wiki/Nathaniel_Borenstein&quot;&gt;said&lt;/a&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;It should be noted that no ethically-trained software engineer would ever consent to write a DestroyBaghdad procedure. Basic professional ethics would instead require him to write a DestroyCity procedure, to which Baghdad could be given as a parameter.&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;So the obvious next step is to generalize this is to program which can take an image and find a primary number whose binary representation is the image.&lt;/p&gt;
+
+&lt;p&gt;We run this for an Argentinosaurus image&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python prime_dinosaur.py -f ~/Downloads/argentinosaurus.jpg -s 40
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Which gives us&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/shabda/ccf7f224df92a1484b46d2d7c28bd37f.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;how-does-this-work&quot;&gt;How does this work?&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;We read the image and convert to desired size&lt;/li&gt;
+  &lt;li&gt;The image data is converted to monochrome and pixels darker (lower) than a threshold are converted 1, rest pixels are zero.&lt;/li&gt;
+  &lt;li&gt;This data is read in in a numpy array&lt;/li&gt;
+  &lt;li&gt;This 2d array is flattened, and treated as a bitarray to get a number&lt;/li&gt;
+  &lt;li&gt;We then start incrementing the number until we get a prime.&lt;/li&gt;
+  &lt;li&gt;The primality is tested using the Miller Rabin test.&lt;/li&gt;
+  &lt;li&gt;When such a number is found the number is converted to its binary representation, and displayed in a square grid.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The full code is:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/shabda/20dc8dd2665920f857f24b8b224c63ea.js&quot;&gt;&lt;/script&gt;</content><author><name>shabda</name></author><summary type="html">First, here is a prime number whose binary representation is a T-Rex. Math with bad drawings asked for a prime number whose binary representation is a giraffe. This lead to discussion on Math.reddit and Hacker news which led to finding such a prime number. 342581792649127676198127791406119644054852809184750511204770992210601825938383173228625368612512343524580568135765381129832784929140287102447656231670490278371618738040053550924844754083137995849927287014555199009052294292243605111352278964229602623894816760629354416193979550552423279842373621548435137856781153105076831681645952473068169294190544029391463758663828828100567003458546392021905815042131115480711892076216081858013250696070743624005842779807059777397154653840706692288630135185563366228931093496037459868457738024280865863648682544327375771172685872176976999577303715645442779935499071380556380855234358517399907184246818275843840363379983214925406281243183361618849192180391506653641933784053451121171160334712857092937535606122822893204604775038632348974223351004456787673186165100098223897371450275291114458983950607846718107603195397991880820766444935587675531082421404505700110617860358142315360174185418283092141238404865012380329781867103175076882601367389664213176688432343205501275425887396821357210158983064167712232404771958406106398750988506833703615072967113838953 You can see the binary representation on reddit. As Nathaniel Borenstein said It should be noted that no ethically-trained software engineer would ever consent to write a DestroyBaghdad procedure. Basic professional ethics would instead require him to write a DestroyCity procedure, to which Baghdad could be given as a parameter. So the obvious next step is to generalize this is to program which can take an image and find a primary number whose binary representation is the image. We run this for an Argentinosaurus image python prime_dinosaur.py -f ~/Downloads/argentinosaurus.jpg -s 40 Which gives us How does this work? We read the image and convert to desired size The image data is converted to monochrome and pixels darker (lower) than a threshold are converted 1, rest pixels are zero. This data is read in in a numpy array This 2d array is flattened, and treated as a bitarray to get a number We then start incrementing the number until we get a prime. The primality is tested using the Miller Rabin test. When such a number is found the number is converted to its binary representation, and displayed in a square grid. The full code is:</summary></entry><entry><title type="html">When and how to use Django ListView</title><link href="http://localhost:4000/django/2017/12/29/when-and-how-use-django-listview.html" rel="alternate" type="text/html" title="When and how to use Django ListView" /><published>2017-12-29T11:36:39+05:30</published><updated>2017-12-29T11:36:39+05:30</updated><id>http://localhost:4000/django/2017/12/29/when-and-how-use-django-listview</id><content type="html" xml:base="http://localhost:4000/django/2017/12/29/when-and-how-use-django-listview.html">&lt;h3 id=&quot;when-to-use-listview&quot;&gt;When to use ListView?&lt;/h3&gt;
+
+&lt;p&gt;Django provides several class based generic views to accomplish common tasks. One among them is ListView. Our &lt;a href=&quot;http://agiliq.com/blog/2017/12/when-and-how-use-django-templateview/&quot; target=&quot;_blank&quot;&gt;last post&lt;/a&gt; was on TemplateView.&lt;/p&gt;
+
+&lt;p&gt;ListView &lt;strong&gt;should be used&lt;/strong&gt; when you want to present a list of objects in a html page.&lt;/p&gt;
+
+&lt;p&gt;ListView &lt;strong&gt;shouldn’t be used&lt;/strong&gt; when your page has forms and does creation or update of objects.&lt;/p&gt;
+
+&lt;p&gt;TemplateView can achieve everything which ListView can, but ListView avoids a lot of boilerplate code which would be needed with TemplateView.&lt;/p&gt;
+
+&lt;p&gt;Let’s write a view using base view &lt;strong&gt;View&lt;/strong&gt; and then modify it to use TemplateView and then to use ListView. ListView would help us avoid several lines of code and would also provide better separation of concern.&lt;/p&gt;
+
+&lt;h3 id=&quot;vanilla-view&quot;&gt;Vanilla View&lt;/h3&gt;
+
+&lt;p&gt;Assume there is a model called Book which looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class Book(models.Model):
+    name = models.CharField(max_length=100)
+    author_name = models.CharField(max_length=100)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We want to have a page which shows all the books in the database. View would look like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class BookListView(View):
+
+	def get(self, request, *args, **kwargs):
+		books = Book.objects.all()
+		context = {'books': books}
+		return render(request, &quot;book-list.html&quot;, context=context)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;book-list.html looks like the following:&lt;/p&gt;
+
+&lt;h4 id=&quot;by-subclassing-templateview&quot;&gt;By subclassing TemplateView&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class BookListView(TemplateView):
+	template_name = 'book-list.html'
+
+	def get_context_data(self, *args, **kwargs):
+		context = super(BookListView, self).get_context_data(*args, **kwargs)
+		context['books'] = Book.objects.all()
+		return context
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;As discussed in last post on TemplateView, we didn’t have to provide a get() implementation and bother with render() while using TemplateView. All that was taken care of by TemplateView.&lt;/p&gt;
+
+&lt;h4 id=&quot;by-subclassing-listview&quot;&gt;By subclassing ListView&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from django.views.generic.list import ListView
+
+class BookListView(ListView):
+	template_name = 'book-list.html'
+	queryset = Book.objects.all()
+	context_object_name = 'books'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;ListView removes more boilerplate from TemplateView. With ListView we didn’t have to bother with get_context_data() implementation. ListView takes care of setting context variable ‘books’ with the queryset we defined on BookListView.&lt;/p&gt;
+
+&lt;p&gt;We can also add filtering in ListView.queryset.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class BookListView(ListView):
+	template_name = 'book-list.html'
+	queryset = Book.objects.filter(name='A Feast for Crows')
+	context_object_name = 'books'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Had we wanted pagination, we would have had to add several lines of code in TemplateView or vanilla View implementation. ListView provides pagination for free, we don’t have to add pagination code.&lt;/p&gt;
+
+&lt;p&gt;Pagination can be added to ListView subclasses by setting a variable &lt;code class=&quot;highlighter-rouge&quot;&gt;paginate_by&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class BookListView(ListView):
+	template_name = 'book-list.html'
+	queryset = Book.objects.all()
+	context_object_name = 'books'
+	paginate_by = 10
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After this &lt;strong&gt;/books-list/?page=1&lt;/strong&gt; will return first 10 books. &lt;strong&gt;/books-list/?page=2&lt;/strong&gt; will return next 10 books and so on.&lt;/p&gt;</content><author><name>akshar</name></author><summary type="html">When to use ListView? Django provides several class based generic views to accomplish common tasks. One among them is ListView. Our last post was on TemplateView. ListView should be used when you want to present a list of objects in a html page. ListView shouldn’t be used when your page has forms and does creation or update of objects. TemplateView can achieve everything which ListView can, but ListView avoids a lot of boilerplate code which would be needed with TemplateView. Let’s write a view using base view View and then modify it to use TemplateView and then to use ListView. ListView would help us avoid several lines of code and would also provide better separation of concern. Vanilla View Assume there is a model called Book which looks like: class Book(models.Model): name = models.CharField(max_length=100) author_name = models.CharField(max_length=100) We want to have a page which shows all the books in the database. View would look like: class BookListView(View): def get(self, request, *args, **kwargs): books = Book.objects.all() context = {'books': books} return render(request, &quot;book-list.html&quot;, context=context) book-list.html looks like the following: By subclassing TemplateView class BookListView(TemplateView): template_name = 'book-list.html' def get_context_data(self, *args, **kwargs): context = super(BookListView, self).get_context_data(*args, **kwargs) context['books'] = Book.objects.all() return context As discussed in last post on TemplateView, we didn’t have to provide a get() implementation and bother with render() while using TemplateView. All that was taken care of by TemplateView. By subclassing ListView from django.views.generic.list import ListView class BookListView(ListView): template_name = 'book-list.html' queryset = Book.objects.all() context_object_name = 'books' ListView removes more boilerplate from TemplateView. With ListView we didn’t have to bother with get_context_data() implementation. ListView takes care of setting context variable ‘books’ with the queryset we defined on BookListView. We can also add filtering in ListView.queryset. class BookListView(ListView): template_name = 'book-list.html' queryset = Book.objects.filter(name='A Feast for Crows') context_object_name = 'books' Had we wanted pagination, we would have had to add several lines of code in TemplateView or vanilla View implementation. ListView provides pagination for free, we don’t have to add pagination code. Pagination can be added to ListView subclasses by setting a variable paginate_by class BookListView(ListView): template_name = 'book-list.html' queryset = Book.objects.all() context_object_name = 'books' paginate_by = 10 After this /books-list/?page=1 will return first 10 books. /books-list/?page=2 will return next 10 books and so on.</summary></entry><entry><title type="html">When and how to use Django TemplateView</title><link href="http://localhost:4000/django/2017/12/29/when-and-how-use-django-templateview.html" rel="alternate" type="text/html" title="When and how to use Django TemplateView" /><published>2017-12-29T11:30:27+05:30</published><updated>2017-12-29T11:30:27+05:30</updated><id>http://localhost:4000/django/2017/12/29/when-and-how-use-django-templateview</id><content type="html" xml:base="http://localhost:4000/django/2017/12/29/when-and-how-use-django-templateview.html">&lt;h3 id=&quot;when-to-use-template-view&quot;&gt;When to use Template View?&lt;/h3&gt;
+
+&lt;p&gt;Django provides several class based generic views to accomplish common tasks. Simplest among them is TemplateView.&lt;/p&gt;
+
+&lt;p&gt;TemplateView &lt;strong&gt;should be used&lt;/strong&gt; when you want to present some information in a html page.&lt;/p&gt;
+
+&lt;p&gt;TemplateView &lt;strong&gt;shouldn’t be used&lt;/strong&gt; when your page has forms and does creation or update of objects.&lt;/p&gt;
+
+&lt;p&gt;TemplateView is most suitable in following cases:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Showing ‘about us’ like pages which are static and hardly needs any context. Though it is easy to use context variables with TemplateView.&lt;/li&gt;
+  &lt;li&gt;Showing pages which work with GET requests and don’t have forms in it.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let’s write a view using base view &lt;strong&gt;View&lt;/strong&gt; and then modify it to use TemplateView. TemplateView would help us avoid several lines of code.&lt;/p&gt;
+
+&lt;h4 id=&quot;vanilla-view&quot;&gt;Vanilla view&lt;/h4&gt;
+
+&lt;p&gt;An ‘about us’ page with &lt;strong&gt;View&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from django.views.generic.base import View
+from django.shortcuts import render
+
+class AboutUs(View):
+	def get(self, request, *args, **kwargs):
+		return render(request, &quot;about-us.html&quot;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With vanilla View we need to provide a get() implementation and must return a HttpResponse() object from get().&lt;/p&gt;
+
+&lt;h4 id=&quot;templateview&quot;&gt;TemplateView&lt;/h4&gt;
+
+&lt;p&gt;The same functionality can be achieved with &lt;strong&gt;TemplateView&lt;/strong&gt; in following way:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from django.views.generic.base import TemplateView
+
+class AboutUs(TemplateView):
+	template_name = 'about-us.html'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;As you can notice, we didn’t have to provide a get() implementation while using TemplateView. TemplateView has it’s own get(). TemplateView.get() also encapsulates the creation of HttpResponse object and returning it.&lt;/p&gt;
+
+&lt;p&gt;We only had to specify the template_name while using TemplateView.&lt;/p&gt;
+
+&lt;p&gt;An ‘about us’ page with &lt;code class=&quot;highlighter-rouge&quot;&gt;context&lt;/code&gt; using a vanilla &lt;strong&gt;View&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class AboutUs(View):
+	def get(self, request, *args, **kwargs):
+		context = {'name': 'Gryffindor'}
+		return render(request, &quot;about-us.html&quot;, context=context)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;templateview-with-context-variables&quot;&gt;TemplateView with context variables&lt;/h4&gt;
+
+&lt;p&gt;An ‘about us’ page with &lt;code class=&quot;highlighter-rouge&quot;&gt;context&lt;/code&gt; using a &lt;strong&gt;TemplateView&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class AboutUs(TemplateView):
+	template_name = 'about-us.html'
+
+	def get_context_data(self, *args, **kwargs):
+		context = super(AboutUs, self).get_context_data(*args, **kwargs)
+		context['name'] = 'Gryffindor'
+		return context
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;TemplateView has a better separation of defining context variables and defining template name.&lt;/p&gt;
+
+&lt;p&gt;Essentially a TemplateView helps you avoid boilerplate code like:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;providing a GET() implementation.&lt;/li&gt;
+  &lt;li&gt;creating a returning a HttpResponse() or a subclass of HttpResponse() object.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>akshar</name></author><summary type="html">When to use Template View? Django provides several class based generic views to accomplish common tasks. Simplest among them is TemplateView. TemplateView should be used when you want to present some information in a html page. TemplateView shouldn’t be used when your page has forms and does creation or update of objects. TemplateView is most suitable in following cases: Showing ‘about us’ like pages which are static and hardly needs any context. Though it is easy to use context variables with TemplateView. Showing pages which work with GET requests and don’t have forms in it. Let’s write a view using base view View and then modify it to use TemplateView. TemplateView would help us avoid several lines of code. Vanilla view An ‘about us’ page with View. from django.views.generic.base import View from django.shortcuts import render class AboutUs(View): def get(self, request, *args, **kwargs): return render(request, &quot;about-us.html&quot;) With vanilla View we need to provide a get() implementation and must return a HttpResponse() object from get(). TemplateView The same functionality can be achieved with TemplateView in following way: from django.views.generic.base import TemplateView class AboutUs(TemplateView): template_name = 'about-us.html' As you can notice, we didn’t have to provide a get() implementation while using TemplateView. TemplateView has it’s own get(). TemplateView.get() also encapsulates the creation of HttpResponse object and returning it. We only had to specify the template_name while using TemplateView. An ‘about us’ page with context using a vanilla View. class AboutUs(View): def get(self, request, *args, **kwargs): context = {'name': 'Gryffindor'} return render(request, &quot;about-us.html&quot;, context=context) TemplateView with context variables An ‘about us’ page with context using a TemplateView. class AboutUs(TemplateView): template_name = 'about-us.html' def get_context_data(self, *args, **kwargs): context = super(AboutUs, self).get_context_data(*args, **kwargs) context['name'] = 'Gryffindor' return context TemplateView has a better separation of defining context variables and defining template name. Essentially a TemplateView helps you avoid boilerplate code like: providing a GET() implementation. creating a returning a HttpResponse() or a subclass of HttpResponse() object.</summary></entry><entry><title type="html">Adventures in advanced Django ORM with HyperLogLog</title><link href="http://localhost:4000/django/2017/12/11/adventures-in-advanced-django-orm-with-hyperloglog.html" rel="alternate" type="text/html" title="Adventures in advanced Django ORM with HyperLogLog" /><published>2017-12-11T22:54:38+05:30</published><updated>2017-12-11T22:54:38+05:30</updated><id>http://localhost:4000/django/2017/12/11/adventures-in-advanced-django-orm-with-hyperloglog</id><content type="html" xml:base="http://localhost:4000/django/2017/12/11/adventures-in-advanced-django-orm-with-hyperloglog.html">&lt;p&gt;Counting distinct object is a common operation. Most databases and Django make its quite simple to do so. Given appropriate tables or models you would be doing something like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;select event_type, count(distinct user_id)
+from github_events
+group by 1;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With appropriateley defined Django model you would do&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GithubEvents.objects.values(
+    &quot;event_type&quot;
+).annotate(
+    distinct_user_count=Count(
+        &quot;user_id&quot;, distinct=True
+    )
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Count distinct is however &lt;a href=&quot;https://en.wikipedia.org/wiki/Count-distinct_problem&quot;&gt;quite slow on large datasets&lt;/a&gt;. There are a few faster methods which give an approximate count in much less time. HyperLogLog is one of the most common methods. We will try implementing that in Django ORM without going to raw SQL and see how far we can get. (Spoiler: We will go far but won’t be able to do it.)&lt;/p&gt;
+
+&lt;p&gt;We will use a table of github events. Citusdata has some interesting data sets, they have a &lt;a href=&quot;https://examples.citusdata.com/events.csv&quot;&gt;Github event data in CSV&lt;/a&gt; which we will use today. We will use Postgres.&lt;/p&gt;
+
+&lt;p&gt;Lets create the table and load the data.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CREATE TABLE github_events
+    (
+        event_id bigint,
+        event_type text,
+        event_public boolean,
+        repo_id bigint,
+        payload jsonb,
+        repo jsonb,
+        user_id bigint,
+        org jsonb,
+        created_at timestamp
+    );
+
+COPY github_events FROM events.csv CSV
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We then do a insepctdb on created table to get our models.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python manage.py inspectdb github_events
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This gives us&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class GithubEvents(models.Model):
+    event_id = models.BigIntegerField(blank=True, null=True)
+    event_type = models.TextField(blank=True, null=True)
+    event_public = models.NullBooleanField()
+    repo_id = models.BigIntegerField(blank=True, null=True)
+    payload = models.TextField(blank=True, null=True)  # This field type is a guess.
+    repo = models.TextField(blank=True, null=True)  # This field type is a guess.
+    user_id = models.BigIntegerField(blank=True, null=True)
+    org = models.TextField(blank=True, null=True)  # This field type is a guess.
+    created_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'github_events'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Change the &lt;code class=&quot;highlighter-rouge&quot;&gt;event_id&lt;/code&gt; to be the primary_key. Other fields stay as is&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;event_id = models.BigIntegerField(primary_key = True)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;To get the HyperLogLog based distinct counts, grouped by event_type we need to the following SQL.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SELECT
+  counted_data.event_type,
+  CASE WHEN num_uniques &amp;lt; 2.5 * 512
+  AND num_zero_buckets &amp;gt; 0 THEN (
+    (
+      0.7213 / (1 + 1.079 / 512)
+    ) * (
+      512 * log(
+        2,
+        (512 :: numeric) / num_zero_buckets
+      )
+    )
+  ):: int ELSE num_uniques END AS approx_distinct_count
+FROM
+  (
+    SELECT
+      event_type,
+      (
+        (
+          pow(512, 2) * (
+            0.7213 / (1 + 1.079 / 512)
+          )
+        ) / (
+          (
+            512 - count(1)
+          ) + sum(
+            pow(2, -1 * bucket_hash)
+          )
+        )
+      ):: int AS num_uniques,
+      512 - count(1) AS num_zero_buckets
+    FROM
+      (
+        SELECT
+          event_type,
+          hashtext(user_id :: varchar) &amp;amp; (512 - 1) AS bucket_num,
+          31 - floor(
+            log(
+              2,
+              min(
+                hashtext(user_id :: varchar) &amp;amp; ~(1 &amp;lt;&amp;lt; 31)
+              )
+            )
+          ) AS bucket_hash
+        FROM
+          github_events
+        GROUP BY
+          1,
+          2
+      ) AS bucketed_data
+    GROUP BY
+      1
+    ORDER BY
+      1
+  ) AS counted_data
+ORDER BY
+  1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We will not go into the details of the SQL. This SQL is adapted from Periscopedata, and &lt;a href=&quot;https://www.periscopedata.com/blog/hyperloglog-in-pure-sql&quot;&gt;they have a very nice tutorial here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We will not be discussing the constants used or the algorithm. You should read the Periscopedata article or &lt;a href=&quot;algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf&quot;&gt;read the original paper&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We will try to convert this SQL to a Django ORM queryset and see how far we can go. This is a pretty advanced SQL with&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Nested Sub-queries&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hashtext&lt;/code&gt; which is an undocumented Postgres function&lt;/li&gt;
+  &lt;li&gt;Bitwise operations&lt;/li&gt;
+  &lt;li&gt;Multiple grouping and mathematical functions&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Trying to convert this to ORM will allow us to use some adavanced Django ORM features.&lt;/p&gt;
+
+&lt;p&gt;Lets start with the innermost subquery&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SELECT
+  event_type,
+  hashtext(user_id :: varchar) &amp;amp; (512 - 1) AS bucket_num,
+  31 - floor(
+    log(
+      2,
+      min(
+        hashtext(user_id :: varchar) &amp;amp; ~(1 &amp;lt;&amp;lt; 31)
+      )
+    )
+  ) AS bucket_hash
+FROM
+  github_events
+GROUP BY
+  1,
+  2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;hashtext(user_id :: varchar)&lt;/code&gt; is used twice, so let us start by implementing that. &lt;code class=&quot;highlighter-rouge&quot;&gt;hashtext&lt;/code&gt; is not part of &lt;code class=&quot;highlighter-rouge&quot;&gt;django.contrib.postgres&lt;/code&gt;, but we can get it by subclassing &lt;code class=&quot;highlighter-rouge&quot;&gt;Func&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Some imports we are going to need for the rest of the tutorial.
+from django.db.models import (DateTimeField, ExpressionWrapper, F,
+     IntegerField, Value, Min, Count, TextField)
+from django.db.models.functions import Cast
+
+class HashText(Func):
+    function = 'HASHTEXT'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With this we can do&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GithubEvents.objects.annotate(
+    hashed_user_id=HashText(
+        Cast(&quot;user_id&quot;, TextField())
+    )
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With this we can do:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GithubEvents.objects.annotate(
+    hashed_user_id=HashText(
+        Cast(&quot;user_id&quot;, TextField())
+    )
+).annotate(
+    bucket_number=ExpressionWrapper(
+        F(&quot;hashed_user_id&quot;).bitand(511), output_field=IntegerField()
+    )
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We are taking the annotated &lt;code class=&quot;highlighter-rouge&quot;&gt;hashed_user_id&lt;/code&gt; and applying a bitwise AND. We
+need to wrap this in a &lt;code class=&quot;highlighter-rouge&quot;&gt;ExpressionWrapper&lt;/code&gt; as Django doesn’t have sufficient data to calculate the output field.&lt;/p&gt;
+
+&lt;p&gt;At this point we have the two fields we need to group on, so we can do&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;GithubEvents.objects.annotate(
+    hashed_user_id=HashText(
+        Cast(&quot;user_id&quot;, TextField())
+    )
+).annotate(
+    bucket_number=ExpressionWrapper(
+        F(&quot;hashed_user_id&quot;).bitand(511), output_field=IntegerField()
+    )
+).values(&quot;event_type&quot;, &quot;bucket_number&quot;, hashed_user_id=hashed_user_id)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now we need our aggregated bucket hash corresponding to this expression:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;31 - floor(
+    log(
+      2,
+      min(
+        hashtext(user_id :: varchar) &amp;amp; ~(1 &amp;lt;&amp;lt; 31)
+      )
+    )
+  )
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So we define a new function class, and use it to annotate further&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class FloorLog2(Func):
+    template = 'FLOOR(LOG(2, (%(expressions)s)))'
+
+grouped_gs = GithubEvents.objects.annotate(
+    hashed_user_id=HashText(
+        Cast(&quot;user_id&quot;, TextField())
+    )
+).annotate(
+    bucket_number=ExpressionWrapper(
+        F(&quot;hashed_user_id&quot;).bitand(511), output_field=IntegerField()
+    )
+).values(
+    &quot;event_type&quot;, &quot;bucket_number&quot;,
+    hashed_user_id=F(&quot;hashed_user_id&quot;)
+).annotate(
+    bucket_hash=31-FloorLog2(
+        Min(&quot;hashed_user_id&quot;).bitand(2147483647)
+    )
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Lets look at the generated query&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;str(grouped_gs.query)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;It gives us&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'SELECT &quot;github_events&quot;.&quot;event_type&quot;, HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) AS &quot;hashed_user_id&quot;, (HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) &amp;amp; 511) AS &quot;bucket_number&quot;, (31 - FLOOR(LOG(2, ((MIN(HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text)) &amp;amp; 2147483647))))) AS &quot;bucket_hash&quot; FROM &quot;github_events&quot; GROUP BY &quot;github_events&quot;.&quot;event_type&quot;, HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text), (HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) &amp;amp; 511)'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Exactly what we want in our innermost subquery.&lt;/p&gt;
+
+&lt;p&gt;Now we want to get to the middle subquery in our SQL, which is&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SELECT
+      event_type,
+      (
+        (
+          pow(512, 2) * (
+            0.7213 / (1 + 1.079 / 512)
+          )
+        ) / (
+          (
+            512 - count(1)
+          ) + sum(
+            pow(2, -1 * bucket_hash)
+          )
+        )
+      ):: int AS num_uniques,
+      512 - count(1) AS num_zero_buckets
+    FROM
+      (
+        ... [First Subquery]
+      ) AS bucketed_data
+    GROUP BY
+      1
+    ORDER BY
+      1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Our first attempt to get this, might be to add another level of &lt;code class=&quot;highlighter-rouge&quot;&gt;values&lt;/code&gt; and anotate. Doing this we get.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class SumPow2(Func):
+    template = &quot;sum(pow(2, -1 * %(expressions)s ))&quot;
+
+grouped_qs_2 = grouped_gs.values(
+    &quot;event_type&quot;, bucket_hash=F(&quot;bucket_hash&quot;)
+).annotate(
+    num_zero_buckets=512-Count(&quot;event_type&quot;),
+    num_uniques=ExpressionWrapper(
+        188686.824458612/(512-Count(&quot;event_type&quot;) + SumPow2('bucket_hash')), output_field=IntegerField()
+    )
+)
+str(grouped_qs_2.query)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Looking at the generated query we see&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'SELECT &quot;github_events&quot;.&quot;event_type&quot;, (31 - FLOOR(LOG(2, (MIN((HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) &amp;amp; 2147483647)))))) AS &quot;bucket_hash&quot;, (512 - COUNT(&quot;github_events&quot;.&quot;event_type&quot;)) AS &quot;num_zero_buckets&quot;, (188686.824458612 / ((512 - COUNT(&quot;github_events&quot;.&quot;event_type&quot;)) + sum(pow(2, -1 * (31 - FLOOR(LOG(2, (MIN((HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) &amp;amp; 2147483647)))))) )))) AS &quot;num_uniques&quot; FROM &quot;github_events&quot; GROUP BY &quot;github_events&quot;.&quot;event_type&quot;'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This is not what we want. Rather than the nested group by we see only the outher most group by, corresponding to the last &lt;code class=&quot;highlighter-rouge&quot;&gt;values&lt;/code&gt; call we added.&lt;/p&gt;
+
+&lt;p&gt;My next approach was to try wrapping this in a subquery expression - &lt;a href=&quot;https://docs.djangoproject.com/en/1.11/releases/1.11/&quot;&gt;added in Django 1.11&lt;/a&gt;, but
+there is no way to select with a group by from a subquery expression.&lt;/p&gt;
+
+&lt;p&gt;At this point I gave up as there seemed to be no way to nest group by expressions. (Though I would ove to be wrong on this). I was able to go much further than I initially expected.&lt;/p&gt;
+
+&lt;h3 id=&quot;references&quot;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf&quot;&gt;HyperLogLog: the analysis of a near-optimal
+cardinality estimation algorithm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.periscopedata.com/blog/hyperloglog-in-pure-sql&quot;&gt;HyperLogLog in Pure SQL&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.citusdata.com/blog/2017/04/04/distributed_count_distinct_with_postgresql/&quot;&gt;Distributed count(distinct) with HyperLogLog on Postgres&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>shabda</name></author><summary type="html">Counting distinct object is a common operation. Most databases and Django make its quite simple to do so. Given appropriate tables or models you would be doing something like select event_type, count(distinct user_id) from github_events group by 1; With appropriateley defined Django model you would do GithubEvents.objects.values( &quot;event_type&quot; ).annotate( distinct_user_count=Count( &quot;user_id&quot;, distinct=True ) ) Count distinct is however quite slow on large datasets. There are a few faster methods which give an approximate count in much less time. HyperLogLog is one of the most common methods. We will try implementing that in Django ORM without going to raw SQL and see how far we can get. (Spoiler: We will go far but won’t be able to do it.) We will use a table of github events. Citusdata has some interesting data sets, they have a Github event data in CSV which we will use today. We will use Postgres. Lets create the table and load the data. CREATE TABLE github_events ( event_id bigint, event_type text, event_public boolean, repo_id bigint, payload jsonb, repo jsonb, user_id bigint, org jsonb, created_at timestamp ); COPY github_events FROM events.csv CSV We then do a insepctdb on created table to get our models. python manage.py inspectdb github_events This gives us class GithubEvents(models.Model): event_id = models.BigIntegerField(blank=True, null=True) event_type = models.TextField(blank=True, null=True) event_public = models.NullBooleanField() repo_id = models.BigIntegerField(blank=True, null=True) payload = models.TextField(blank=True, null=True) # This field type is a guess. repo = models.TextField(blank=True, null=True) # This field type is a guess. user_id = models.BigIntegerField(blank=True, null=True) org = models.TextField(blank=True, null=True) # This field type is a guess. created_at = models.DateTimeField(blank=True, null=True) class Meta: managed = False db_table = 'github_events' Change the event_id to be the primary_key. Other fields stay as is event_id = models.BigIntegerField(primary_key = True) To get the HyperLogLog based distinct counts, grouped by event_type we need to the following SQL. SELECT counted_data.event_type, CASE WHEN num_uniques &amp;lt; 2.5 * 512 AND num_zero_buckets &amp;gt; 0 THEN ( ( 0.7213 / (1 + 1.079 / 512) ) * ( 512 * log( 2, (512 :: numeric) / num_zero_buckets ) ) ):: int ELSE num_uniques END AS approx_distinct_count FROM ( SELECT event_type, ( ( pow(512, 2) * ( 0.7213 / (1 + 1.079 / 512) ) ) / ( ( 512 - count(1) ) + sum( pow(2, -1 * bucket_hash) ) ) ):: int AS num_uniques, 512 - count(1) AS num_zero_buckets FROM ( SELECT event_type, hashtext(user_id :: varchar) &amp;amp; (512 - 1) AS bucket_num, 31 - floor( log( 2, min( hashtext(user_id :: varchar) &amp;amp; ~(1 &amp;lt;&amp;lt; 31) ) ) ) AS bucket_hash FROM github_events GROUP BY 1, 2 ) AS bucketed_data GROUP BY 1 ORDER BY 1 ) AS counted_data ORDER BY 1 We will not go into the details of the SQL. This SQL is adapted from Periscopedata, and they have a very nice tutorial here. We will not be discussing the constants used or the algorithm. You should read the Periscopedata article or read the original paper. We will try to convert this SQL to a Django ORM queryset and see how far we can go. This is a pretty advanced SQL with Nested Sub-queries hashtext which is an undocumented Postgres function Bitwise operations Multiple grouping and mathematical functions Trying to convert this to ORM will allow us to use some adavanced Django ORM features. Lets start with the innermost subquery SELECT event_type, hashtext(user_id :: varchar) &amp;amp; (512 - 1) AS bucket_num, 31 - floor( log( 2, min( hashtext(user_id :: varchar) &amp;amp; ~(1 &amp;lt;&amp;lt; 31) ) ) ) AS bucket_hash FROM github_events GROUP BY 1, 2 The hashtext(user_id :: varchar) is used twice, so let us start by implementing that. hashtext is not part of django.contrib.postgres, but we can get it by subclassing Func # Some imports we are going to need for the rest of the tutorial. from django.db.models import (DateTimeField, ExpressionWrapper, F, IntegerField, Value, Min, Count, TextField) from django.db.models.functions import Cast class HashText(Func): function = 'HASHTEXT' With this we can do GithubEvents.objects.annotate( hashed_user_id=HashText( Cast(&quot;user_id&quot;, TextField()) ) ) With this we can do: GithubEvents.objects.annotate( hashed_user_id=HashText( Cast(&quot;user_id&quot;, TextField()) ) ).annotate( bucket_number=ExpressionWrapper( F(&quot;hashed_user_id&quot;).bitand(511), output_field=IntegerField() ) ) We are taking the annotated hashed_user_id and applying a bitwise AND. We need to wrap this in a ExpressionWrapper as Django doesn’t have sufficient data to calculate the output field. At this point we have the two fields we need to group on, so we can do GithubEvents.objects.annotate( hashed_user_id=HashText( Cast(&quot;user_id&quot;, TextField()) ) ).annotate( bucket_number=ExpressionWrapper( F(&quot;hashed_user_id&quot;).bitand(511), output_field=IntegerField() ) ).values(&quot;event_type&quot;, &quot;bucket_number&quot;, hashed_user_id=hashed_user_id) Now we need our aggregated bucket hash corresponding to this expression: 31 - floor( log( 2, min( hashtext(user_id :: varchar) &amp;amp; ~(1 &amp;lt;&amp;lt; 31) ) ) ) So we define a new function class, and use it to annotate further class FloorLog2(Func): template = 'FLOOR(LOG(2, (%(expressions)s)))' grouped_gs = GithubEvents.objects.annotate( hashed_user_id=HashText( Cast(&quot;user_id&quot;, TextField()) ) ).annotate( bucket_number=ExpressionWrapper( F(&quot;hashed_user_id&quot;).bitand(511), output_field=IntegerField() ) ).values( &quot;event_type&quot;, &quot;bucket_number&quot;, hashed_user_id=F(&quot;hashed_user_id&quot;) ).annotate( bucket_hash=31-FloorLog2( Min(&quot;hashed_user_id&quot;).bitand(2147483647) ) ) Lets look at the generated query str(grouped_gs.query) It gives us 'SELECT &quot;github_events&quot;.&quot;event_type&quot;, HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) AS &quot;hashed_user_id&quot;, (HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) &amp;amp; 511) AS &quot;bucket_number&quot;, (31 - FLOOR(LOG(2, ((MIN(HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text)) &amp;amp; 2147483647))))) AS &quot;bucket_hash&quot; FROM &quot;github_events&quot; GROUP BY &quot;github_events&quot;.&quot;event_type&quot;, HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text), (HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) &amp;amp; 511)' Exactly what we want in our innermost subquery. Now we want to get to the middle subquery in our SQL, which is SELECT event_type, ( ( pow(512, 2) * ( 0.7213 / (1 + 1.079 / 512) ) ) / ( ( 512 - count(1) ) + sum( pow(2, -1 * bucket_hash) ) ) ):: int AS num_uniques, 512 - count(1) AS num_zero_buckets FROM ( ... [First Subquery] ) AS bucketed_data GROUP BY 1 ORDER BY 1 Our first attempt to get this, might be to add another level of values and anotate. Doing this we get. class SumPow2(Func): template = &quot;sum(pow(2, -1 * %(expressions)s ))&quot; grouped_qs_2 = grouped_gs.values( &quot;event_type&quot;, bucket_hash=F(&quot;bucket_hash&quot;) ).annotate( num_zero_buckets=512-Count(&quot;event_type&quot;), num_uniques=ExpressionWrapper( 188686.824458612/(512-Count(&quot;event_type&quot;) + SumPow2('bucket_hash')), output_field=IntegerField() ) ) str(grouped_qs_2.query) Looking at the generated query we see 'SELECT &quot;github_events&quot;.&quot;event_type&quot;, (31 - FLOOR(LOG(2, (MIN((HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) &amp;amp; 2147483647)))))) AS &quot;bucket_hash&quot;, (512 - COUNT(&quot;github_events&quot;.&quot;event_type&quot;)) AS &quot;num_zero_buckets&quot;, (188686.824458612 / ((512 - COUNT(&quot;github_events&quot;.&quot;event_type&quot;)) + sum(pow(2, -1 * (31 - FLOOR(LOG(2, (MIN((HASHTEXT(&quot;github_events&quot;.&quot;user_id&quot;::text) &amp;amp; 2147483647)))))) )))) AS &quot;num_uniques&quot; FROM &quot;github_events&quot; GROUP BY &quot;github_events&quot;.&quot;event_type&quot;' This is not what we want. Rather than the nested group by we see only the outher most group by, corresponding to the last values call we added. My next approach was to try wrapping this in a subquery expression - added in Django 1.11, but there is no way to select with a group by from a subquery expression. At this point I gave up as there seemed to be no way to nest group by expressions. (Though I would ove to be wrong on this). I was able to go much further than I initially expected. References HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm HyperLogLog in Pure SQL Distributed count(distinct) with HyperLogLog on Postgres</summary></entry><entry><title type="html">Django 2.0 Window expressions tutorial</title><link href="http://localhost:4000/django/2017/12/06/django-20-window-expressions-tutorial.html" rel="alternate" type="text/html" title="Django 2.0 Window expressions tutorial" /><published>2017-12-06T10:52:38+05:30</published><updated>2017-12-06T10:52:38+05:30</updated><id>http://localhost:4000/django/2017/12/06/django-20-window-expressions-tutorial</id><content type="html" xml:base="http://localhost:4000/django/2017/12/06/django-20-window-expressions-tutorial.html">&lt;p&gt;Django 2.0 was &lt;a href=&quot;https://docs.djangoproject.com/en/2.0/releases/&quot;&gt;released
+recently&lt;/a&gt; and among the
+most exciting things for me is support for Window expressions, which
+allows adding an OVER clause to querysets. We will use Window
+expressions to analyze the commits data to the Django repo.&lt;/p&gt;
+
+&lt;h2 id=&quot;so-what-is-an-over-clause&quot;&gt;So what is an over clause?&lt;/h2&gt;
+
+&lt;p&gt;An over clause is of this format&lt;/p&gt;
+
+&lt;p&gt;``` {.sourceCode .sql}
+SELECT depname, empno, salary,
+  avg(salary)
+    OVER (PARTITION BY depname)
+FROM empsalary;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+Compare this to a similar GROUP BY statement
+
+``` {.sourceCode .sql}
+SELECT depname, avg(salary)
+FROM empsalary
+GROUP BY depname;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The difference is a GROUP BY has as many rows as grouping elements, here
+number of depname. An over clause adds the the aggregated result to each
+row of the select.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.postgresql.org/docs/9.1/static/tutorial-window.html&quot;&gt;Postgres documentation
+says&lt;/a&gt;,
+&quot;A window function performs a calculation across a set of table rows
+that are somehow related to the current row. This is comparable to the
+type of calculation that can be done with an aggregate function. But
+unlike regular aggregate functions, use of a window function does not
+cause rows to become grouped into a single output row — the rows
+retain their separate identities. Behind the scenes, the window function
+is able to access more than just the current row of the query result.&quot;
+This is true for all other DB implementation as well.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-are-real-world-uses-of-over-expressions&quot;&gt;What are real world uses of over expressions?&lt;/h2&gt;
+
+&lt;p&gt;We will use the Django ORM with the Window expression to to some
+analysis on the most prolific committers to Django. To do this we will
+export the commiter names and time of commit to a csv.&lt;/p&gt;
+
+&lt;p&gt;``` {.sourceCode .bash}
+git log  –no-merges –date=iso –pretty=format:’%h|%an|%aI’ &amp;gt; commits.iso.csv&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+This is not ranking of Django developers, just of their number of
+commits, which allows us an interestig dataset. I am grateful to
+everyone who has contributed to Django - they have made my life
+immesureably better.
+
+With some light data wrangling using Pandas, we transform this to a per
+author, per year data and import to Postgres. Our table structure looks
+like this.
+
+``` {.sourceCode .sql}
+experiments=# \d commits_by_year;
+   Table &quot;public.commits_by_year&quot;
+    Column     |  Type   | Modifiers
+---------------+---------+-----------
+ id            | bigint  |
+ author        | text    |
+ commit_year   | integer |
+ commits_count | integer |
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We define a model to interact with this table.&lt;/p&gt;
+
+&lt;p&gt;``` {.sourceCode .python3}
+from django.db import models&lt;/p&gt;
+
+&lt;p&gt;class Committer(models.Model):
+    author = models.CharField(max_length=100)
+    commit_year = models.PositiveIntegerField()
+    commits_count = models.PositiveIntegerField()&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class Meta:
+    db_table = 'commits_by_year' ```
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Lets quickly test if our data is imported. &lt;a href=&quot;https://github.com/shabda/experiments/blob/master/data/commits_by_year.csv&quot;&gt;You can get a csv from
+here&lt;/a&gt;,
+and import to Postgres to follow along.&lt;/p&gt;
+
+&lt;p&gt;``` {.sourceCode .python3}
+In [2]: Committer.objects.all().count()
+Out[2]: 2318&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+Let us setup our environment and get the imports we need.
+
+``` {.sourceCode .python3}
+## Some ORM imports which we are going to need
+
+from django.db.models import Avg, F, Window
+from django.db.models.functions import  Rank, DenseRank, CumeDist
+from django_commits.models import Committer
+
+# We will use pandas to display the queryset in tanular format
+import pandas
+pandas.options.display.max_rows=20
+
+# An utility function to display querysets
+def as_table(values_queryset):
+    return pandas.DataFrame(list(values_queryset))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Lets quickly look at the data we have.&lt;/p&gt;
+
+&lt;p&gt;``` {.sourceCode .python3}
+as_table(Committer.objects.all().values(
+  “author”, “commit_year”, “commits_count”
+))&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&amp;lt;div&amp;gt;
+&amp;lt;style scoped&amp;gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+&amp;lt;/style&amp;gt;
+&amp;lt;table border=&quot;1&quot; class=&quot;dataframe&quot;&amp;gt;
+  &amp;lt;thead&amp;gt;
+    &amp;lt;tr style=&quot;text-align: right;&quot;&amp;gt;
+      &amp;lt;th&amp;gt;&amp;lt;/th&amp;gt;
+      &amp;lt;th&amp;gt;author&amp;lt;/th&amp;gt;
+      &amp;lt;th&amp;gt;commit_year&amp;lt;/th&amp;gt;
+      &amp;lt;th&amp;gt;commits_count&amp;lt;/th&amp;gt;
+    &amp;lt;/tr&amp;gt;
+  &amp;lt;/thead&amp;gt;
+  &amp;lt;tbody&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;0&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Tim Graham&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;373&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;1&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Sergey Fedoseev&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;158&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Mariusz Felisiak&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;113&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;3&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Claude Paroz&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;102&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;4&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Mads Jensen&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;55&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;5&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Simon Charette&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;40&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;6&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Jon Dufresne&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;33&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;7&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Anton Samarchyan&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;27&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;8&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;François Freitag&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;17&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;9&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Srinivas Reddy Thatiparthy&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2017&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;14&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;...&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;...&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;...&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;...&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2308&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Malcolm Tredinnick&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2006&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;175&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2309&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Georg Bauer&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2006&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;90&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2310&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Russell Keith-Magee&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2006&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;86&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2311&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Jacob Kaplan-Moss&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2006&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;83&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2312&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Luke Plant&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2006&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;20&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2313&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Wilson Miner&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2006&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;12&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2314&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Adrian Holovaty&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2005&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;1015&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2315&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Jacob Kaplan-Moss&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2005&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;130&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2316&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Georg Bauer&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2005&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;112&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;th&amp;gt;2317&amp;lt;/th&amp;gt;
+      &amp;lt;td&amp;gt;Wilson Miner&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;2005&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;20&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+  &amp;lt;/tbody&amp;gt;
+&amp;lt;/table&amp;gt;
+&amp;lt;p&amp;gt;2318 rows × 3 columns&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;
+We will now use the Window expression to get the contributors ranked by
+number of commits, within each year. We will go over the code in detail,
+but lets look at the queryset and results.
+
+``` {.sourceCode .python3}
+# Find out who have been the most prolific contributors
+# in the years 2010-2017
+
+dense_rank_by_year = Window(
+    expression=DenseRank(),
+    partition_by=F(&quot;commit_year&quot;),
+    order_by=F(&quot;commits_count&quot;).desc()
+)
+
+commiters_with_rank = Committer.objects.filter(
+        commit_year__gte=2010, commits_count__gte=10
+    ).annotate(
+        the_rank=dense_rank_by_year
+    ).order_by(
+        &quot;-commit_year&quot;, &quot;the_rank&quot;
+    ).values(
+        &quot;author&quot;, &quot;commit_year&quot;, &quot;commits_count&quot;, &quot;the_rank&quot;
+    )
+as_table(commiters_with_rank)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div&gt;
+&lt;style scoped=&quot;&quot;&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+&lt;/style&gt;
+&lt;table border=&quot;1&quot; class=&quot;dataframe&quot;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&quot;text-align: right;&quot;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;author&lt;/th&gt;
+      &lt;th&gt;commit_year&lt;/th&gt;
+      &lt;th&gt;commits_count&lt;/th&gt;
+      &lt;th&gt;the_rank&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;Tim Graham&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;373&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;Sergey Fedoseev&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;158&lt;/td&gt;
+      &lt;td&gt;2&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;Mariusz Felisiak&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;113&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;Claude Paroz&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;102&lt;/td&gt;
+      &lt;td&gt;4&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;Mads Jensen&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;55&lt;/td&gt;
+      &lt;td&gt;5&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;5&lt;/th&gt;
+      &lt;td&gt;Simon Charette&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;6&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;6&lt;/th&gt;
+      &lt;td&gt;Jon Dufresne&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;33&lt;/td&gt;
+      &lt;td&gt;7&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;7&lt;/th&gt;
+      &lt;td&gt;Anton Samarchyan&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;27&lt;/td&gt;
+      &lt;td&gt;8&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;8&lt;/th&gt;
+      &lt;td&gt;François Freitag&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;17&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;9&lt;/th&gt;
+      &lt;td&gt;Srinivas Reddy Thatiparthy&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;14&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;...&lt;/th&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;171&lt;/th&gt;
+      &lt;td&gt;Joseph Kocherhans&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;53&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;172&lt;/th&gt;
+      &lt;td&gt;Ramiro Morales&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;53&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;173&lt;/th&gt;
+      &lt;td&gt;Jacob Kaplan-Moss&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;42&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;174&lt;/th&gt;
+      &lt;td&gt;Chris Beaven&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;29&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;175&lt;/th&gt;
+      &lt;td&gt;Malcolm Tredinnick&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;26&lt;/td&gt;
+      &lt;td&gt;14&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;176&lt;/th&gt;
+      &lt;td&gt;Honza Král&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+      &lt;td&gt;15&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;177&lt;/th&gt;
+      &lt;td&gt;Carl Meyer&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;17&lt;/td&gt;
+      &lt;td&gt;16&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;178&lt;/th&gt;
+      &lt;td&gt;Ian Kelly&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;17&lt;/td&gt;
+      &lt;td&gt;16&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;179&lt;/th&gt;
+      &lt;td&gt;Simon Meers&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;17&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;180&lt;/th&gt;
+      &lt;td&gt;Gary Wilson Jr&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;18&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;181 rows × 4 columns&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Lets look a the the ORM code in more detail here.&lt;/p&gt;
+
+&lt;p&gt;``` {.sourceCode .python3}&lt;/p&gt;
+&lt;h1 id=&quot;we-are-creating-the-window-function-part-of-our-sql-query-here&quot;&gt;We are creating the Window function part of our SQL query here&lt;/h1&gt;
+&lt;p&gt;dense_rank_by_year = Window(
+    # We want to get the Rank with no gaps
+    expression=DenseRank(),
+    # We want to partition the queryset on commit_year
+    # Each distinct commit_year is a different partition
+    partition_by=F(“commit_year”),
+    # This decides the ordering within each partition
+    order_by=F(“commits_count”).desc()
+)&lt;/p&gt;
+
+&lt;p&gt;commiters_with_rank = Committer.objects.filter(
+        commit_year__gte=2010, commits_count__gte=10
+    # Standard filter oprtation, limit rows to 2010-2017
+    ).annotate(
+    # For each commiter, we are annotating its rank
+        the_rank=dense_rank_by_year
+    ).order_by(
+        “-commit_year”, “the_rank”
+    ).values(
+        “author”, “commit_year”, “commits_count”, “the_rank”
+    )
+as_table(commiters_with_rank)&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+Now lets try getting the average commits per commiter for each year
+along with the other data.
+
+``` {.sourceCode .python3}
+avg_commits_per_year = Window(
+    # We want the average of commits per committer, with each partition
+    expression=Avg(&quot;commits_count&quot;),
+    # Each individual year is a partition.
+    partition_by=F(&quot;commit_year&quot;)
+)
+
+commiters_with_yearly_average = Committer.objects.filter().annotate(
+      avg_commit_per_year=avg_commits_per_year
+    ).values(
+        &quot;author&quot;, &quot;commit_year&quot;, &quot;commits_count&quot;, &quot;avg_commit_per_year&quot;
+    )
+# We could have done further operation with avg_commit_per_year
+# Eg: F(commits_count) - F(avg_commit_per_year),
+# would tell us committers who commit more than average
+as_table(commiters_with_yearly_average)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This gives us&lt;/p&gt;
+
+&lt;div&gt;
+&lt;style scoped=&quot;&quot;&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+&lt;/style&gt;
+&lt;table border=&quot;1&quot; class=&quot;dataframe&quot;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&quot;text-align: right;&quot;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;author&lt;/th&gt;
+      &lt;th&gt;avg_commit_per_year&lt;/th&gt;
+      &lt;th&gt;commit_year&lt;/th&gt;
+      &lt;th&gt;commits_count&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;Wilson Miner&lt;/td&gt;
+      &lt;td&gt;319.250000&lt;/td&gt;
+      &lt;td&gt;2005&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;Adrian Holovaty&lt;/td&gt;
+      &lt;td&gt;319.250000&lt;/td&gt;
+      &lt;td&gt;2005&lt;/td&gt;
+      &lt;td&gt;1015&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;Jacob Kaplan-Moss&lt;/td&gt;
+      &lt;td&gt;319.250000&lt;/td&gt;
+      &lt;td&gt;2005&lt;/td&gt;
+      &lt;td&gt;130&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;Georg Bauer&lt;/td&gt;
+      &lt;td&gt;319.250000&lt;/td&gt;
+      &lt;td&gt;2005&lt;/td&gt;
+      &lt;td&gt;112&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;Russell Keith-Magee&lt;/td&gt;
+      &lt;td&gt;188.571429&lt;/td&gt;
+      &lt;td&gt;2006&lt;/td&gt;
+      &lt;td&gt;86&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;5&lt;/th&gt;
+      &lt;td&gt;Jacob Kaplan-Moss&lt;/td&gt;
+      &lt;td&gt;188.571429&lt;/td&gt;
+      &lt;td&gt;2006&lt;/td&gt;
+      &lt;td&gt;83&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;6&lt;/th&gt;
+      &lt;td&gt;Luke Plant&lt;/td&gt;
+      &lt;td&gt;188.571429&lt;/td&gt;
+      &lt;td&gt;2006&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;7&lt;/th&gt;
+      &lt;td&gt;Wilson Miner&lt;/td&gt;
+      &lt;td&gt;188.571429&lt;/td&gt;
+      &lt;td&gt;2006&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;8&lt;/th&gt;
+      &lt;td&gt;Adrian Holovaty&lt;/td&gt;
+      &lt;td&gt;188.571429&lt;/td&gt;
+      &lt;td&gt;2006&lt;/td&gt;
+      &lt;td&gt;854&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;9&lt;/th&gt;
+      &lt;td&gt;Malcolm Tredinnick&lt;/td&gt;
+      &lt;td&gt;188.571429&lt;/td&gt;
+      &lt;td&gt;2006&lt;/td&gt;
+      &lt;td&gt;175&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;...&lt;/th&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2308&lt;/th&gt;
+      &lt;td&gt;Adam Johnson&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2309&lt;/th&gt;
+      &lt;td&gt;Tom&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2310&lt;/th&gt;
+      &lt;td&gt;Srinivas Reddy Thatiparthy&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;14&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2311&lt;/th&gt;
+      &lt;td&gt;François Freitag&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;17&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2312&lt;/th&gt;
+      &lt;td&gt;Anton Samarchyan&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;27&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2313&lt;/th&gt;
+      &lt;td&gt;Jon Dufresne&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;33&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2314&lt;/th&gt;
+      &lt;td&gt;Simon Charette&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2315&lt;/th&gt;
+      &lt;td&gt;Mads Jensen&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;55&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2316&lt;/th&gt;
+      &lt;td&gt;Claude Paroz&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;102&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2317&lt;/th&gt;
+      &lt;td&gt;Mariusz Felisiak&lt;/td&gt;
+      &lt;td&gt;4.916084&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;113&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;2318 rows × 4 columns&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;You could try other Window functions such as CumeDist, Rank or Ntile.&lt;/p&gt;
+
+&lt;p&gt;``` {.sourceCode .python3}
+from django.db.models.functions import CumeDist
+cumedist_by_year = Window(
+    expression=CumeDist(),
+    partition_by=F(“commit_year”),
+    order_by=F(“commits_count”).desc()
+)&lt;/p&gt;
+
+&lt;p&gt;commiters_with_rank = Committer.objects.filter(
+        commit_year__gte=2010, commits_count__gte=10
+    ).annotate(
+        cumedist_by_year=cumedist_by_year
+    ).order_by(
+        “-commit_year”, “the_rank”
+    ).values(
+        “author”, “commit_year”, “commits_count”, “cumedist_by_year”
+    )
+as_table(commiters_with_rank)&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+Until now, we have partitioned on commit\_year. We can partition on
+other fields too. We will partition on author to find out how their
+contributions have changed over the years using the Lag window
+expression.
+
+``` {.sourceCode .python3}
+from django.db.models.functions import Lag
+from django.db.models import Value
+commits_in_previous_year = Window(
+    expression=Lag(&quot;commits_count&quot;, default=Value(0)),
+    partition_by=F(&quot;author&quot;),
+    order_by=F(&quot;commit_year&quot;).asc(),
+)
+
+commiters_with_pervious_year_commit = Committer.objects.filter(
+        commit_year__gte=2010, commits_count__gte=10
+    ).annotate(
+        commits_in_previous_year=commits_in_previous_year
+    ).order_by(
+        &quot;author&quot;, &quot;-commit_year&quot;
+    ).values(
+        &quot;author&quot;, &quot;commit_year&quot;, &quot;commits_count&quot;, &quot;commits_in_previous_year&quot;
+    )
+as_table(commiters_with_pervious_year_commit)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div&gt;
+&lt;style scoped=&quot;&quot;&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+&lt;/style&gt;
+&lt;table border=&quot;1&quot; class=&quot;dataframe&quot;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&quot;text-align: right;&quot;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;author&lt;/th&gt;
+      &lt;th&gt;commit_year&lt;/th&gt;
+      &lt;th&gt;commits_count&lt;/th&gt;
+      &lt;th&gt;commits_in_previous_year&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;Adam Chainz&lt;/td&gt;
+      &lt;td&gt;2016&lt;/td&gt;
+      &lt;td&gt;42&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;Adam Chainz&lt;/td&gt;
+      &lt;td&gt;2015&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;Adam Johnson&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;Adrian Holovaty&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;98&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;Adrian Holovaty&lt;/td&gt;
+      &lt;td&gt;2011&lt;/td&gt;
+      &lt;td&gt;98&lt;/td&gt;
+      &lt;td&gt;72&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;5&lt;/th&gt;
+      &lt;td&gt;Adrian Holovaty&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;72&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;6&lt;/th&gt;
+      &lt;td&gt;Akshesh&lt;/td&gt;
+      &lt;td&gt;2016&lt;/td&gt;
+      &lt;td&gt;31&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;7&lt;/th&gt;
+      &lt;td&gt;Alasdair Nicol&lt;/td&gt;
+      &lt;td&gt;2016&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+      &lt;td&gt;19&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;8&lt;/th&gt;
+      &lt;td&gt;Alasdair Nicol&lt;/td&gt;
+      &lt;td&gt;2015&lt;/td&gt;
+      &lt;td&gt;19&lt;/td&gt;
+      &lt;td&gt;17&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;9&lt;/th&gt;
+      &lt;td&gt;Alasdair Nicol&lt;/td&gt;
+      &lt;td&gt;2013&lt;/td&gt;
+      &lt;td&gt;17&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;...&lt;/th&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;171&lt;/th&gt;
+      &lt;td&gt;Timo Graham&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+      &lt;td&gt;70&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;172&lt;/th&gt;
+      &lt;td&gt;Timo Graham&lt;/td&gt;
+      &lt;td&gt;2011&lt;/td&gt;
+      &lt;td&gt;70&lt;/td&gt;
+      &lt;td&gt;60&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;173&lt;/th&gt;
+      &lt;td&gt;Timo Graham&lt;/td&gt;
+      &lt;td&gt;2010&lt;/td&gt;
+      &lt;td&gt;60&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;174&lt;/th&gt;
+      &lt;td&gt;Tom&lt;/td&gt;
+      &lt;td&gt;2017&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;175&lt;/th&gt;
+      &lt;td&gt;Unai Zalakain&lt;/td&gt;
+      &lt;td&gt;2013&lt;/td&gt;
+      &lt;td&gt;17&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;176&lt;/th&gt;
+      &lt;td&gt;Vajrasky Kok&lt;/td&gt;
+      &lt;td&gt;2013&lt;/td&gt;
+      &lt;td&gt;14&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;177&lt;/th&gt;
+      &lt;td&gt;areski&lt;/td&gt;
+      &lt;td&gt;2014&lt;/td&gt;
+      &lt;td&gt;15&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;178&lt;/th&gt;
+      &lt;td&gt;eltronix&lt;/td&gt;
+      &lt;td&gt;2016&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;179&lt;/th&gt;
+      &lt;td&gt;wrwrwr&lt;/td&gt;
+      &lt;td&gt;2014&lt;/td&gt;
+      &lt;td&gt;21&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;180&lt;/th&gt;
+      &lt;td&gt;Łukasz Langa&lt;/td&gt;
+      &lt;td&gt;2013&lt;/td&gt;
+      &lt;td&gt;15&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;181 rows × 4 columns&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;I hope this tutorial has been helpful in understanding the window
+expressions. While still not as felxible as SqlAlchemy, Django ORM has
+become extremely powerful with recent Django releases. Stay tuned for
+more advanced ORM tutorials.&lt;/p&gt;</content><author><name>shabda</name></author><summary type="html">Django 2.0 was released recently and among the most exciting things for me is support for Window expressions, which allows adding an OVER clause to querysets. We will use Window expressions to analyze the commits data to the Django repo.</summary></entry><entry><title type="html">Configure Django to log exceptions in production</title><link href="http://localhost:4000/django/2017/12/02/configure-django-log-exceptions-production.html" rel="alternate" type="text/html" title="Configure Django to log exceptions in production" /><published>2017-12-02T08:19:18+05:30</published><updated>2017-12-02T08:19:18+05:30</updated><id>http://localhost:4000/django/2017/12/02/configure-django-log-exceptions-production</id><content type="html" xml:base="http://localhost:4000/django/2017/12/02/configure-django-log-exceptions-production.html">&lt;p&gt;Django default logging behaviour for unhandled exceptions is:&lt;/p&gt;
+
+&lt;h4 id=&quot;with-debugtrue-development&quot;&gt;With DEBUG=True (Development)&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Log the exception on console/stream.&lt;/li&gt;
+  &lt;li&gt;Show the exception on page, i.e in http response.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;with-debugfalse-production&quot;&gt;With DEBUG=False (Production)&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Do not log the exception on console/stream.&lt;/li&gt;
+  &lt;li&gt;Do not show the exception in response.&lt;/li&gt;
+  &lt;li&gt;Send an email to admin if email settings are configured correctly.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Usually not logging the exception on console isn’t a problem since an exception email is sent to you which can help you know the source of exception. But this assumes that email settings are configured correctly else you will not receive the exception email.&lt;/p&gt;
+
+&lt;p&gt;You might not have email settings configured correctly and don’t want to get into that right away. You might instead want to log the exception on console even with DEBUG=False. This post would help you in such scenario.&lt;/p&gt;
+
+&lt;h4 id=&quot;default-logging-configuration&quot;&gt;Default logging configuration&lt;/h4&gt;
+
+&lt;p&gt;Django’s default logging setting is:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;DEFAULT_LOGGING = {
+	'version': 1,
+	'disable_existing_loggers': False,
+	'filters': {
+		'require_debug_false': {
+			'()': 'django.utils.log.RequireDebugFalse',
+		},
+		'require_debug_true': {
+			'()': 'django.utils.log.RequireDebugTrue',
+		},
+	},
+	'formatters': {
+		'django.server': {
+			'()': 'django.utils.log.ServerFormatter',
+			'format': '[%(server_time)s] %(message)s',
+		}
+	},
+	'handlers': {
+		'console': {
+			'level': 'INFO',
+			'filters': ['require_debug_true'],
+			'class': 'logging.StreamHandler',
+		},
+		'django.server': {
+			'level': 'INFO',
+			'class': 'logging.StreamHandler',
+			'formatter': 'django.server',
+		},
+		'mail_admins': {
+			'level': 'ERROR',
+			'filters': ['require_debug_false'],
+			'class': 'django.utils.log.AdminEmailHandler'
+		}
+	},
+	'loggers': {
+		'django': {
+			'handlers': ['console', 'mail_admins'],
+			'level': 'INFO',
+		},
+		'django.server': {
+			'handlers': ['django.server'],
+			'level': 'INFO',
+			'propagate': False,
+		},
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Without any explicit &lt;code class=&quot;highlighter-rouge&quot;&gt;settings.LOGGING&lt;/code&gt; configured in settings.py, this is the default logging configuration Django works with. You can ignore &lt;code class=&quot;highlighter-rouge&quot;&gt;django.server&lt;/code&gt; part.&lt;/p&gt;
+
+&lt;p&gt;Any unhandled Django exception is handled in function &lt;code class=&quot;highlighter-rouge&quot;&gt;handle_uncaught_exception&lt;/code&gt;. The relevant code is on &lt;a href=&quot;https://github.com/django/django/blob/1.11.7/django/core/handlers/exception.py#L124&quot; target=&quot;_blank&quot;&gt;Github&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Error is logged using &lt;code class=&quot;highlighter-rouge&quot;&gt;logger.error&lt;/code&gt; in this function. This logger is an instance of &lt;code class=&quot;highlighter-rouge&quot;&gt;django.request&lt;/code&gt;. Since logger &lt;code class=&quot;highlighter-rouge&quot;&gt;django&lt;/code&gt; is a parent of &lt;code class=&quot;highlighter-rouge&quot;&gt;django.request&lt;/code&gt;, so log records are propogated to logger &lt;code class=&quot;highlighter-rouge&quot;&gt;django&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;As you can see from &lt;code class=&quot;highlighter-rouge&quot;&gt;DEFAULT_LOGGING&lt;/code&gt;, logger &lt;code class=&quot;highlighter-rouge&quot;&gt;django&lt;/code&gt; has two handlers.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;console&lt;/li&gt;
+  &lt;li&gt;mail_admins&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As you can see from &lt;code class=&quot;highlighter-rouge&quot;&gt;DEFAULT_LOGGING&lt;/code&gt;, handler &lt;code class=&quot;highlighter-rouge&quot;&gt;console&lt;/code&gt; has a filter called &lt;code class=&quot;highlighter-rouge&quot;&gt;require_debug_true&lt;/code&gt; because of which this handler doesn’t handle log records in production, i.e when DEBUG=False.&lt;/p&gt;
+
+&lt;h4 id=&quot;logging-to-console-in-production&quot;&gt;Logging to console in production&lt;/h4&gt;
+
+&lt;p&gt;So you can create a new handler which directs &lt;code class=&quot;highlighter-rouge&quot;&gt;ERROR&lt;/code&gt; log records to Stream when DEBUG=False.&lt;/p&gt;
+
+&lt;p&gt;This handler would look like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'console_debug_false': {
+	'level': 'ERROR',
+	'filters': ['require_debug_false'],
+	'class': 'logging.StreamHandler',
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And you can ask logger &lt;code class=&quot;highlighter-rouge&quot;&gt;django&lt;/code&gt; to use this handler by adding this handler in &lt;code class=&quot;highlighter-rouge&quot;&gt;loggers['django']['handlers']&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Your final &lt;code class=&quot;highlighter-rouge&quot;&gt;settings.LOGGING&lt;/code&gt; would look like following:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;LOGGING = {
+	'version': 1,
+	'disable_existing_loggers': False,
+	'filters': {
+		'require_debug_false': {
+			'()': 'django.utils.log.RequireDebugFalse',
+		},
+		'require_debug_true': {
+			'()': 'django.utils.log.RequireDebugTrue',
+		},
+	},
+	'formatters': {
+		'django.server': {
+			'()': 'django.utils.log.ServerFormatter',
+			'format': '[%(server_time)s] %(message)s',
+		}
+	},
+	'handlers': {
+		'console': {
+			'level': 'INFO',
+			'filters': ['require_debug_true'],
+			'class': 'logging.StreamHandler',
+		},
+		'console_debug_false': {
+			'level': 'ERROR',
+			'filters': ['require_debug_false'],
+			'class': 'logging.StreamHandler',
+		},
+		'django.server': {
+			'level': 'INFO',
+			'class': 'logging.StreamHandler',
+			'formatter': 'django.server',
+		},
+		'mail_admins': {
+			'level': 'ERROR',
+			'filters': ['require_debug_false'],
+			'class': 'django.utils.log.AdminEmailHandler'
+		}
+	},
+	'loggers': {
+		'django': {
+			'handlers': ['console', 'console_debug_false', 'mail_admins'],
+			'level': 'INFO',
+		},
+		'django.server': {
+			'handlers': ['django.server'],
+			'level': 'INFO',
+			'propagate': False,
+		}
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If you don’t want emails to be sent to admins, in case email settings aren’t configured correctly, then you should remove &lt;code class=&quot;highlighter-rouge&quot;&gt;mail_admins&lt;/code&gt; from &lt;code class=&quot;highlighter-rouge&quot;&gt;loggers['django']['handlers']&lt;/code&gt;.&lt;/p&gt;</content><author><name>akshar</name></author><summary type="html">Django default logging behaviour for unhandled exceptions is: With DEBUG=True (Development) Log the exception on console/stream. Show the exception on page, i.e in http response. With DEBUG=False (Production) Do not log the exception on console/stream. Do not show the exception in response. Send an email to admin if email settings are configured correctly. Usually not logging the exception on console isn’t a problem since an exception email is sent to you which can help you know the source of exception. But this assumes that email settings are configured correctly else you will not receive the exception email. You might not have email settings configured correctly and don’t want to get into that right away. You might instead want to log the exception on console even with DEBUG=False. This post would help you in such scenario. Default logging configuration Django’s default logging setting is: DEFAULT_LOGGING = { 'version': 1, 'disable_existing_loggers': False, 'filters': { 'require_debug_false': { '()': 'django.utils.log.RequireDebugFalse', }, 'require_debug_true': { '()': 'django.utils.log.RequireDebugTrue', }, }, 'formatters': { 'django.server': { '()': 'django.utils.log.ServerFormatter', 'format': '[%(server_time)s] %(message)s', } }, 'handlers': { 'console': { 'level': 'INFO', 'filters': ['require_debug_true'], 'class': 'logging.StreamHandler', }, 'django.server': { 'level': 'INFO', 'class': 'logging.StreamHandler', 'formatter': 'django.server', }, 'mail_admins': { 'level': 'ERROR', 'filters': ['require_debug_false'], 'class': 'django.utils.log.AdminEmailHandler' } }, 'loggers': { 'django': { 'handlers': ['console', 'mail_admins'], 'level': 'INFO', }, 'django.server': { 'handlers': ['django.server'], 'level': 'INFO', 'propagate': False, }, } } Without any explicit settings.LOGGING configured in settings.py, this is the default logging configuration Django works with. You can ignore django.server part. Any unhandled Django exception is handled in function handle_uncaught_exception. The relevant code is on Github Error is logged using logger.error in this function. This logger is an instance of django.request. Since logger django is a parent of django.request, so log records are propogated to logger django. As you can see from DEFAULT_LOGGING, logger django has two handlers. console mail_admins As you can see from DEFAULT_LOGGING, handler console has a filter called require_debug_true because of which this handler doesn’t handle log records in production, i.e when DEBUG=False. Logging to console in production So you can create a new handler which directs ERROR log records to Stream when DEBUG=False. This handler would look like 'console_debug_false': { 'level': 'ERROR', 'filters': ['require_debug_false'], 'class': 'logging.StreamHandler', } And you can ask logger django to use this handler by adding this handler in loggers['django']['handlers']. Your final settings.LOGGING would look like following: LOGGING = { 'version': 1, 'disable_existing_loggers': False, 'filters': { 'require_debug_false': { '()': 'django.utils.log.RequireDebugFalse', }, 'require_debug_true': { '()': 'django.utils.log.RequireDebugTrue', }, }, 'formatters': { 'django.server': { '()': 'django.utils.log.ServerFormatter', 'format': '[%(server_time)s] %(message)s', } }, 'handlers': { 'console': { 'level': 'INFO', 'filters': ['require_debug_true'], 'class': 'logging.StreamHandler', }, 'console_debug_false': { 'level': 'ERROR', 'filters': ['require_debug_false'], 'class': 'logging.StreamHandler', }, 'django.server': { 'level': 'INFO', 'class': 'logging.StreamHandler', 'formatter': 'django.server', }, 'mail_admins': { 'level': 'ERROR', 'filters': ['require_debug_false'], 'class': 'django.utils.log.AdminEmailHandler' } }, 'loggers': { 'django': { 'handlers': ['console', 'console_debug_false', 'mail_admins'], 'level': 'INFO', }, 'django.server': { 'handlers': ['django.server'], 'level': 'INFO', 'propagate': False, } } } If you don’t want emails to be sent to admins, in case email settings aren’t configured correctly, then you should remove mail_admins from loggers['django']['handlers'].</summary></entry><entry><title type="html">How performant is your Python web application</title><link href="http://localhost:4000/gunicorn/2017/11/15/how-performant-your-python-web-application.html" rel="alternate" type="text/html" title="How performant is your Python web application" /><published>2017-11-15T12:26:01+05:30</published><updated>2017-11-15T12:26:01+05:30</updated><id>http://localhost:4000/gunicorn/2017/11/15/how-performant-your-python-web-application</id><content type="html" xml:base="http://localhost:4000/gunicorn/2017/11/15/how-performant-your-python-web-application.html">&lt;p&gt;This post tries to explain web application performance. &lt;strong&gt;Performance&lt;/strong&gt; means the &lt;strong&gt;number of requests per second&lt;/strong&gt; that can be served by a deployed application.&lt;/p&gt;
+
+&lt;p&gt;This post would help answer questions like:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;How &lt;code class=&quot;highlighter-rouge&quot;&gt;performant&lt;/code&gt; is an application.&lt;/li&gt;
+  &lt;li&gt;How much &lt;code class=&quot;highlighter-rouge&quot;&gt;load&lt;/code&gt; can it handle.&lt;/li&gt;
+  &lt;li&gt;How many &lt;code class=&quot;highlighter-rouge&quot;&gt;concurrent requests&lt;/code&gt; can it serve.&lt;/li&gt;
+  &lt;li&gt;How can you determine &lt;code class=&quot;highlighter-rouge&quot;&gt;requests per second&lt;/code&gt; for an application.&lt;/li&gt;
+  &lt;li&gt;What steps to take to increase &lt;code class=&quot;highlighter-rouge&quot;&gt;serving capability&lt;/code&gt; for an application.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This post has as much code as theory.&lt;/p&gt;
+
+&lt;p&gt;This post assumes that you have a basic understanding of processes, threads. You can read our &lt;a href=&quot;http://agiliq.com/blog/2013/09/process-and-threads-for-beginners/&quot; target=&quot;_blank&quot;&gt;previous post&lt;/a&gt; for basic understanding of processes and threads.&lt;/p&gt;
+
+&lt;p&gt;In any web application there are many urls and associated handlers/controllers for each url. A url might respond in 200ms while another url might take 3 seconds. While determining performance of an application, choose the url which will be used most often and determine its performance.&lt;/p&gt;
+
+&lt;h3 id=&quot;factors-which-determine-performance&quot;&gt;Factors which determine performance&lt;/h3&gt;
+
+&lt;p&gt;There are many &lt;code class=&quot;highlighter-rouge&quot;&gt;factors&lt;/code&gt; determining performance of an application. Major factors are:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Application type&lt;/li&gt;
+  &lt;li&gt;Application complexity&lt;/li&gt;
+  &lt;li&gt;Web server&lt;/li&gt;
+  &lt;li&gt;Physical server, i.e infrastructure&lt;/li&gt;
+  &lt;li&gt;Web server configuration&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In this post we will see how changing &lt;code class=&quot;highlighter-rouge&quot;&gt;web server configuration&lt;/code&gt; changes performance with other factors remaining constant.&lt;/p&gt;
+
+&lt;p&gt;Two major components of &lt;code class=&quot;highlighter-rouge&quot;&gt;web server configuration&lt;/code&gt; are:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Number of processes/workers&lt;/li&gt;
+  &lt;li&gt;Number of threads&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;We will also see what web server configuration should be preferred for which application type. Example: How increasing number of server processes boosts performance for some applications while it reduces performance for other application types.&lt;/p&gt;
+
+&lt;h4 id=&quot;application-type&quot;&gt;Application type&lt;/h4&gt;
+
+&lt;p&gt;Applications could be compute intensive or network intensive or I/O intensive. Compute intensive applications can’t get any benefit by making number of server workers or threads greater than number of CPU cores.&lt;/p&gt;
+
+&lt;p&gt;Network intensive or I/O intensive applications can benefit a lot by making several server workers/threads run on each core.&lt;/p&gt;
+
+&lt;h4 id=&quot;application-complexity&quot;&gt;Application complexity&lt;/h4&gt;
+
+&lt;p&gt;Suppose a url handler makes two db calls and takes a second to respond. In such case reducing number of db calls to 1 will reduce response time by half and number of requests served per second will get doubled.&lt;/p&gt;
+
+&lt;h4 id=&quot;web-server&quot;&gt;Web server&lt;/h4&gt;
+
+&lt;p&gt;There are many web servers. eg: Apache, Gunicorn, uwsgi etc. Apache might be better than gunicorn and might be able to handle more requests per second than gunicorn.&lt;/p&gt;
+
+&lt;h4 id=&quot;physical-serverinfrastructure&quot;&gt;Physical server/Infrastructure&lt;/h4&gt;
+
+&lt;p&gt;Increasing the number of cores or memory will improve the performance. If a single core machine is able to handle 10 requests per second for a computationally intensive application, then a machine with 2 cores should be able to handle 20 requests per second.&lt;/p&gt;
+
+&lt;p&gt;This might need properly configuring the web server to get maximum utilization from physical server.&lt;/p&gt;
+
+&lt;h4 id=&quot;application-server-configuration&quot;&gt;Application server configuration&lt;/h4&gt;
+
+&lt;p&gt;Number of running web server processes influences performance. Similarly number of server threads in each process influences performance too.&lt;/p&gt;
+
+&lt;h3 id=&quot;demo-server-configuration&quot;&gt;Demo server configuration&lt;/h3&gt;
+
+&lt;p&gt;Our demo physical server is a t1.micro instance with 1 GB RAM. It has a single core.&lt;/p&gt;
+
+&lt;p&gt;Demo application for this post uses Django/Python served from a Gunicorn application server.&lt;/p&gt;
+
+&lt;p&gt;Familiarity with Django would be helpful but you should be able to follow as long as you have understanding of any web framework.&lt;/p&gt;
+
+&lt;h3 id=&quot;demo-application&quot;&gt;Demo application&lt;/h3&gt;
+
+&lt;p&gt;Our application has the following url:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://34.233.117.92:8000/static_content_sleep
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The Django handler/controller for url &lt;code class=&quot;highlighter-rouge&quot;&gt;static_content_sleep&lt;/code&gt; looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def static_content_sleep(request):
+	st = time.time()  # Compute Start time
+	print &quot;sleeping&quot;
+	time.sleep(1)     # Simulate db call which takes 1 seconds
+	print &quot;waking&quot;
+	print time.time() - st, &quot;in this function&quot;  # Compute end time
+	return HttpResponse(&quot;Woke up&quot;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Most web applications would be working with a database to fetch data.&lt;/p&gt;
+
+&lt;p&gt;We don’t have a database setup. We are assuming that db used by the handler responds in 1 second. We are simulating a db call by making the code execution sleep for 1 second.&lt;/p&gt;
+
+&lt;p&gt;This application is being served by Gunicorn web server. Gunicorn configuration looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;workers = 1
+threads = 1
+bind = '0.0.0.0:8000'
+daemon = False
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The important configuration variables are &lt;code class=&quot;highlighter-rouge&quot;&gt;workers&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;threads&lt;/code&gt;. Ignore others.&lt;/p&gt;
+
+&lt;p&gt;If you want to setup gunicorn on your physical server, you can refer our &lt;a href=&quot;http://agiliq.com/blog/2013/08/minimal-nginx-and-gunicorn-configuration-for-djang/&quot; target=&quot;_blank&quot;&gt;previous post&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We used default gunicorn configuration for &lt;code class=&quot;highlighter-rouge&quot;&gt;workers&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;threads&lt;/code&gt;. The default configuration of gunicorn has following characteristics:&lt;/p&gt;
+
+&lt;h4 id=&quot;workers&quot;&gt;workers&lt;/h4&gt;
+
+&lt;p&gt;Default is 1. This means that only one gunicorn process would be running on the physical server.&lt;/p&gt;
+
+&lt;p&gt;If we make it 2, it would mean that 2 gunicorn processes would be running on the server.&lt;/p&gt;
+
+&lt;h4 id=&quot;threads&quot;&gt;threads&lt;/h4&gt;
+
+&lt;p&gt;Default is 1. This tells number of threads in each worker process. This means that each gunicorn worker is single threaded and isn’t multithreaded.&lt;/p&gt;
+
+&lt;h3 id=&quot;making-requests&quot;&gt;Making requests&lt;/h3&gt;
+
+&lt;p&gt;Let’s make two simultaneous request to this url.&lt;/p&gt;
+
+&lt;p&gt;Making two requests from browser will not be simultaneous as switching from one browser tab to another tab might take you more than a second. In that case you cannot properly observe time taken by the server to process two simultaneous requests.&lt;/p&gt;
+
+&lt;p&gt;Let’s write a Python function to make simultaneous requests and log the time.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [15]: from threading import Thread
+In [16]: import requests
+
+In [17]: class UrlThread(Thread):
+	...:     def run(self):
+	...:         resp = requests.get('http://34.233.117.92:8000/static_content_sleep')
+
+In [18]: def make_n_requests(num_requests):
+	...:     threads = []
+	...:     for i in range(num_requests):
+	...:         threads.append(UrlThread())
+	...:     start = time.time()
+			 # The requests will be almost simultaneous.
+			 # Second request will be made within nanoseconds of making the first request.
+	...:     for thread in threads:
+	...:         thread.start() # Threads will be started without waiting for response of previous threads
+	...:     for thread in threads:
+	...:         thread.join()  # Wait for response for all the requests.
+	...:     end = time.time()
+	...:     print &quot;Time to get response for %d simultaneous requests&quot; % (num_requests,), end - start
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You can use curl or a shell script or any programming language using which you can simulate &lt;strong&gt;n&lt;/strong&gt; simultaneous requests.&lt;/p&gt;
+
+&lt;p&gt;Make 2 simultaneous requests&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [19]: make_n_requests(2)
+Time to get response for 2 simultaneous requests 2.622205019
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Gunicorn log on server looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sleeping
+waking
+1.00131487846 in this function
+sleeping
+waking
+1.00130581856 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;observation&quot;&gt;Observation&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Print statements of the handler are printed. Print statements are printed again.&lt;/li&gt;
+  &lt;li&gt;Based on prints, we can infer that second request’s execution started after completion of first request.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let’s make 5 simultaneous requests and see what happens&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [20]: make_n_requests(5)
+Time to get response for 5 simultaneous requests 5.65813708305
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Gunicorn log looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sleeping
+waking
+1.00114989281 in this function
+sleeping
+waking
+1.0011370182 in this function
+sleeping
+waking
+1.00114202499 in this function
+sleeping
+waking
+1.00130295753 in this function
+sleeping
+waking
+1.00131988525 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You can see 5 sets of print statements.&lt;/p&gt;
+
+&lt;h4 id=&quot;observation-1&quot;&gt;Observation&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;As we increase number of simultaneous requests, response time is proportionately increasing.&lt;/li&gt;
+  &lt;li&gt;For 2 requests, server takes around 2 seconds to respond.&lt;/li&gt;
+  &lt;li&gt;For 5 requests, server takes around 5 seconds to respond.&lt;/li&gt;
+  &lt;li&gt;For 10 requests, it &lt;code class=&quot;highlighter-rouge&quot;&gt;would take&lt;/code&gt; around 10 seconds to respond.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let’s change gunicorn &lt;code class=&quot;highlighter-rouge&quot;&gt;threads&lt;/code&gt;from its default value of 1 to 5.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;threads = 5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Gunicorn process will have 5 threads now. And each thread is capable of serving a request. Hence 5 requests can be simultaneosly served.&lt;/p&gt;
+
+&lt;p&gt;Restart gunicorn.&lt;/p&gt;
+
+&lt;p&gt;Let’s make 5 simultaneous requests again.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [27]: make_n_requests(5)
+Time to get response for 5 simultaneous requests 1.77244091034
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;** While earlier it was taking around 5 seconds to get 5 simultaneous requests processed, now it takes less than 2 seconds. **&lt;/p&gt;
+
+&lt;p&gt;Server log looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sleeping
+ sleeping
+sleeping
+sleeping
+sleeping
+waking
+1.001278162 in this function
+ waking
+1.00262784958 in this function
+waking
+1.00353288651 in this function
+waking
+1.00325298309 in this function
+waking
+1.0035841465 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;important-observation&quot;&gt;Important Observation&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Each gunicorn thread could handle a request.&lt;/li&gt;
+  &lt;li&gt;Processor kept switching between all these 5 threads.&lt;/li&gt;
+  &lt;li&gt;This way all 5 requests being processed by 5 different threads got a chance to execute concurrently without waiting for completion of any request.&lt;/li&gt;
+  &lt;li&gt;Print pattern also suggests that execution of 5 requests started before waiting for completion of first request.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We can accomplish this performance boost by increasing number of workers instead of number of threads. We will change threads back to 1 and increase &lt;code class=&quot;highlighter-rouge&quot;&gt;workers&lt;/code&gt; to 5 instead.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;workers = 5
+threads = 1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Make 5 simultaneous requests&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [22]: make_n_requests(5)
+Time to get response for 5 simultaneous requests 1.76864600182
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Server gunicorn log looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sleeping
+sleeping
+sleeping
+sleeping
+sleeping
+waking
+1.00134015083 in this function
+waking
+1.00125384331 in this function
+waking
+1.00277590752 in this function
+waking
+1.00121593475 in this function
+waking
+1.00092220306 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here, processor executed 5 processes parallely.&lt;/p&gt;
+
+&lt;p&gt;Let’s make 10 simultaneous requests:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [23]: make_n_requests(10)
+Time to get response for 10 simultaneous requests 2.74328804016
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Server log looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sleeping   -&amp;gt; First 5 requests are assigned to 5 workers
+sleeping
+sleeping
+sleeping
+sleeping
+waking     -&amp;gt; One worker, say worker 1, finished execution.
+waking     -&amp;gt; Another worker, say worker 2, finished execution. This print was executed before last print statement of worker 1 could execute.
+1.00396203995 in this function  -&amp;gt; Worker 1 last print statement. Worker 1 free now and can serve another request.
+1.00669813156 in this function  -&amp;gt; Worker 2 last print statement. Worker 2 free now
+sleeping   -&amp;gt; Assigned to probably worker 1
+waking     -&amp;gt; Probably worker 3 woke up.
+1.00510120392 in this function
+sleeping
+waking
+1.00605106354 in this function
+sleeping
+sleeping
+waking
+1.00563693047 in this function
+sleeping
+waking
+1.00345993042 in this function
+waking
+1.00495409966 in this function
+waking
+1.00393104553 in this function
+waking
+1.0027141571 in this function
+waking
+1.00151586533 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;observation-2&quot;&gt;Observation&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;We made 10 simultaneous requests.&lt;/li&gt;
+  &lt;li&gt;First 5 requests were assigned to 5 running gunicorn processes.&lt;/li&gt;
+  &lt;li&gt;First 5 requests were concurrently handled during 1st second. 5 remaining requests were waiting to be executed during this time. During next second each gunicorn process picked up another request after completing a request. That’s why it took around 2 seconds to get response for 10 requests.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let’s use 2 threads with 5 workers&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;threads = 2
+workers = 5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s restart gunicorn. Now there are 5 gunicorn processes running and each process is running 2 threads.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [16]: make_n_requests(10)
+Time to get response for 10 simultaneous requests 1.46275486946
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Server log looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sleeping -&amp;gt; 'sleeping' repeated 10 times before any 'waking'.
+sleeping
+sleeping
+sleeping
+sleeping
+sleeping
+sleeping
+sleeping
+sleeping
+sleeping
+waking
+1.00119280815 in this function
+waking
+1.00499987602 in this function
+waking
+1.00233006477 in this function
+waking
+1.00144195557 in this function
+waking
+1.00114202499 in this function
+waking
+1.00117397308 in this function
+waking
+1.00114512444 in this function
+waking
+1.00120997429 in this function
+waking
+1.00124192238 in this function
+waking
+1.00117397308 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;inference&quot;&gt;Inference&lt;/h3&gt;
+
+&lt;p&gt;Based on these examples we can infer that making number of threads/workers greater than number of cores improves the performance for a network intensive and I/O intensive application.&lt;/p&gt;
+
+&lt;h4 id=&quot;can-we-keep-increasing-workers-and-threads&quot;&gt;Can we keep increasing workers and threads&lt;/h4&gt;
+
+&lt;p&gt;You have to keep RAM usage under consideration while tuning the number of workers and threads.&lt;/p&gt;
+
+&lt;p&gt;Code execution for a handler needs memory. While worker is processing a request, sufficient memory must be available. If handling each request needs 50 MB and you have 5 workers and 1 thread running, you must ensure that 250 MB free RAM is there after starting gunicorn.&lt;/p&gt;
+
+&lt;h4 id=&quot;performance-with-current-configuration&quot;&gt;Performance with current configuration&lt;/h4&gt;
+
+&lt;p&gt;Curent configuration has 2 workers and 5 threads for each worker. So 10 requests will be handled concurrently.&lt;/p&gt;
+
+&lt;p&gt;Each request takes around 1 second to respond.&lt;/p&gt;
+
+&lt;p&gt;So with current configuration server can handle 10 requests per second.&lt;/p&gt;
+
+&lt;p&gt;If the handler is changed to &lt;code class=&quot;highlighter-rouge&quot;&gt;time.sleep(0.5)&lt;/code&gt;, i.e if each request could respond in approximately 0.5 seconds then server would be able to handle 20 requests per second.&lt;/p&gt;
+
+&lt;p&gt;If we change number of workers to 3 and 5 threads for each worker, then with time.sleep(0.5), server would be able to handle 3*5*2, i,e 30 requests per second.&lt;/p&gt;
+
+&lt;h4 id=&quot;increase-performance-by-increasing-number-of-cores&quot;&gt;Increase performance by increasing number of cores&lt;/h4&gt;
+
+&lt;p&gt;Suppose we use a machine with 2 cores.&lt;/p&gt;
+
+&lt;p&gt;On single core machine if we were using 2 workers, then on double core machine we should use 4 workers. This assumes that there is sufficient RAM available to be allocated to 4 workers.&lt;/p&gt;
+
+&lt;p&gt;A dual core machine would be able to handle 4*5, i.e 20 requests per second, assuming each request responds in a second.&lt;/p&gt;
+
+&lt;p&gt;If we found that 3 workers with 5 thread each is an optimum combination on a single core machine, then we should use 6 workers on a dual core machine.&lt;/p&gt;
+
+&lt;h3 id=&quot;computationally-bound-applications&quot;&gt;Computationally bound applications&lt;/h3&gt;
+
+&lt;p&gt;Earlier sections discussed about I/O bound applications. Let’s talk about CPU bound applications.&lt;/p&gt;
+
+&lt;p&gt;App has a following url:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://34.233.117.92:8000/list_of_dict
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The Django handler/controller for url &lt;code class=&quot;highlighter-rouge&quot;&gt;list_of_dict&lt;/code&gt; looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def list_of_dict(request):
+	print &quot;entered function&quot;
+    st = time.time()
+    for i in xrange(30000000):
+            pass
+    print time.time() - st, &quot;in this function&quot;
+    return HttpResponse(json.dumps(&quot;a&quot;))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s change &lt;code class=&quot;highlighter-rouge&quot;&gt;UrlThread&lt;/code&gt; used by &lt;code class=&quot;highlighter-rouge&quot;&gt;make_n_requests&lt;/code&gt; to work with this new url.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [14]: class UrlThread(Thread):
+	...:     def run(self):
+	...:         resp = requests.get('http://34.233.117.92:8000/list_of_dict')
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s change gunicorn configuration to have a single worker and single thread.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;workers = 1
+threads = 1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s make 1 request to this url&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [28]: make_n_requests(1)
+Time to get response for 1 simultaneous requests 1.49780297279
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Server log looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;entered function
+0.454895019531 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;It takes around 0.5 seconds in the handler as you can see from server log. And it takes around 1 second for request and response to travel on the wire. So in total it takes around 1.5 seconds.&lt;/p&gt;
+
+&lt;p&gt;Let’s make 5 requests to this url&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [32]: make_n_requests(5)
+Time to get response for 5 simultaneous requests 2.94885587692
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Server log looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;entered function
+0.460360050201 in this function
+entered function
+0.459032058716 in this function
+entered function
+0.462526082993 in this function
+entered function
+0.45965385437 in this function
+entered function
+0.460576057434 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Each request takes around 0.5 seconds to complete. Plus there is an additional time for request and response to move over the wire. In total it takes around 3 seconds.&lt;/p&gt;
+
+&lt;p&gt;Time to get response for n requests is increasing linearly as we increase n.&lt;/p&gt;
+
+&lt;p&gt;With a single worker and single thread, time to get response for simultaneous requests was increasing linearly with number of requests in I/O bound handler too.&lt;/p&gt;
+
+&lt;p&gt;Let’s change gunicorn &lt;code class=&quot;highlighter-rouge&quot;&gt;threads&lt;/code&gt;from its default value of 1 to 5.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;threads = 5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s make 5 simultaneous requests again.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [33]: make_n_requests(5)
+Time to get response for 5 simultaneous requests 3.37198781967
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We didn’t get any advantage by increasing number of threads. Instead the performance deteriorated.&lt;/p&gt;
+
+&lt;p&gt;Server log looks like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;entered function
+entered function
+entered function
+entered function
+entered function
+2.68351387978 in this function
+ 2.67835998535 in this function
+2.67423701286 in this function
+ 2.67234015465 in this function
+2.6794462204 in this function
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Event different requests didn’t complete in 0.5 second as was happening with single thread. The CPU time was split between 5 threads and so instead of 0.5 seconds it took 2.6 seconds for each request to complete.&lt;/p&gt;
+
+&lt;h4 id=&quot;observation-3&quot;&gt;Observation&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;In CPU bound applications, CPU isn’t idle. So multiple threads don’t provide an advantage.&lt;/li&gt;
+  &lt;li&gt;CPU time is split between threads, which infact leads to longer response time for each request.&lt;/li&gt;
+  &lt;li&gt;Thread switching brings a performance hit. That’s why we saw response time for 5 requests going up from 2.9 seconds to 3.3 seconds for 5 simultaneous requests.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;takeaways&quot;&gt;Takeaways&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;There is no definite answer for how many workers and threads will provide maximum performance. It’s a matter of tuning and finding out.&lt;/li&gt;
+  &lt;li&gt;Making number of workers/threads greater than number of cores almost always leads to higher number of requests per second handling in a I/O bound application.&lt;/li&gt;
+  &lt;li&gt;Making number of workers/threads greater than number of cores almost always leads to reduced number of requests per second handling in a CPU bound application.&lt;/li&gt;
+  &lt;li&gt;Making number of workers/threads greater than number of cores leads to increase in response time for each request in a CPU bound application.&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>akshar</name></author><summary type="html">This post tries to explain web application performance. Performance means the number of requests per second that can be served by a deployed application. This post would help answer questions like: How performant is an application. How much load can it handle. How many concurrent requests can it serve. How can you determine requests per second for an application. What steps to take to increase serving capability for an application. This post has as much code as theory. This post assumes that you have a basic understanding of processes, threads. You can read our previous post for basic understanding of processes and threads. In any web application there are many urls and associated handlers/controllers for each url. A url might respond in 200ms while another url might take 3 seconds. While determining performance of an application, choose the url which will be used most often and determine its performance. Factors which determine performance There are many factors determining performance of an application. Major factors are: Application type Application complexity Web server Physical server, i.e infrastructure Web server configuration In this post we will see how changing web server configuration changes performance with other factors remaining constant. Two major components of web server configuration are: Number of processes/workers Number of threads We will also see what web server configuration should be preferred for which application type. Example: How increasing number of server processes boosts performance for some applications while it reduces performance for other application types. Application type Applications could be compute intensive or network intensive or I/O intensive. Compute intensive applications can’t get any benefit by making number of server workers or threads greater than number of CPU cores. Network intensive or I/O intensive applications can benefit a lot by making several server workers/threads run on each core. Application complexity Suppose a url handler makes two db calls and takes a second to respond. In such case reducing number of db calls to 1 will reduce response time by half and number of requests served per second will get doubled. Web server There are many web servers. eg: Apache, Gunicorn, uwsgi etc. Apache might be better than gunicorn and might be able to handle more requests per second than gunicorn. Physical server/Infrastructure Increasing the number of cores or memory will improve the performance. If a single core machine is able to handle 10 requests per second for a computationally intensive application, then a machine with 2 cores should be able to handle 20 requests per second. This might need properly configuring the web server to get maximum utilization from physical server. Application server configuration Number of running web server processes influences performance. Similarly number of server threads in each process influences performance too. Demo server configuration Our demo physical server is a t1.micro instance with 1 GB RAM. It has a single core. Demo application for this post uses Django/Python served from a Gunicorn application server. Familiarity with Django would be helpful but you should be able to follow as long as you have understanding of any web framework. Demo application Our application has the following url: http://34.233.117.92:8000/static_content_sleep The Django handler/controller for url static_content_sleep looks like: def static_content_sleep(request): st = time.time() # Compute Start time print &quot;sleeping&quot; time.sleep(1) # Simulate db call which takes 1 seconds print &quot;waking&quot; print time.time() - st, &quot;in this function&quot; # Compute end time return HttpResponse(&quot;Woke up&quot;) Most web applications would be working with a database to fetch data. We don’t have a database setup. We are assuming that db used by the handler responds in 1 second. We are simulating a db call by making the code execution sleep for 1 second. This application is being served by Gunicorn web server. Gunicorn configuration looks like: workers = 1 threads = 1 bind = '0.0.0.0:8000' daemon = False The important configuration variables are workers and threads. Ignore others. If you want to setup gunicorn on your physical server, you can refer our previous post. We used default gunicorn configuration for workers and threads. The default configuration of gunicorn has following characteristics: workers Default is 1. This means that only one gunicorn process would be running on the physical server. If we make it 2, it would mean that 2 gunicorn processes would be running on the server. threads Default is 1. This tells number of threads in each worker process. This means that each gunicorn worker is single threaded and isn’t multithreaded. Making requests Let’s make two simultaneous request to this url. Making two requests from browser will not be simultaneous as switching from one browser tab to another tab might take you more than a second. In that case you cannot properly observe time taken by the server to process two simultaneous requests. Let’s write a Python function to make simultaneous requests and log the time. In [15]: from threading import Thread In [16]: import requests In [17]: class UrlThread(Thread): ...: def run(self): ...: resp = requests.get('http://34.233.117.92:8000/static_content_sleep') In [18]: def make_n_requests(num_requests): ...: threads = [] ...: for i in range(num_requests): ...: threads.append(UrlThread()) ...: start = time.time() # The requests will be almost simultaneous. # Second request will be made within nanoseconds of making the first request. ...: for thread in threads: ...: thread.start() # Threads will be started without waiting for response of previous threads ...: for thread in threads: ...: thread.join() # Wait for response for all the requests. ...: end = time.time() ...: print &quot;Time to get response for %d simultaneous requests&quot; % (num_requests,), end - start You can use curl or a shell script or any programming language using which you can simulate n simultaneous requests. Make 2 simultaneous requests In [19]: make_n_requests(2) Time to get response for 2 simultaneous requests 2.622205019 Gunicorn log on server looks like: sleeping waking 1.00131487846 in this function sleeping waking 1.00130581856 in this function Observation Print statements of the handler are printed. Print statements are printed again. Based on prints, we can infer that second request’s execution started after completion of first request. Let’s make 5 simultaneous requests and see what happens In [20]: make_n_requests(5) Time to get response for 5 simultaneous requests 5.65813708305 Gunicorn log looks like: sleeping waking 1.00114989281 in this function sleeping waking 1.0011370182 in this function sleeping waking 1.00114202499 in this function sleeping waking 1.00130295753 in this function sleeping waking 1.00131988525 in this function You can see 5 sets of print statements. Observation As we increase number of simultaneous requests, response time is proportionately increasing. For 2 requests, server takes around 2 seconds to respond. For 5 requests, server takes around 5 seconds to respond. For 10 requests, it would take around 10 seconds to respond. Let’s change gunicorn threadsfrom its default value of 1 to 5. threads = 5 Gunicorn process will have 5 threads now. And each thread is capable of serving a request. Hence 5 requests can be simultaneosly served. Restart gunicorn. Let’s make 5 simultaneous requests again. In [27]: make_n_requests(5) Time to get response for 5 simultaneous requests 1.77244091034 ** While earlier it was taking around 5 seconds to get 5 simultaneous requests processed, now it takes less than 2 seconds. ** Server log looks like: sleeping sleeping sleeping sleeping sleeping waking 1.001278162 in this function waking 1.00262784958 in this function waking 1.00353288651 in this function waking 1.00325298309 in this function waking 1.0035841465 in this function Important Observation Each gunicorn thread could handle a request. Processor kept switching between all these 5 threads. This way all 5 requests being processed by 5 different threads got a chance to execute concurrently without waiting for completion of any request. Print pattern also suggests that execution of 5 requests started before waiting for completion of first request. We can accomplish this performance boost by increasing number of workers instead of number of threads. We will change threads back to 1 and increase workers to 5 instead. workers = 5 threads = 1 Make 5 simultaneous requests In [22]: make_n_requests(5) Time to get response for 5 simultaneous requests 1.76864600182 Server gunicorn log looks like: sleeping sleeping sleeping sleeping sleeping waking 1.00134015083 in this function waking 1.00125384331 in this function waking 1.00277590752 in this function waking 1.00121593475 in this function waking 1.00092220306 in this function Here, processor executed 5 processes parallely. Let’s make 10 simultaneous requests: In [23]: make_n_requests(10) Time to get response for 10 simultaneous requests 2.74328804016 Server log looks like: sleeping -&amp;gt; First 5 requests are assigned to 5 workers sleeping sleeping sleeping sleeping waking -&amp;gt; One worker, say worker 1, finished execution. waking -&amp;gt; Another worker, say worker 2, finished execution. This print was executed before last print statement of worker 1 could execute. 1.00396203995 in this function -&amp;gt; Worker 1 last print statement. Worker 1 free now and can serve another request. 1.00669813156 in this function -&amp;gt; Worker 2 last print statement. Worker 2 free now sleeping -&amp;gt; Assigned to probably worker 1 waking -&amp;gt; Probably worker 3 woke up. 1.00510120392 in this function sleeping waking 1.00605106354 in this function sleeping sleeping waking 1.00563693047 in this function sleeping waking 1.00345993042 in this function waking 1.00495409966 in this function waking 1.00393104553 in this function waking 1.0027141571 in this function waking 1.00151586533 in this function Observation We made 10 simultaneous requests. First 5 requests were assigned to 5 running gunicorn processes. First 5 requests were concurrently handled during 1st second. 5 remaining requests were waiting to be executed during this time. During next second each gunicorn process picked up another request after completing a request. That’s why it took around 2 seconds to get response for 10 requests. Let’s use 2 threads with 5 workers threads = 2 workers = 5 Let’s restart gunicorn. Now there are 5 gunicorn processes running and each process is running 2 threads. In [16]: make_n_requests(10) Time to get response for 10 simultaneous requests 1.46275486946 Server log looks like: sleeping -&amp;gt; 'sleeping' repeated 10 times before any 'waking'. sleeping sleeping sleeping sleeping sleeping sleeping sleeping sleeping sleeping waking 1.00119280815 in this function waking 1.00499987602 in this function waking 1.00233006477 in this function waking 1.00144195557 in this function waking 1.00114202499 in this function waking 1.00117397308 in this function waking 1.00114512444 in this function waking 1.00120997429 in this function waking 1.00124192238 in this function waking 1.00117397308 in this function Inference Based on these examples we can infer that making number of threads/workers greater than number of cores improves the performance for a network intensive and I/O intensive application. Can we keep increasing workers and threads You have to keep RAM usage under consideration while tuning the number of workers and threads. Code execution for a handler needs memory. While worker is processing a request, sufficient memory must be available. If handling each request needs 50 MB and you have 5 workers and 1 thread running, you must ensure that 250 MB free RAM is there after starting gunicorn. Performance with current configuration Curent configuration has 2 workers and 5 threads for each worker. So 10 requests will be handled concurrently. Each request takes around 1 second to respond. So with current configuration server can handle 10 requests per second. If the handler is changed to time.sleep(0.5), i.e if each request could respond in approximately 0.5 seconds then server would be able to handle 20 requests per second. If we change number of workers to 3 and 5 threads for each worker, then with time.sleep(0.5), server would be able to handle 3*5*2, i,e 30 requests per second. Increase performance by increasing number of cores Suppose we use a machine with 2 cores. On single core machine if we were using 2 workers, then on double core machine we should use 4 workers. This assumes that there is sufficient RAM available to be allocated to 4 workers. A dual core machine would be able to handle 4*5, i.e 20 requests per second, assuming each request responds in a second. If we found that 3 workers with 5 thread each is an optimum combination on a single core machine, then we should use 6 workers on a dual core machine. Computationally bound applications Earlier sections discussed about I/O bound applications. Let’s talk about CPU bound applications. App has a following url: http://34.233.117.92:8000/list_of_dict The Django handler/controller for url list_of_dict looks like: def list_of_dict(request): print &quot;entered function&quot; st = time.time() for i in xrange(30000000): pass print time.time() - st, &quot;in this function&quot; return HttpResponse(json.dumps(&quot;a&quot;)) Let’s change UrlThread used by make_n_requests to work with this new url. In [14]: class UrlThread(Thread): ...: def run(self): ...: resp = requests.get('http://34.233.117.92:8000/list_of_dict') Let’s change gunicorn configuration to have a single worker and single thread. workers = 1 threads = 1 Let’s make 1 request to this url In [28]: make_n_requests(1) Time to get response for 1 simultaneous requests 1.49780297279 Server log looks like: entered function 0.454895019531 in this function It takes around 0.5 seconds in the handler as you can see from server log. And it takes around 1 second for request and response to travel on the wire. So in total it takes around 1.5 seconds. Let’s make 5 requests to this url In [32]: make_n_requests(5) Time to get response for 5 simultaneous requests 2.94885587692 Server log looks like: entered function 0.460360050201 in this function entered function 0.459032058716 in this function entered function 0.462526082993 in this function entered function 0.45965385437 in this function entered function 0.460576057434 in this function Each request takes around 0.5 seconds to complete. Plus there is an additional time for request and response to move over the wire. In total it takes around 3 seconds. Time to get response for n requests is increasing linearly as we increase n. With a single worker and single thread, time to get response for simultaneous requests was increasing linearly with number of requests in I/O bound handler too. Let’s change gunicorn threadsfrom its default value of 1 to 5. threads = 5 Let’s make 5 simultaneous requests again. In [33]: make_n_requests(5) Time to get response for 5 simultaneous requests 3.37198781967 We didn’t get any advantage by increasing number of threads. Instead the performance deteriorated. Server log looks like: entered function entered function entered function entered function entered function 2.68351387978 in this function 2.67835998535 in this function 2.67423701286 in this function 2.67234015465 in this function 2.6794462204 in this function Event different requests didn’t complete in 0.5 second as was happening with single thread. The CPU time was split between 5 threads and so instead of 0.5 seconds it took 2.6 seconds for each request to complete. Observation In CPU bound applications, CPU isn’t idle. So multiple threads don’t provide an advantage. CPU time is split between threads, which infact leads to longer response time for each request. Thread switching brings a performance hit. That’s why we saw response time for 5 requests going up from 2.9 seconds to 3.3 seconds for 5 simultaneous requests. Takeaways There is no definite answer for how many workers and threads will provide maximum performance. It’s a matter of tuning and finding out. Making number of workers/threads greater than number of cores almost always leads to higher number of requests per second handling in a I/O bound application. Making number of workers/threads greater than number of cores almost always leads to reduced number of requests per second handling in a CPU bound application. Making number of workers/threads greater than number of cores leads to increase in response time for each request in a CPU bound application.</summary></entry><entry><title type="html">How Python generators are similar to iterators</title><link href="http://localhost:4000/python/2017/11/01/how-python-generators-are-similar-iterators.html" rel="alternate" type="text/html" title="How Python generators are similar to iterators" /><published>2017-11-01T11:29:47+05:30</published><updated>2017-11-01T11:29:47+05:30</updated><id>http://localhost:4000/python/2017/11/01/how-python-generators-are-similar-iterators</id><content type="html" xml:base="http://localhost:4000/python/2017/11/01/how-python-generators-are-similar-iterators.html">&lt;p&gt;This post assumes you have a solid understanding of iterables, iterators, __iter__(), next() and built in iter(). If not, read our &lt;a href=&quot;http://agiliq.com/blog/2017/10/iterators-and-iterables/&quot; target=&quot;_blank&quot;&gt;previous post&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;generators&quot;&gt;Generators&lt;/h3&gt;
+
+&lt;p&gt;Generators simplify creation of iterables. Anything that can be done with a generator can be done by implementing iterator protocol. Generators require lesser lines of code than solving the problem with iterators and iterables.&lt;/p&gt;
+
+&lt;p&gt;Generators are &lt;strong&gt;functions&lt;/strong&gt; having an &lt;strong&gt;yield&lt;/strong&gt; keyword. Any function which has “yield” in it is a generator.&lt;/p&gt;
+
+&lt;p&gt;Calling a generator function creates an iterable. Since it is an iterable so it can be used with iter() and with a for loop.&lt;/p&gt;
+
+&lt;p&gt;Let’s write a generator function&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def func():
+    yield 1
+    yield 2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can use this generator with a for loop:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [2]: for each in func():
+   ...:     print each
+   ...:
+1
+2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In this case the numbers 1 and 2 were never stored in memory simultaneously. During first iteration of loop only 1 was stored in memory and during second iteration 2 was stored in memory.&lt;/p&gt;
+
+&lt;p&gt;Same thing using iterators and iterables would need the following code:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [15]: class Iterable(object):
+...:     def __init__(self):
+...:         self.current = 1
+...:     def __iter__(self):
+...:         return self
+...:     def next(self):
+...:         while self.current &amp;lt; 3:
+...:             temp = self.current
+...:             self.current += 1
+...:             return temp
+...:         raise StopIteration()
+...:
+
+In [16]: for each in Iterable():
+	...:     print each
+	...:
+1
+2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;how-generators-are-similar-to-iterables&quot;&gt;How generators are similar to iterables&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A generator function, i.e func can be considered similar to an iterable class.&lt;/li&gt;
+  &lt;li&gt;Calling a generator function creates an iterable instance. This instance has an __iter__() method. So this instance can be used with built-in function iter().&lt;/li&gt;
+  &lt;li&gt;Since calling a generator function creates an iterable, so it can be used with a for-loop.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let’s try it out step by step with the generator func:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [10]: f_iterable = func()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s verify that it is an iterable. Check for iterables is they have an __iter__() on them.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [11]: f_iterable.__iter__
+Out[11]: &amp;lt;method-wrapper '__iter__' of generator object at 0x103fe5f50&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Since it is an iterable, let’s get the underlying iterator from it.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [12]: f_iterator = iter(f_iterable)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s get the values from this iterator using next().&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [13]: next(f_iterator)
+Out[13]: 1
+
+In [14]: next(f_iterator)
+Out[14]: 2
+
+In [15]: next(f_iterator)
+---------------------------------------------------------------------------
+StopIteration                             Traceback (most recent call last)
+&amp;lt;ipython-input-15-c130bb6b8eb9&amp;gt; in &amp;lt;module&amp;gt;()
+----&amp;gt; 1 next(f_iterator)
+
+StopIteration:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Generator takes care of creating the iterable. It also takes care of creating the underlying iterator. And next() of this iterator() is such that it returns each ‘yield’ value of generator one after the other. When there is no more ‘yield’ in the generator function then this iterator raises StopIteration.&lt;/p&gt;
+
+&lt;p&gt;And we already know how iterables work with for-loop. To recap:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Saying &lt;code class=&quot;highlighter-rouge&quot;&gt;for each in iterable&lt;/code&gt; causes iter(iterable) to be called. This returns the underlying iterator.&lt;/li&gt;
+  &lt;li&gt;Then next() of iterator is repeatedly called until next() of iterator raises a StopIteration.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;That’s why when we use the generator instance with for-loop the ‘yield’ values are returned one by one until there is nothing more to be ‘yielded’ and at that point &lt;strong&gt;StopIteration&lt;/strong&gt; is raised and so for-loop stops.&lt;/p&gt;
+
+&lt;p&gt;In last post we saw how to generate fibonacci number upto a maximum using iterators and iterables. Putting it here for reference:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [16]: class Fibonacci(object):
+    ...:     def __init__(self, max):
+    ...:         self.max = max
+    ...:         self.loop = 1
+    ...:         self.first = 0
+    ...:         self.second = 1
+    ...:     def __iter__(self):
+    ...:         return self
+    ...:     def next(self):
+    ...:         if self.first + self.second &amp;gt; self.max:
+    ...:             raise StopIteration()
+    ...:         if self.loop == 1:
+    ...:             temp = 0
+    ...:         elif self.loop == 2:
+    ...:             temp = 1
+    ...:         else:
+    ...:             temp = self.first + self.second
+    ...:             self.first, self.second = self.second, temp
+    ...:         self.loop += 1
+    ...:         return temp
+
+In [17]: for each in Fibonacci(20):
+    ...:     print each
+    ...:
+0
+1
+1
+2
+3
+5
+8
+13
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The same fibonacci generator can be written using generators in the following way:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [43]: def fibonacci(maximum):
+	...:     first, second = 0, 1
+	...:     yield first
+	...:     yield second
+	...:     while (first + second) &amp;lt; maximum:
+	...:         yield first + second
+	...:         first, second = second, first+second
+	...:
+
+In [44]: for each in fibonacci(20):
+	...:     print each
+	...:
+0
+1
+1
+2
+3
+5
+8
+13
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We saved several lines of code by using generators instead of iterators and iterables.&lt;/p&gt;
+
+&lt;h4 id=&quot;implementing-xrange-with-generator&quot;&gt;Implementing xrange with generator.&lt;/h4&gt;
+
+&lt;p&gt;In the &lt;a href=&quot;http://agiliq.com/blog/2017/10/real-world-usage-iterators-and-iterables/&quot; target=&quot;_blank&quot;&gt;last post&lt;/a&gt; we implemented Python built-in xrange() using iterators and iterables.&lt;/p&gt;
+
+&lt;p&gt;We can implement xrange with generators in following way:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [76]: def xrange(stop):
+	...:     current = 0
+	...:     while current &amp;lt; stop:
+	...:         yield current
+	...:         current += 1
+	...:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You should read &lt;a href=&quot;https://stackoverflow.com/questions/2776829/difference-between-pythons-generators-and-iterators#answer-2776865&quot; target=&quot;_blank&quot;&gt;this SO answer&lt;/a&gt; for difference between generators and iterators.&lt;/p&gt;</content><author><name>akshar</name></author><summary type="html">This post assumes you have a solid understanding of iterables, iterators, __iter__(), next() and built in iter(). If not, read our previous post Generators Generators simplify creation of iterables. Anything that can be done with a generator can be done by implementing iterator protocol. Generators require lesser lines of code than solving the problem with iterators and iterables. Generators are functions having an yield keyword. Any function which has “yield” in it is a generator. Calling a generator function creates an iterable. Since it is an iterable so it can be used with iter() and with a for loop. Let’s write a generator function def func(): yield 1 yield 2 We can use this generator with a for loop: In [2]: for each in func(): ...: print each ...: 1 2 In this case the numbers 1 and 2 were never stored in memory simultaneously. During first iteration of loop only 1 was stored in memory and during second iteration 2 was stored in memory. Same thing using iterators and iterables would need the following code: In [15]: class Iterable(object): ...: def __init__(self): ...: self.current = 1 ...: def __iter__(self): ...: return self ...: def next(self): ...: while self.current &amp;lt; 3: ...: temp = self.current ...: self.current += 1 ...: return temp ...: raise StopIteration() ...: In [16]: for each in Iterable(): ...: print each ...: 1 2 How generators are similar to iterables A generator function, i.e func can be considered similar to an iterable class. Calling a generator function creates an iterable instance. This instance has an __iter__() method. So this instance can be used with built-in function iter(). Since calling a generator function creates an iterable, so it can be used with a for-loop. Let’s try it out step by step with the generator func: In [10]: f_iterable = func() Let’s verify that it is an iterable. Check for iterables is they have an __iter__() on them. In [11]: f_iterable.__iter__ Out[11]: &amp;lt;method-wrapper '__iter__' of generator object at 0x103fe5f50&amp;gt; Since it is an iterable, let’s get the underlying iterator from it. In [12]: f_iterator = iter(f_iterable) Let’s get the values from this iterator using next(). In [13]: next(f_iterator) Out[13]: 1 In [14]: next(f_iterator) Out[14]: 2 In [15]: next(f_iterator) --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &amp;lt;ipython-input-15-c130bb6b8eb9&amp;gt; in &amp;lt;module&amp;gt;() ----&amp;gt; 1 next(f_iterator) StopIteration: Generator takes care of creating the iterable. It also takes care of creating the underlying iterator. And next() of this iterator() is such that it returns each ‘yield’ value of generator one after the other. When there is no more ‘yield’ in the generator function then this iterator raises StopIteration. And we already know how iterables work with for-loop. To recap: Saying for each in iterable causes iter(iterable) to be called. This returns the underlying iterator. Then next() of iterator is repeatedly called until next() of iterator raises a StopIteration. That’s why when we use the generator instance with for-loop the ‘yield’ values are returned one by one until there is nothing more to be ‘yielded’ and at that point StopIteration is raised and so for-loop stops. In last post we saw how to generate fibonacci number upto a maximum using iterators and iterables. Putting it here for reference: In [16]: class Fibonacci(object): ...: def __init__(self, max): ...: self.max = max ...: self.loop = 1 ...: self.first = 0 ...: self.second = 1 ...: def __iter__(self): ...: return self ...: def next(self): ...: if self.first + self.second &amp;gt; self.max: ...: raise StopIteration() ...: if self.loop == 1: ...: temp = 0 ...: elif self.loop == 2: ...: temp = 1 ...: else: ...: temp = self.first + self.second ...: self.first, self.second = self.second, temp ...: self.loop += 1 ...: return temp In [17]: for each in Fibonacci(20): ...: print each ...: 0 1 1 2 3 5 8 13 The same fibonacci generator can be written using generators in the following way: In [43]: def fibonacci(maximum): ...: first, second = 0, 1 ...: yield first ...: yield second ...: while (first + second) &amp;lt; maximum: ...: yield first + second ...: first, second = second, first+second ...: In [44]: for each in fibonacci(20): ...: print each ...: 0 1 1 2 3 5 8 13 We saved several lines of code by using generators instead of iterators and iterables. Implementing xrange with generator. In the last post we implemented Python built-in xrange() using iterators and iterables. We can implement xrange with generators in following way: In [76]: def xrange(stop): ...: current = 0 ...: while current &amp;lt; stop: ...: yield current ...: current += 1 ...: You should read this SO answer for difference between generators and iterators.</summary></entry><entry><title type="html">Real world usage of __iter__ and next</title><link href="http://localhost:4000/python/2017/10/18/real-world-usage-iterators-and-iterables.html" rel="alternate" type="text/html" title="Real world usage of __iter__ and next" /><published>2017-10-18T10:53:28+05:30</published><updated>2017-10-18T10:53:28+05:30</updated><id>http://localhost:4000/python/2017/10/18/real-world-usage-iterators-and-iterables</id><content type="html" xml:base="http://localhost:4000/python/2017/10/18/real-world-usage-iterators-and-iterables.html">&lt;p&gt;This post assumes that you have a basic understanding of the iterator protocol. If not read our &lt;a href=&quot;http://agiliq.com/blog/2017/10/iterators-and-iterables/&quot; target=&quot;_blank&quot;&gt;last post.&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;real-world-usage-of-__iter__&quot;&gt;Real world usage of __iter__&lt;/h3&gt;
+
+&lt;h4 id=&quot;implementing-xrange&quot;&gt;Implementing xrange&lt;/h4&gt;
+
+&lt;p&gt;There is a builtin function called xrange. It is very similar to list. xrange yields the same values as the corresponding list, without actually storing them all simultaneously. Since it doesn’t store all values simultaneously, so it saves memory.&lt;/p&gt;
+
+&lt;p&gt;If xrange were not there, it could have been implemented in following way using iterators:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [12]: class xrange_iterator(object):
+	...:     def __init__(self, max):
+	...:         self.max = max
+	...:         self.current = 0
+	...:     def next(self):
+	...:        if self.current == self.max:
+	...:             raise StopIteration()
+	...:        temp = self.current
+	...:        self.current += 1
+	...:        return temp
+
+
+In [13]: class xrange_2(object):
+	...:     def __init__(self, max):
+	...:         self.max = max
+	...:     def __iter__(self):
+	...:         return xrange_iterator(self.max)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We wrote an iterable called xrange_2. And wrote an iterator called xrange_iterator which is used by xrange_2. Let’s use the iterable we just wrote:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [14]: for each in xrange_2(5):
+	...:     print each
+	...:
+0
+1
+2
+3
+4
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here values from 0 to 4 weren’t stored in the memory simultaneously but instead were transient.&lt;/p&gt;
+
+&lt;h4 id=&quot;allowing-looping-over-any-arbitrary-object&quot;&gt;Allowing looping over any arbitrary object&lt;/h4&gt;
+
+&lt;p&gt;Assume there is a class which encapsulates a list and encapsulates several other things too. We want the elements of list to be retrieved when a user loops over the instance of this class.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;n [15]: class ListContainer(object):
+	...:     def __init__(self, fruits):
+	...:         self.fruits = fruits
+
+	...:     def __iter__(self):
+	...:         return iter(self.fruits)
+	...:
+
+In [16]: l = ListContainer([&quot;orange&quot;, &quot;mango&quot;, &quot;banana&quot;])
+
+In [17]: for fruits in l:
+	...:     print fruits
+	...:
+orange
+mango
+banana
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;__iter__ returns the iterator of the enacapsulated list. That’s why looping over the instance calls next() of the encapsulated list.&lt;/p&gt;
+
+&lt;p&gt;Django does something similar with Forms and fields.&lt;/p&gt;
+
+&lt;p&gt;A form is implemented using a class in Django. Any form has fields. Form fields are also implemented using class in Django. A Django Field class has several functionality implemented in it like how the widget corresponding to field should look, how the POSTed value should be validated etc.&lt;/p&gt;
+
+&lt;p&gt;Django code for forms look something like: (Note that this is not exact code, I have simplified it to keep the post shorter)&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [1]: class Field(object):
+   ...:     pass
+
+In [2]: class CharField(Field):
+   ...:     pass
+
+In [3]: class DecimalField(Field):
+ ...:     pass
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;A form class looks something like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [4]: class Form(object):
+   ...:     def __init__(self, fields):
+   ...:         self.fields = fields
+   ...:
+   ...:     def __iter__(self):
+   ...:         return iter(self.fields)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Django want to return field instances when a form is looped over. That’s why it implements an __iter__.&lt;/p&gt;
+
+&lt;p&gt;A form instance with two field can be created like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [6]: fields = [CharField(), DecimalField()]
+
+In [7]: form = Form(fields)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You should be seeing the field instances when you loop over the form&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [8]: for field in form:
+   ...:     print field
+   ...:
+  &amp;lt;__main__.CharField object at 0x107cd7850&amp;gt;
+  &amp;lt;__main__.DecimalField object at 0x107cd7710&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;generating-transient-values&quot;&gt;Generating transient values&lt;/h4&gt;
+
+&lt;p&gt;An iterator can be used to generate transient values which can be consumed as the loop is running, and which don’t need to be stored in a list. We did the same thing in xrange_2.&lt;/p&gt;
+
+&lt;p&gt;Suppose we want to generate fibonacci numbers till any maximum value:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [16]: class Fibonacci(object):
+	...:     def __init__(self, max):
+	...:         self.max = max
+	...:         self.loop = 1
+	...:         self.first = 0
+	...:         self.second = 1
+	...:     def __iter__(self):
+	...:         return self
+	...:     def next(self):
+	...:         if self.first + self.second &amp;gt; self.max:
+	...:             raise StopIteration()
+	...:         if self.loop == 1:
+	...:             temp = 0
+	...:         elif self.loop == 2:
+	...:             temp = 1
+	...:         else:
+	...:             temp = self.first + self.second
+	...:             self.first, self.second = self.second, temp
+	...:         self.loop += 1
+	...:         return temp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can then use the Fibonacci class we just wrote in following way:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [17]: for each in Fibonacci(20):
+	...:     print each
+	...:
+0
+1
+1
+2
+3
+5
+8
+13
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>akshar</name></author><summary type="html">This post assumes that you have a basic understanding of the iterator protocol. If not read our last post. Real world usage of __iter__ Implementing xrange There is a builtin function called xrange. It is very similar to list. xrange yields the same values as the corresponding list, without actually storing them all simultaneously. Since it doesn’t store all values simultaneously, so it saves memory. If xrange were not there, it could have been implemented in following way using iterators: In [12]: class xrange_iterator(object): ...: def __init__(self, max): ...: self.max = max ...: self.current = 0 ...: def next(self): ...: if self.current == self.max: ...: raise StopIteration() ...: temp = self.current ...: self.current += 1 ...: return temp In [13]: class xrange_2(object): ...: def __init__(self, max): ...: self.max = max ...: def __iter__(self): ...: return xrange_iterator(self.max) We wrote an iterable called xrange_2. And wrote an iterator called xrange_iterator which is used by xrange_2. Let’s use the iterable we just wrote: In [14]: for each in xrange_2(5): ...: print each ...: 0 1 2 3 4 Here values from 0 to 4 weren’t stored in the memory simultaneously but instead were transient. Allowing looping over any arbitrary object Assume there is a class which encapsulates a list and encapsulates several other things too. We want the elements of list to be retrieved when a user loops over the instance of this class. n [15]: class ListContainer(object): ...: def __init__(self, fruits): ...: self.fruits = fruits ...: def __iter__(self): ...: return iter(self.fruits) ...: In [16]: l = ListContainer([&quot;orange&quot;, &quot;mango&quot;, &quot;banana&quot;]) In [17]: for fruits in l: ...: print fruits ...: orange mango banana __iter__ returns the iterator of the enacapsulated list. That’s why looping over the instance calls next() of the encapsulated list. Django does something similar with Forms and fields. A form is implemented using a class in Django. Any form has fields. Form fields are also implemented using class in Django. A Django Field class has several functionality implemented in it like how the widget corresponding to field should look, how the POSTed value should be validated etc. Django code for forms look something like: (Note that this is not exact code, I have simplified it to keep the post shorter) In [1]: class Field(object): ...: pass In [2]: class CharField(Field): ...: pass In [3]: class DecimalField(Field): ...: pass A form class looks something like In [4]: class Form(object): ...: def __init__(self, fields): ...: self.fields = fields ...: ...: def __iter__(self): ...: return iter(self.fields) Django want to return field instances when a form is looped over. That’s why it implements an __iter__. A form instance with two field can be created like: In [6]: fields = [CharField(), DecimalField()] In [7]: form = Form(fields) You should be seeing the field instances when you loop over the form In [8]: for field in form: ...: print field ...: &amp;lt;__main__.CharField object at 0x107cd7850&amp;gt; &amp;lt;__main__.DecimalField object at 0x107cd7710&amp;gt; Generating transient values An iterator can be used to generate transient values which can be consumed as the loop is running, and which don’t need to be stored in a list. We did the same thing in xrange_2. Suppose we want to generate fibonacci numbers till any maximum value: In [16]: class Fibonacci(object): ...: def __init__(self, max): ...: self.max = max ...: self.loop = 1 ...: self.first = 0 ...: self.second = 1 ...: def __iter__(self): ...: return self ...: def next(self): ...: if self.first + self.second &amp;gt; self.max: ...: raise StopIteration() ...: if self.loop == 1: ...: temp = 0 ...: elif self.loop == 2: ...: temp = 1 ...: else: ...: temp = self.first + self.second ...: self.first, self.second = self.second, temp ...: self.loop += 1 ...: return temp We can then use the Fibonacci class we just wrote in following way: In [17]: for each in Fibonacci(20): ...: print each ...: 0 1 1 2 3 5 8 13</summary></entry><entry><title type="html">Iterators and Iterables</title><link href="http://localhost:4000/python/2017/10/12/iterators-and-iterables.html" rel="alternate" type="text/html" title="Iterators and Iterables" /><published>2017-10-12T11:36:19+05:30</published><updated>2017-10-12T11:36:19+05:30</updated><id>http://localhost:4000/python/2017/10/12/iterators-and-iterables</id><content type="html" xml:base="http://localhost:4000/python/2017/10/12/iterators-and-iterables.html">&lt;h4 id=&quot;iterable&quot;&gt;Iterable&lt;/h4&gt;
+
+&lt;p&gt;Iterables are objects that implement the iterator protocol.&lt;/p&gt;
+
+&lt;p&gt;Iterator protocol mandates that __iter__ method be implemented on the object.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class A(object):
+	def __iter__(self):
+		return B()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;An instance of A would be an iterable, because class A has __iter__() defined on it.&lt;/p&gt;
+
+&lt;p&gt;__iter__ method mandates that an &lt;code class=&quot;highlighter-rouge&quot;&gt;iterator&lt;/code&gt; be returned from it. Instance of class B must be an iterator. More on iterators to follow. &lt;code class=&quot;highlighter-rouge&quot;&gt;iterator&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;iterables&lt;/code&gt; are different things.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;a = A()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here “a” is an &lt;code class=&quot;highlighter-rouge&quot;&gt;iterable&lt;/code&gt;. It is not an &lt;code class=&quot;highlighter-rouge&quot;&gt;iterator&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;There is a built-in method called &lt;code class=&quot;highlighter-rouge&quot;&gt;iter()&lt;/code&gt;. Only iterables can be passed to built in method &lt;code class=&quot;highlighter-rouge&quot;&gt;iter()&lt;/code&gt;. If we try to pass a non-iterable to iter(), a TypeError will occur. More on built-in method iter() to follow.&lt;/p&gt;
+
+&lt;p&gt;Passing an iterable to built in &lt;code class=&quot;highlighter-rouge&quot;&gt;iter()&lt;/code&gt; causes __iter__() of the iterable to be called.&lt;/p&gt;
+
+&lt;h4 id=&quot;iterator&quot;&gt;Iterator&lt;/h4&gt;
+
+&lt;p&gt;An iterator is an object that has next() method defined.&lt;/p&gt;
+
+&lt;p&gt;An iterator doesn’t need to have __iter__() defined. Similarly an iterable doesn’t need to have next() defined.&lt;/p&gt;
+
+&lt;p&gt;To reiterate, iterable must have __iter__() defined and iterator must have next() defined.&lt;/p&gt;
+
+&lt;p&gt;Iterator class B could look like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;class B(object):
+	def next(self):
+		return &quot;boom&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Class B is an iterator because it has method next().&lt;/p&gt;
+
+&lt;p&gt;You can do:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;a_instance = A()	
+a_iter = iter(a_instance)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;a_instance&lt;/code&gt; is an iterable because it has method __iter__. Calling built-in iter() on the iterable &lt;code class=&quot;highlighter-rouge&quot;&gt;a_instance&lt;/code&gt; internally called a_instance.__iter__(). a_instance.__iter__() returned an iterator which is an instance of class B.&lt;/p&gt;
+
+&lt;h4 id=&quot;built-in-next-and-built-in-iter&quot;&gt;Built-in next() and built-in iter()&lt;/h4&gt;
+
+&lt;p&gt;Built in method &lt;code class=&quot;highlighter-rouge&quot;&gt;next()&lt;/code&gt; mandates that an iterator be passed to it.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [33]: next(a_iter)
+Out[33]: 'boom'
+
+In [34]: next(a_iter)
+Out[34]: 'boom'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;next() works with an iterator. next() doesn’t work with iterable. Try it:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [60]: iterable = A()
+
+In [61]: next(iterable)
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+&amp;lt;ipython-input-61-edd1adac5cd0&amp;gt; in &amp;lt;module&amp;gt;()
+----&amp;gt; 1 next(iterable)
+
+TypeError: A object is not an iterator
+
+In [65]: iterator = B()
+
+In [66]: next(iterator)
+Out[66]: 'boom'
+
+In [67]: next(iterator)
+Out[67]: 'boom'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;iter() works with iterable. iter() doesn’t work with iterators.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [73]: iter(iterable)
+Out[73]: &amp;lt;__main__.B at 0x1058cef50&amp;gt;
+
+In [74]: iter(iterator)
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+&amp;lt;ipython-input-74-035e65827850&amp;gt; in &amp;lt;module&amp;gt;()
+----&amp;gt; 1 iter(iterator)
+
+TypeError: 'B' object is not iterable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;An iterable needs an underlying iterator. In our examples, iterable A needs underlying iterator B.&lt;/p&gt;
+
+&lt;p&gt;At the same time iterators are independent of iterables. B isn’t dependent on A.&lt;/p&gt;
+
+&lt;p&gt;Let’s create a class which is not an iterable i.e which doesn’t have __iter__() implemented and try to use it with built in iter().&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [44]: class NotIterable(object):
+	...:     pass
+	...:
+
+In [45]: iter(NotIterable())
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+&amp;lt;ipython-input-45-a8708f85a52f&amp;gt; in &amp;lt;module&amp;gt;()
+----&amp;gt; 1 iter(NotIterable())
+
+TypeError: 'NotIterable' object is not iterable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Built in iter() can only work with an iterable. And calling iter(iterable) returns an iterator.&lt;/p&gt;
+
+&lt;h4 id=&quot;stopiteration&quot;&gt;StopIteration&lt;/h4&gt;
+
+&lt;p&gt;When using iterators, there is a related concept called StopIteration.&lt;/p&gt;
+
+&lt;p&gt;Currently every time you call next() on an instance of B, “boom” is returned. Suppose you only want “boom” to be returned 3 times, then you can do.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [79]: class B(object):
+	...:     def __init__(self):
+	...:         self.i = 0
+	...:     def next(self):
+	...:         if self.i == 3:
+	...:             raise StopIteration()
+	...:         self.i += 1
+	...:         return &quot;boom&quot;
+
+In [81]: next(b_instance)
+Out[81]: 'boom'
+
+In [82]: next(b_instance)
+Out[82]: 'boom'
+
+In [83]: next(b_instance)
+Out[83]: 'boom'
+
+In [84]: next(b_instance)
+---------------------------------------------------------------------------
+StopIteration                             Traceback (most recent call last)
+&amp;lt;ipython-input-84-95c74b691bf4&amp;gt; in &amp;lt;module&amp;gt;()
+----&amp;gt; 1 next(b_instance)
+
+&amp;lt;ipython-input-79-700035006973&amp;gt; in next(self)
+	  4     def next(self):
+	  5         if self.i == 3:
+----&amp;gt; 6             raise StopIteration()
+	  7         self.i += 1
+	  8         return &quot;boom&quot;
+
+StopIteration:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;how-for-loop-works&quot;&gt;How for loop works&lt;/h4&gt;
+
+&lt;p&gt;For loop expects an iterable to be passed to it. Assuming the classes look like the following:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [89]: class B(object):
+	...:     def next(self):
+	...:         return &quot;boom&quot;
+	...:
+
+In [89]: class A(object):
+	...:     def __iter__(self):
+	...:         return B()
+	...:
+
+In [89]: iterable = A()
+
+In [89]: for each in iterable:
+	...:     print each
+	...:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This would keep printing “boom”. What happened here:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Saying &lt;code class=&quot;highlighter-rouge&quot;&gt;for each in iterable&lt;/code&gt; causes iter(iterable) to be called. This returns the underlying iterator.&lt;/li&gt;
+  &lt;li&gt;Then next() of iterator is repeatedly called until next() of iterator raises a StopIteration.&lt;/li&gt;
+  &lt;li&gt;Since in this case StopIteration() is never raised from the iterator, so “boom” keeps on getting returned.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In case we only want “boom” to be printed 3 times, we could do:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [89]: class B(object):
+	...:     def __init__(self):
+	...:         self.i = 0 # Hard coded currently, but can be made configurable
+	...:     def next(self):
+	...:         if self.i == 3:
+	...:             raise StopIteration()
+	...:         self.i += 1
+	...:         return &quot;boom&quot;
+	...:
+
+In [90]: iterable = A()
+
+In [91]: for each in iterable:
+	...:     print each
+	...:
+boom
+boom
+boom
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here StopIteration() was raised after next() of iterator ran for 3 times. So &lt;code class=&quot;highlighter-rouge&quot;&gt;for&lt;/code&gt; loop only printed “boom” 3 times.&lt;/p&gt;
+
+&lt;h5 id=&quot;how-lists-work-with-for-loop&quot;&gt;How lists work with for loop&lt;/h5&gt;
+
+&lt;p&gt;Python lists are iterables. Internally lists implement the __iter__() method. And __iter__() of list returns an iterator which has a next() method.&lt;/p&gt;
+
+&lt;p&gt;You can verify that a list object has __iter__():&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [92]: l = [1, 2, 3]
+
+In [93]: l.__iter__
+Out[93]: &amp;lt;method-wrapper '__iter__' of list object at 0x1058eaa28&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s get the corresponding iterator for this iterable.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [94]: iterator_for_list = iter(l)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Since we are expecting it to be an iterator, there must be a method next() on this object.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [99]: iterator_for_list.next
+Out[99]: &amp;lt;method-wrapper 'next' of listiterator object at 0x1058dd610&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Calling next() on this object will return different elements of list. When no more elements are left, a StopIteration() would be raised&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;In [102]: iterator_for_list.next()
+Out[102]: 1
+
+In [103]: iterator_for_list.next()
+Out[103]: 2
+
+In [104]: iterator_for_list.next()
+Out[104]: 3
+
+In [105]: iterator_for_list.next()
+---------------------------------------------------------------------------
+StopIteration                             Traceback (most recent call last)
+&amp;lt;ipython-input-105-3adc9ab4c81f&amp;gt; in &amp;lt;module&amp;gt;()
+----&amp;gt; 1 iterator_for_list.next()
+
+StopIteration:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Because iterator protocol is implemented on a list, that’s why we are able to iterate over a list.&lt;/p&gt;</content><author><name>akshar</name></author><summary type="html">Iterable Iterables are objects that implement the iterator protocol. Iterator protocol mandates that __iter__ method be implemented on the object. class A(object): def __iter__(self): return B() An instance of A would be an iterable, because class A has __iter__() defined on it. __iter__ method mandates that an iterator be returned from it. Instance of class B must be an iterator. More on iterators to follow. iterator and iterables are different things. a = A() Here “a” is an iterable. It is not an iterator. There is a built-in method called iter(). Only iterables can be passed to built in method iter(). If we try to pass a non-iterable to iter(), a TypeError will occur. More on built-in method iter() to follow. Passing an iterable to built in iter() causes __iter__() of the iterable to be called. Iterator An iterator is an object that has next() method defined. An iterator doesn’t need to have __iter__() defined. Similarly an iterable doesn’t need to have next() defined. To reiterate, iterable must have __iter__() defined and iterator must have next() defined. Iterator class B could look like: class B(object): def next(self): return &quot;boom&quot; Class B is an iterator because it has method next(). You can do: a_instance = A() a_iter = iter(a_instance) a_instance is an iterable because it has method __iter__. Calling built-in iter() on the iterable a_instance internally called a_instance.__iter__(). a_instance.__iter__() returned an iterator which is an instance of class B. Built-in next() and built-in iter() Built in method next() mandates that an iterator be passed to it. In [33]: next(a_iter) Out[33]: 'boom' In [34]: next(a_iter) Out[34]: 'boom' next() works with an iterator. next() doesn’t work with iterable. Try it: In [60]: iterable = A() In [61]: next(iterable) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &amp;lt;ipython-input-61-edd1adac5cd0&amp;gt; in &amp;lt;module&amp;gt;() ----&amp;gt; 1 next(iterable) TypeError: A object is not an iterator In [65]: iterator = B() In [66]: next(iterator) Out[66]: 'boom' In [67]: next(iterator) Out[67]: 'boom' iter() works with iterable. iter() doesn’t work with iterators. In [73]: iter(iterable) Out[73]: &amp;lt;__main__.B at 0x1058cef50&amp;gt; In [74]: iter(iterator) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &amp;lt;ipython-input-74-035e65827850&amp;gt; in &amp;lt;module&amp;gt;() ----&amp;gt; 1 iter(iterator) TypeError: 'B' object is not iterable An iterable needs an underlying iterator. In our examples, iterable A needs underlying iterator B. At the same time iterators are independent of iterables. B isn’t dependent on A. Let’s create a class which is not an iterable i.e which doesn’t have __iter__() implemented and try to use it with built in iter(). In [44]: class NotIterable(object): ...: pass ...: In [45]: iter(NotIterable()) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &amp;lt;ipython-input-45-a8708f85a52f&amp;gt; in &amp;lt;module&amp;gt;() ----&amp;gt; 1 iter(NotIterable()) TypeError: 'NotIterable' object is not iterable Built in iter() can only work with an iterable. And calling iter(iterable) returns an iterator. StopIteration When using iterators, there is a related concept called StopIteration. Currently every time you call next() on an instance of B, “boom” is returned. Suppose you only want “boom” to be returned 3 times, then you can do. In [79]: class B(object): ...: def __init__(self): ...: self.i = 0 ...: def next(self): ...: if self.i == 3: ...: raise StopIteration() ...: self.i += 1 ...: return &quot;boom&quot; In [81]: next(b_instance) Out[81]: 'boom' In [82]: next(b_instance) Out[82]: 'boom' In [83]: next(b_instance) Out[83]: 'boom' In [84]: next(b_instance) --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &amp;lt;ipython-input-84-95c74b691bf4&amp;gt; in &amp;lt;module&amp;gt;() ----&amp;gt; 1 next(b_instance) &amp;lt;ipython-input-79-700035006973&amp;gt; in next(self) 4 def next(self): 5 if self.i == 3: ----&amp;gt; 6 raise StopIteration() 7 self.i += 1 8 return &quot;boom&quot; StopIteration: How for loop works For loop expects an iterable to be passed to it. Assuming the classes look like the following: In [89]: class B(object): ...: def next(self): ...: return &quot;boom&quot; ...: In [89]: class A(object): ...: def __iter__(self): ...: return B() ...: In [89]: iterable = A() In [89]: for each in iterable: ...: print each ...: This would keep printing “boom”. What happened here: Saying for each in iterable causes iter(iterable) to be called. This returns the underlying iterator. Then next() of iterator is repeatedly called until next() of iterator raises a StopIteration. Since in this case StopIteration() is never raised from the iterator, so “boom” keeps on getting returned. In case we only want “boom” to be printed 3 times, we could do: In [89]: class B(object): ...: def __init__(self): ...: self.i = 0 # Hard coded currently, but can be made configurable ...: def next(self): ...: if self.i == 3: ...: raise StopIteration() ...: self.i += 1 ...: return &quot;boom&quot; ...: In [90]: iterable = A() In [91]: for each in iterable: ...: print each ...: boom boom boom Here StopIteration() was raised after next() of iterator ran for 3 times. So for loop only printed “boom” 3 times. How lists work with for loop Python lists are iterables. Internally lists implement the __iter__() method. And __iter__() of list returns an iterator which has a next() method. You can verify that a list object has __iter__(): In [92]: l = [1, 2, 3] In [93]: l.__iter__ Out[93]: &amp;lt;method-wrapper '__iter__' of list object at 0x1058eaa28&amp;gt; Let’s get the corresponding iterator for this iterable. In [94]: iterator_for_list = iter(l) Since we are expecting it to be an iterator, there must be a method next() on this object. In [99]: iterator_for_list.next Out[99]: &amp;lt;method-wrapper 'next' of listiterator object at 0x1058dd610&amp;gt; Calling next() on this object will return different elements of list. When no more elements are left, a StopIteration() would be raised In [102]: iterator_for_list.next() Out[102]: 1 In [103]: iterator_for_list.next() Out[103]: 2 In [104]: iterator_for_list.next() Out[104]: 3 In [105]: iterator_for_list.next() --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &amp;lt;ipython-input-105-3adc9ab4c81f&amp;gt; in &amp;lt;module&amp;gt;() ----&amp;gt; 1 iterator_for_list.next() StopIteration: Because iterator protocol is implemented on a list, that’s why we are able to iterate over a list.</summary></entry></feed>

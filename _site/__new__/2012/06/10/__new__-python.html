@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>new() in python | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="new() in python" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Lately I started looking into Django code and wish to write about internals of Django. I started with Django models and will be writing about it soon. For understanding how Django models work, I had to understand what metaclasses are and how metaclasses work. Metaclasses use method “__new__” and so I looked at what “__new__” does. ###As __new__ is a static method, we will see a lttle bit about static methods and then __new__ in detail. Understanding static methods. Understanding method “__new__” of any class. We will see how to override method __new__ in a class. Also, I will be trying all the code we write here on Ipython and I suggest you to try everything on Ipython as well. ###Static methods A little bit about instance methods first. Let’s write a class. In [1]: class A(object): ...: def met(self, a, b): ...: print a, b ...: In this case, met() is an instance method. So, it is expected that we pass an instance of A as the first argument to met. Let’s create an object and call met() on the created object and pass two arguments to met(). In [4]: obj = A() In [5]: obj.met(1,2) 1 2 #output ####What happened here? When we called met(), we passed two arguments although met() expects three argument as per its definition. When we wrote obj.met(1, 2), interpreter took care of sending instance obj as the first argument to met() and 1 and 2 were passed as second and third arguments respectively. Let’s try calling met() without an instance or in other words let’s call the method using class. In [6]: A.met(1,2) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) /home/akshar/branding_git/netconference/&lt;ipython-input-6-e8b323dba928&gt; in &lt;module&gt;() ----&gt; 1 A.met(1,2) TypeError: unbound method met() must be called with A instance as first argument (got int instance instead) We defined met() as an instance method of class A, so it expected an instance of A as the first argument. As its very clear from the error, met() expected an instance of A as the first argument but got an ‘int’ instead. If we pass an instance of A as the first argument, it will work as expected. In [7]: A.met(obj, 3, 4) 3 4 #output Notice that we called the method on class A and not on an instance of A. But we took care of sending an instance of A as the first argument to met() and it worked as expected. Let’s see static method now. In [8]: class B(object): ...: @staticmethod ...: def met(a, b): ...: print a,b ...: ####What does @staticmethod above the method definition do? Its a decorator which changes a method to static method. It means the method is no longer an instance method, which means that the method does not expect its first argument to be an instance. So, for our method definition, the method does not expect its first argument to be an instance of B. Even if we call the method on an instance of B, current instance will not be passed as the first argument to this method, since its a static method. For instance method that we saw earlier the current instance was passed as the first argument. In [9]: B.met(5,6) 5 6 #output Here we were able to call the method on the class and were not required to pass an instance of B as the first argument. Let’s call this method on an instance. In [10]: b = B() In [11]: b.met(5,6) 5 6 Here we called the method on an instance and passed two arguments. Since its a static method, the current instance i.e b was not passed as the first argument to met(). Had it not been a static method, current instance would have been passed as first argument, 5 as second argument and 6 as third argument. ###Understanding method __new__ of a class. We will also see how to override method __new__ in a class. First let’s see a little bit about __init__ In [13]: class A(object): ....: def __init__(self, a, b): ....: print &quot;init gets called&quot; ....: print &quot;self is&quot;, self ....: self.a, self.b = a,b ....: In __init__, we print something as we enter the method which is to validate that __init__ has been called. Then we print the first argument which is self and then we perform some assignments. __init__ is an instance method and expects the first argument to be an instance. Let’s call the class passing it two arguments. Keep in mind the part call the class, we are going to again use it in next few lines. If you have any confusion about the part calling the class, it will be clear in next few lines. In [16]: a = A(1,2) init gets called #output self is &lt;__main__.A object at 0x3357210&gt; #output Notice the second line of output which is “self is &lt;__main__.A object at 0x3357210&gt;”. As apparent from second line of output, when __init__ is entered, object/instance has already been created by that time. Its only the assignment which is done in __init__, althought you could do some other stuff as well. But __init__ doesn’t create the instance. __init__ receives the created instance as the first argument. ####What creates the object? Method __new__() creates the object. ####What is __new__? __new__ is a static method which creates an instance. We will see the method signature soon. One reason i could think of having __new__ as a static method is because the instance has not been created yet when __new__ is called. So, they could not have had it as an instance method. __new__ gets called when you call the class. Call the class means issuing the statement “a=A(1,2)”. Here A(1,2) is like calling the class. A is a class and we put two parenthesis in front of it and put some arguments between the parenthesis. So, its like “calling the class” similar to calling a method. __new__ must return the created object. Only when __new__ returns the created instance then __init__ gets called. If __new__ does not return an instance then __init__ would not be called. Remember __new__ is always called before __init__. __new__ gets passed all the arguments that we pass while calling the class. Also, it gets passed one extra argument that we will see soon. ####How was the instance created in the last example when we didn’t define __new__? class A extends from object(Here we mean the class named object) i.e subclasses from object. object defines a method __new__, so A gets this method from object since its extending object. This inherited __new__ created the instance of A. ####Method signature of __new__ __new__ receives the class whose instance need to be created as the first argument. This statement could be a little confusing, just continue reading and see the next example and again read it after seeing the example, it will be clear. The other arguments received by __new__ are same as what were passed while calling the class. So, __new__ receives all the arguments that we pass while calling the class. Also, it receives one extra argument. This extra argument is the class whose instance need to be created and it will be received as first argument by __new__. So, signature of __new__ could be written as: __new__(cls, *args, **kwargs) Let’s see an example. In [22]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: print cls ....: print &quot;args is&quot;, args ....: print &quot;kwargs is&quot;, kwargs ....: Here we override __new__ that we inherit from the superclass. We are printing all the arguments that this method receives so that we can check what gets passed to __new__. Let’s try to create an instance of A by calling the class. In [23]: a=A() &lt;class &#39;__main__.A&#39;&gt; #output args is () #output kwargs is {} #output As we mentioned earlier, __new__ gets called when we call the class. As is apparent from the output __new__ was called and it printed three lines of output. First line of output prints the first argument received by __new__. As we can see, it is class A itself. We tried to create an instance of A and __new__ of A received class A itself as the first argument. This is what we meant when we said “__new__ receives the class whose instance need to be created as the first argument”. Now go back to the section “Method signature of __new__” and read it again. While calling the class we did not pass any arguments. So our output shows that args and kwargs did not receive anything. You can verify that all the arguments passed while calling the class gets sent to __new__. Just call the class passing it some arguments. In [25]: a=A(1,2,named=5) &lt;class &#39;__main__.A&#39;&gt; #output args is (1, 2) #output kwargs is {&#39;named&#39;: 5} #output So, whatever arguments we passed while calling the class were passed to __new__ and were received by args and kwargs in __new__. Let’s check whether an object really gets created with how we have currently overridden __new__. In [26]: a = A(1,2) &lt;class &#39;__main__.A&#39;&gt; #output args is (1, 2) #output kwargs is {} #output In [27]: print a None #output We tried to create an instance and then tried printing the instance. But an instance of A was not created as apparent from the last print statement which printed None. ####Why did this happen? As we know if we don’t return any value from a method, it implicitly returns None. Under the section “What is __new__”, we mentioned that __new__ must return the created instance. Here we did not return the created instance from __new__, so None was implicitly returned and was assigned to a. Let’s combine __new__ and __init__. In [29]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: print cls ....: print args ....: print kwargs ....: def __init__(self, a, b): ....: print &quot;init gets called&quot; ....: print &quot;self is&quot;, self ....: self.a, self.b = a, b ....: Let’s try to create an instance of A. In [31]: a=A(1,2) &lt;class &#39;__main__.A&#39;&gt; #output (1, 2) #output {} #output As we mentioned earlier when a class gets called, first __new__ is called. Only when __new__ returns an instance then __init__ is called. In our previous example __new__ did not return an instance. So __init__ was not called. Had __init__ been called we would have seen the print statements that we have inside __init__. Also since __new__ did not return an instance, a will still be None. Verify that. In [32]: print a None #output Let’s redefine the class to make it proper. We should return an instance from __new__, so that __init__ gets called and we get the desired behaviour. In case we don’t override __new__, __new__ of parent class creates the instance and then __init__ gets called. In case we are overriding __new__, we should call the __new__ of parent class to get the created instance. However if you know how object creation works at the low level and you can implement it in your overridden __new__, you don’t need to call parent __new__ to get the created instance. I don’t know such details of how object creation work and will use the parent __new__ to get the created instance. Once we get the created instance we can perform any extra operations we wish before returning the instance from __new__ method. For demonstration purpose, let us take a weird example where we need to add an attribute named ‘created_at’ to the created instance. For our case lets consider it needs to be done inside the __new__ method, althought we could have done it inside __init__. In [33]: import datetime In [35]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(cls, *args, **kwargs) ....: setattr(new_instance, &#39;created_at&#39;, datetime.datetime.now()) ....: return new_instance ....: def __init__(self, a, b): ....: print &quot;inside init&quot; ....: self.a, self.b = a, b ....: In the first line of __new__, we called the __new__ of parent class to get the created instance. __new__ of parent class should be passed the same arguments that we received in the overridden __new__. __new__ of parent class i.e __new__ of class object knows how to create an instance and it returns the created instance. In the next line, we used inbuilt method setattr() to set an attribute ‘created_at’ on the newly created instance. The value we set for this attribute is the current time. This line is equivalent to writing new_instance.created_at=datetime.datetime.now(). In the final line we returned the newly created instance. Since we are returning an instance from __new__, __init__ will be called passing it whatever arguments were used in the class call. Let’s verify this. In [36]: obj1 = A(1,2) inside init #output This statement suggests that __init__ was called. Let’s print the created instance. In [37]: obj1 Out[37]: &lt;__main__.A at 0x3357390&gt; Notice that earlier when we were not returning anything from __new__ and were trying to print it, we were getting output as None. But this time the output shows that obj1 refers to an instance of A. We can verify that obj1 has an attribute ‘created_at’ and __init__ was properly executed by printing the three attributes of obj1. In [37]: print obj1.created_at 2012-06-09 22:44:30.376914 #output In [38]: print obj1.a, obj1.b 1 2 #output Let’s see our final example. In [60]: class B(object): ....: pass ....: In [61]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(B, *args, **kwargs) ....: return new_instance ....: Pay attention to first line of A’s new. Instead of passing cls as the first argument to object.__new__, we pass class B as first argument. Let’s see what happens in such case. In [62]: a = A() In [63]: print a &lt;__main__.B object at 0x7f912c036750&gt; #Output. Tried creating an instance of A but got an instance of B We tried to create an instance of A. But when we printed it, we realise that an instance of B has been created. This happened because we passed class B as the first argument to object.__new__. This shows that whatever class we pass to superclass’ __new__, an instance of that class will be created. Remember __new__ receives the class whose instance need to be created as first argument. So for any __new__, the first argument (which is cls for our case) will always refer to the class inside which __new__ is defined. So, for our case, cls will be class A. Here we wanted to create an instance of A. So, class A must be passed as first argument to object.__new__. Inside __new__ of class A, cls refers to class A. So, we need to pass cls as first argument to object.__new__. That’s why if we want proper behaviour we need to pass the same arguments to the superclass’ __new__ as it was received by the overridden __new__. We can make that single line change in A’s __new__ and our code will behave as expected. In [64]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(cls, *args, **kwargs) ....: return new_instance ....: In [65]: a=A() In [66]: print a &lt;__main__.A object at 0x7f912c0368d0&gt; #Output. We got an instance of A That was all about method __new__. Hopefully next post would be about metaclasses and there we can see some more useful uses of __new__. Hope you liked the post." />
+<meta property="og:description" content="Lately I started looking into Django code and wish to write about internals of Django. I started with Django models and will be writing about it soon. For understanding how Django models work, I had to understand what metaclasses are and how metaclasses work. Metaclasses use method “__new__” and so I looked at what “__new__” does. ###As __new__ is a static method, we will see a lttle bit about static methods and then __new__ in detail. Understanding static methods. Understanding method “__new__” of any class. We will see how to override method __new__ in a class. Also, I will be trying all the code we write here on Ipython and I suggest you to try everything on Ipython as well. ###Static methods A little bit about instance methods first. Let’s write a class. In [1]: class A(object): ...: def met(self, a, b): ...: print a, b ...: In this case, met() is an instance method. So, it is expected that we pass an instance of A as the first argument to met. Let’s create an object and call met() on the created object and pass two arguments to met(). In [4]: obj = A() In [5]: obj.met(1,2) 1 2 #output ####What happened here? When we called met(), we passed two arguments although met() expects three argument as per its definition. When we wrote obj.met(1, 2), interpreter took care of sending instance obj as the first argument to met() and 1 and 2 were passed as second and third arguments respectively. Let’s try calling met() without an instance or in other words let’s call the method using class. In [6]: A.met(1,2) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) /home/akshar/branding_git/netconference/&lt;ipython-input-6-e8b323dba928&gt; in &lt;module&gt;() ----&gt; 1 A.met(1,2) TypeError: unbound method met() must be called with A instance as first argument (got int instance instead) We defined met() as an instance method of class A, so it expected an instance of A as the first argument. As its very clear from the error, met() expected an instance of A as the first argument but got an ‘int’ instead. If we pass an instance of A as the first argument, it will work as expected. In [7]: A.met(obj, 3, 4) 3 4 #output Notice that we called the method on class A and not on an instance of A. But we took care of sending an instance of A as the first argument to met() and it worked as expected. Let’s see static method now. In [8]: class B(object): ...: @staticmethod ...: def met(a, b): ...: print a,b ...: ####What does @staticmethod above the method definition do? Its a decorator which changes a method to static method. It means the method is no longer an instance method, which means that the method does not expect its first argument to be an instance. So, for our method definition, the method does not expect its first argument to be an instance of B. Even if we call the method on an instance of B, current instance will not be passed as the first argument to this method, since its a static method. For instance method that we saw earlier the current instance was passed as the first argument. In [9]: B.met(5,6) 5 6 #output Here we were able to call the method on the class and were not required to pass an instance of B as the first argument. Let’s call this method on an instance. In [10]: b = B() In [11]: b.met(5,6) 5 6 Here we called the method on an instance and passed two arguments. Since its a static method, the current instance i.e b was not passed as the first argument to met(). Had it not been a static method, current instance would have been passed as first argument, 5 as second argument and 6 as third argument. ###Understanding method __new__ of a class. We will also see how to override method __new__ in a class. First let’s see a little bit about __init__ In [13]: class A(object): ....: def __init__(self, a, b): ....: print &quot;init gets called&quot; ....: print &quot;self is&quot;, self ....: self.a, self.b = a,b ....: In __init__, we print something as we enter the method which is to validate that __init__ has been called. Then we print the first argument which is self and then we perform some assignments. __init__ is an instance method and expects the first argument to be an instance. Let’s call the class passing it two arguments. Keep in mind the part call the class, we are going to again use it in next few lines. If you have any confusion about the part calling the class, it will be clear in next few lines. In [16]: a = A(1,2) init gets called #output self is &lt;__main__.A object at 0x3357210&gt; #output Notice the second line of output which is “self is &lt;__main__.A object at 0x3357210&gt;”. As apparent from second line of output, when __init__ is entered, object/instance has already been created by that time. Its only the assignment which is done in __init__, althought you could do some other stuff as well. But __init__ doesn’t create the instance. __init__ receives the created instance as the first argument. ####What creates the object? Method __new__() creates the object. ####What is __new__? __new__ is a static method which creates an instance. We will see the method signature soon. One reason i could think of having __new__ as a static method is because the instance has not been created yet when __new__ is called. So, they could not have had it as an instance method. __new__ gets called when you call the class. Call the class means issuing the statement “a=A(1,2)”. Here A(1,2) is like calling the class. A is a class and we put two parenthesis in front of it and put some arguments between the parenthesis. So, its like “calling the class” similar to calling a method. __new__ must return the created object. Only when __new__ returns the created instance then __init__ gets called. If __new__ does not return an instance then __init__ would not be called. Remember __new__ is always called before __init__. __new__ gets passed all the arguments that we pass while calling the class. Also, it gets passed one extra argument that we will see soon. ####How was the instance created in the last example when we didn’t define __new__? class A extends from object(Here we mean the class named object) i.e subclasses from object. object defines a method __new__, so A gets this method from object since its extending object. This inherited __new__ created the instance of A. ####Method signature of __new__ __new__ receives the class whose instance need to be created as the first argument. This statement could be a little confusing, just continue reading and see the next example and again read it after seeing the example, it will be clear. The other arguments received by __new__ are same as what were passed while calling the class. So, __new__ receives all the arguments that we pass while calling the class. Also, it receives one extra argument. This extra argument is the class whose instance need to be created and it will be received as first argument by __new__. So, signature of __new__ could be written as: __new__(cls, *args, **kwargs) Let’s see an example. In [22]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: print cls ....: print &quot;args is&quot;, args ....: print &quot;kwargs is&quot;, kwargs ....: Here we override __new__ that we inherit from the superclass. We are printing all the arguments that this method receives so that we can check what gets passed to __new__. Let’s try to create an instance of A by calling the class. In [23]: a=A() &lt;class &#39;__main__.A&#39;&gt; #output args is () #output kwargs is {} #output As we mentioned earlier, __new__ gets called when we call the class. As is apparent from the output __new__ was called and it printed three lines of output. First line of output prints the first argument received by __new__. As we can see, it is class A itself. We tried to create an instance of A and __new__ of A received class A itself as the first argument. This is what we meant when we said “__new__ receives the class whose instance need to be created as the first argument”. Now go back to the section “Method signature of __new__” and read it again. While calling the class we did not pass any arguments. So our output shows that args and kwargs did not receive anything. You can verify that all the arguments passed while calling the class gets sent to __new__. Just call the class passing it some arguments. In [25]: a=A(1,2,named=5) &lt;class &#39;__main__.A&#39;&gt; #output args is (1, 2) #output kwargs is {&#39;named&#39;: 5} #output So, whatever arguments we passed while calling the class were passed to __new__ and were received by args and kwargs in __new__. Let’s check whether an object really gets created with how we have currently overridden __new__. In [26]: a = A(1,2) &lt;class &#39;__main__.A&#39;&gt; #output args is (1, 2) #output kwargs is {} #output In [27]: print a None #output We tried to create an instance and then tried printing the instance. But an instance of A was not created as apparent from the last print statement which printed None. ####Why did this happen? As we know if we don’t return any value from a method, it implicitly returns None. Under the section “What is __new__”, we mentioned that __new__ must return the created instance. Here we did not return the created instance from __new__, so None was implicitly returned and was assigned to a. Let’s combine __new__ and __init__. In [29]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: print cls ....: print args ....: print kwargs ....: def __init__(self, a, b): ....: print &quot;init gets called&quot; ....: print &quot;self is&quot;, self ....: self.a, self.b = a, b ....: Let’s try to create an instance of A. In [31]: a=A(1,2) &lt;class &#39;__main__.A&#39;&gt; #output (1, 2) #output {} #output As we mentioned earlier when a class gets called, first __new__ is called. Only when __new__ returns an instance then __init__ is called. In our previous example __new__ did not return an instance. So __init__ was not called. Had __init__ been called we would have seen the print statements that we have inside __init__. Also since __new__ did not return an instance, a will still be None. Verify that. In [32]: print a None #output Let’s redefine the class to make it proper. We should return an instance from __new__, so that __init__ gets called and we get the desired behaviour. In case we don’t override __new__, __new__ of parent class creates the instance and then __init__ gets called. In case we are overriding __new__, we should call the __new__ of parent class to get the created instance. However if you know how object creation works at the low level and you can implement it in your overridden __new__, you don’t need to call parent __new__ to get the created instance. I don’t know such details of how object creation work and will use the parent __new__ to get the created instance. Once we get the created instance we can perform any extra operations we wish before returning the instance from __new__ method. For demonstration purpose, let us take a weird example where we need to add an attribute named ‘created_at’ to the created instance. For our case lets consider it needs to be done inside the __new__ method, althought we could have done it inside __init__. In [33]: import datetime In [35]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(cls, *args, **kwargs) ....: setattr(new_instance, &#39;created_at&#39;, datetime.datetime.now()) ....: return new_instance ....: def __init__(self, a, b): ....: print &quot;inside init&quot; ....: self.a, self.b = a, b ....: In the first line of __new__, we called the __new__ of parent class to get the created instance. __new__ of parent class should be passed the same arguments that we received in the overridden __new__. __new__ of parent class i.e __new__ of class object knows how to create an instance and it returns the created instance. In the next line, we used inbuilt method setattr() to set an attribute ‘created_at’ on the newly created instance. The value we set for this attribute is the current time. This line is equivalent to writing new_instance.created_at=datetime.datetime.now(). In the final line we returned the newly created instance. Since we are returning an instance from __new__, __init__ will be called passing it whatever arguments were used in the class call. Let’s verify this. In [36]: obj1 = A(1,2) inside init #output This statement suggests that __init__ was called. Let’s print the created instance. In [37]: obj1 Out[37]: &lt;__main__.A at 0x3357390&gt; Notice that earlier when we were not returning anything from __new__ and were trying to print it, we were getting output as None. But this time the output shows that obj1 refers to an instance of A. We can verify that obj1 has an attribute ‘created_at’ and __init__ was properly executed by printing the three attributes of obj1. In [37]: print obj1.created_at 2012-06-09 22:44:30.376914 #output In [38]: print obj1.a, obj1.b 1 2 #output Let’s see our final example. In [60]: class B(object): ....: pass ....: In [61]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(B, *args, **kwargs) ....: return new_instance ....: Pay attention to first line of A’s new. Instead of passing cls as the first argument to object.__new__, we pass class B as first argument. Let’s see what happens in such case. In [62]: a = A() In [63]: print a &lt;__main__.B object at 0x7f912c036750&gt; #Output. Tried creating an instance of A but got an instance of B We tried to create an instance of A. But when we printed it, we realise that an instance of B has been created. This happened because we passed class B as the first argument to object.__new__. This shows that whatever class we pass to superclass’ __new__, an instance of that class will be created. Remember __new__ receives the class whose instance need to be created as first argument. So for any __new__, the first argument (which is cls for our case) will always refer to the class inside which __new__ is defined. So, for our case, cls will be class A. Here we wanted to create an instance of A. So, class A must be passed as first argument to object.__new__. Inside __new__ of class A, cls refers to class A. So, we need to pass cls as first argument to object.__new__. That’s why if we want proper behaviour we need to pass the same arguments to the superclass’ __new__ as it was received by the overridden __new__. We can make that single line change in A’s __new__ and our code will behave as expected. In [64]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(cls, *args, **kwargs) ....: return new_instance ....: In [65]: a=A() In [66]: print a &lt;__main__.A object at 0x7f912c0368d0&gt; #Output. We got an instance of A That was all about method __new__. Hopefully next post would be about metaclasses and there we can see some more useful uses of __new__. Hope you liked the post." />
+<link rel="canonical" href="http://localhost:4000/__new__/2012/06/10/__new__-python.html" />
+<meta property="og:url" content="http://localhost:4000/__new__/2012/06/10/__new__-python.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2012-06-10T10:30:02+05:30" />
+<script type="application/ld+json">
+{"description":"Lately I started looking into Django code and wish to write about internals of Django. I started with Django models and will be writing about it soon. For understanding how Django models work, I had to understand what metaclasses are and how metaclasses work. Metaclasses use method “__new__” and so I looked at what “__new__” does. ###As __new__ is a static method, we will see a lttle bit about static methods and then __new__ in detail. Understanding static methods. Understanding method “__new__” of any class. We will see how to override method __new__ in a class. Also, I will be trying all the code we write here on Ipython and I suggest you to try everything on Ipython as well. ###Static methods A little bit about instance methods first. Let’s write a class. In [1]: class A(object): ...: def met(self, a, b): ...: print a, b ...: In this case, met() is an instance method. So, it is expected that we pass an instance of A as the first argument to met. Let’s create an object and call met() on the created object and pass two arguments to met(). In [4]: obj = A() In [5]: obj.met(1,2) 1 2 #output ####What happened here? When we called met(), we passed two arguments although met() expects three argument as per its definition. When we wrote obj.met(1, 2), interpreter took care of sending instance obj as the first argument to met() and 1 and 2 were passed as second and third arguments respectively. Let’s try calling met() without an instance or in other words let’s call the method using class. In [6]: A.met(1,2) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) /home/akshar/branding_git/netconference/&lt;ipython-input-6-e8b323dba928&gt; in &lt;module&gt;() ----&gt; 1 A.met(1,2) TypeError: unbound method met() must be called with A instance as first argument (got int instance instead) We defined met() as an instance method of class A, so it expected an instance of A as the first argument. As its very clear from the error, met() expected an instance of A as the first argument but got an ‘int’ instead. If we pass an instance of A as the first argument, it will work as expected. In [7]: A.met(obj, 3, 4) 3 4 #output Notice that we called the method on class A and not on an instance of A. But we took care of sending an instance of A as the first argument to met() and it worked as expected. Let’s see static method now. In [8]: class B(object): ...: @staticmethod ...: def met(a, b): ...: print a,b ...: ####What does @staticmethod above the method definition do? Its a decorator which changes a method to static method. It means the method is no longer an instance method, which means that the method does not expect its first argument to be an instance. So, for our method definition, the method does not expect its first argument to be an instance of B. Even if we call the method on an instance of B, current instance will not be passed as the first argument to this method, since its a static method. For instance method that we saw earlier the current instance was passed as the first argument. In [9]: B.met(5,6) 5 6 #output Here we were able to call the method on the class and were not required to pass an instance of B as the first argument. Let’s call this method on an instance. In [10]: b = B() In [11]: b.met(5,6) 5 6 Here we called the method on an instance and passed two arguments. Since its a static method, the current instance i.e b was not passed as the first argument to met(). Had it not been a static method, current instance would have been passed as first argument, 5 as second argument and 6 as third argument. ###Understanding method __new__ of a class. We will also see how to override method __new__ in a class. First let’s see a little bit about __init__ In [13]: class A(object): ....: def __init__(self, a, b): ....: print &quot;init gets called&quot; ....: print &quot;self is&quot;, self ....: self.a, self.b = a,b ....: In __init__, we print something as we enter the method which is to validate that __init__ has been called. Then we print the first argument which is self and then we perform some assignments. __init__ is an instance method and expects the first argument to be an instance. Let’s call the class passing it two arguments. Keep in mind the part call the class, we are going to again use it in next few lines. If you have any confusion about the part calling the class, it will be clear in next few lines. In [16]: a = A(1,2) init gets called #output self is &lt;__main__.A object at 0x3357210&gt; #output Notice the second line of output which is “self is &lt;__main__.A object at 0x3357210&gt;”. As apparent from second line of output, when __init__ is entered, object/instance has already been created by that time. Its only the assignment which is done in __init__, althought you could do some other stuff as well. But __init__ doesn’t create the instance. __init__ receives the created instance as the first argument. ####What creates the object? Method __new__() creates the object. ####What is __new__? __new__ is a static method which creates an instance. We will see the method signature soon. One reason i could think of having __new__ as a static method is because the instance has not been created yet when __new__ is called. So, they could not have had it as an instance method. __new__ gets called when you call the class. Call the class means issuing the statement “a=A(1,2)”. Here A(1,2) is like calling the class. A is a class and we put two parenthesis in front of it and put some arguments between the parenthesis. So, its like “calling the class” similar to calling a method. __new__ must return the created object. Only when __new__ returns the created instance then __init__ gets called. If __new__ does not return an instance then __init__ would not be called. Remember __new__ is always called before __init__. __new__ gets passed all the arguments that we pass while calling the class. Also, it gets passed one extra argument that we will see soon. ####How was the instance created in the last example when we didn’t define __new__? class A extends from object(Here we mean the class named object) i.e subclasses from object. object defines a method __new__, so A gets this method from object since its extending object. This inherited __new__ created the instance of A. ####Method signature of __new__ __new__ receives the class whose instance need to be created as the first argument. This statement could be a little confusing, just continue reading and see the next example and again read it after seeing the example, it will be clear. The other arguments received by __new__ are same as what were passed while calling the class. So, __new__ receives all the arguments that we pass while calling the class. Also, it receives one extra argument. This extra argument is the class whose instance need to be created and it will be received as first argument by __new__. So, signature of __new__ could be written as: __new__(cls, *args, **kwargs) Let’s see an example. In [22]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: print cls ....: print &quot;args is&quot;, args ....: print &quot;kwargs is&quot;, kwargs ....: Here we override __new__ that we inherit from the superclass. We are printing all the arguments that this method receives so that we can check what gets passed to __new__. Let’s try to create an instance of A by calling the class. In [23]: a=A() &lt;class &#39;__main__.A&#39;&gt; #output args is () #output kwargs is {} #output As we mentioned earlier, __new__ gets called when we call the class. As is apparent from the output __new__ was called and it printed three lines of output. First line of output prints the first argument received by __new__. As we can see, it is class A itself. We tried to create an instance of A and __new__ of A received class A itself as the first argument. This is what we meant when we said “__new__ receives the class whose instance need to be created as the first argument”. Now go back to the section “Method signature of __new__” and read it again. While calling the class we did not pass any arguments. So our output shows that args and kwargs did not receive anything. You can verify that all the arguments passed while calling the class gets sent to __new__. Just call the class passing it some arguments. In [25]: a=A(1,2,named=5) &lt;class &#39;__main__.A&#39;&gt; #output args is (1, 2) #output kwargs is {&#39;named&#39;: 5} #output So, whatever arguments we passed while calling the class were passed to __new__ and were received by args and kwargs in __new__. Let’s check whether an object really gets created with how we have currently overridden __new__. In [26]: a = A(1,2) &lt;class &#39;__main__.A&#39;&gt; #output args is (1, 2) #output kwargs is {} #output In [27]: print a None #output We tried to create an instance and then tried printing the instance. But an instance of A was not created as apparent from the last print statement which printed None. ####Why did this happen? As we know if we don’t return any value from a method, it implicitly returns None. Under the section “What is __new__”, we mentioned that __new__ must return the created instance. Here we did not return the created instance from __new__, so None was implicitly returned and was assigned to a. Let’s combine __new__ and __init__. In [29]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: print cls ....: print args ....: print kwargs ....: def __init__(self, a, b): ....: print &quot;init gets called&quot; ....: print &quot;self is&quot;, self ....: self.a, self.b = a, b ....: Let’s try to create an instance of A. In [31]: a=A(1,2) &lt;class &#39;__main__.A&#39;&gt; #output (1, 2) #output {} #output As we mentioned earlier when a class gets called, first __new__ is called. Only when __new__ returns an instance then __init__ is called. In our previous example __new__ did not return an instance. So __init__ was not called. Had __init__ been called we would have seen the print statements that we have inside __init__. Also since __new__ did not return an instance, a will still be None. Verify that. In [32]: print a None #output Let’s redefine the class to make it proper. We should return an instance from __new__, so that __init__ gets called and we get the desired behaviour. In case we don’t override __new__, __new__ of parent class creates the instance and then __init__ gets called. In case we are overriding __new__, we should call the __new__ of parent class to get the created instance. However if you know how object creation works at the low level and you can implement it in your overridden __new__, you don’t need to call parent __new__ to get the created instance. I don’t know such details of how object creation work and will use the parent __new__ to get the created instance. Once we get the created instance we can perform any extra operations we wish before returning the instance from __new__ method. For demonstration purpose, let us take a weird example where we need to add an attribute named ‘created_at’ to the created instance. For our case lets consider it needs to be done inside the __new__ method, althought we could have done it inside __init__. In [33]: import datetime In [35]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(cls, *args, **kwargs) ....: setattr(new_instance, &#39;created_at&#39;, datetime.datetime.now()) ....: return new_instance ....: def __init__(self, a, b): ....: print &quot;inside init&quot; ....: self.a, self.b = a, b ....: In the first line of __new__, we called the __new__ of parent class to get the created instance. __new__ of parent class should be passed the same arguments that we received in the overridden __new__. __new__ of parent class i.e __new__ of class object knows how to create an instance and it returns the created instance. In the next line, we used inbuilt method setattr() to set an attribute ‘created_at’ on the newly created instance. The value we set for this attribute is the current time. This line is equivalent to writing new_instance.created_at=datetime.datetime.now(). In the final line we returned the newly created instance. Since we are returning an instance from __new__, __init__ will be called passing it whatever arguments were used in the class call. Let’s verify this. In [36]: obj1 = A(1,2) inside init #output This statement suggests that __init__ was called. Let’s print the created instance. In [37]: obj1 Out[37]: &lt;__main__.A at 0x3357390&gt; Notice that earlier when we were not returning anything from __new__ and were trying to print it, we were getting output as None. But this time the output shows that obj1 refers to an instance of A. We can verify that obj1 has an attribute ‘created_at’ and __init__ was properly executed by printing the three attributes of obj1. In [37]: print obj1.created_at 2012-06-09 22:44:30.376914 #output In [38]: print obj1.a, obj1.b 1 2 #output Let’s see our final example. In [60]: class B(object): ....: pass ....: In [61]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(B, *args, **kwargs) ....: return new_instance ....: Pay attention to first line of A’s new. Instead of passing cls as the first argument to object.__new__, we pass class B as first argument. Let’s see what happens in such case. In [62]: a = A() In [63]: print a &lt;__main__.B object at 0x7f912c036750&gt; #Output. Tried creating an instance of A but got an instance of B We tried to create an instance of A. But when we printed it, we realise that an instance of B has been created. This happened because we passed class B as the first argument to object.__new__. This shows that whatever class we pass to superclass’ __new__, an instance of that class will be created. Remember __new__ receives the class whose instance need to be created as first argument. So for any __new__, the first argument (which is cls for our case) will always refer to the class inside which __new__ is defined. So, for our case, cls will be class A. Here we wanted to create an instance of A. So, class A must be passed as first argument to object.__new__. Inside __new__ of class A, cls refers to class A. So, we need to pass cls as first argument to object.__new__. That’s why if we want proper behaviour we need to pass the same arguments to the superclass’ __new__ as it was received by the overridden __new__. We can make that single line change in A’s __new__ and our code will behave as expected. In [64]: class A(object): ....: def __new__(cls, *args, **kwargs): ....: new_instance = object.__new__(cls, *args, **kwargs) ....: return new_instance ....: In [65]: a=A() In [66]: print a &lt;__main__.A object at 0x7f912c0368d0&gt; #Output. We got an instance of A That was all about method __new__. Hopefully next post would be about metaclasses and there we can see some more useful uses of __new__. Hope you liked the post.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/__new__/2012/06/10/__new__-python.html","headline":"new() in python","dateModified":"2012-06-10T10:30:02+05:30","datePublished":"2012-06-10T10:30:02+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/__new__/2012/06/10/__new__-python.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">__new__() in python</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2012-06-10T10:30:02+05:30" itemprop="datePublished">Jun 10, 2012
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Lately I started looking into Django code and wish to write about internals of Django. I started with Django models and will be writing about it soon. 
+For understanding how Django models work, I had to understand what metaclasses are and how metaclasses work. Metaclasses use method “__new__” and so I looked at what “__new__” does.</p>
+
+<p>###As __new__ is a static method, we will see a lttle bit about static methods and then __new__ in detail.</p>
+<ol>
+  <li>
+    <p>Understanding static methods.</p>
+  </li>
+  <li>
+    <p>Understanding method “__new__” of any class. We will see how to override method __new__ in a class.</p>
+  </li>
+</ol>
+
+<p>Also, I will be trying all the code we write here on Ipython and I suggest you to try everything on Ipython as well.</p>
+
+<p>###Static methods
+A little bit about instance methods first.
+Let’s write a class.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [1]: class A(object):
+   ...:     def met(self, a, b):
+   ...:         print a, b
+   ...:
+</code></pre></div></div>
+
+<p>In this case, met() is an instance method. So, it is expected that we pass an instance of A as the first argument to met.</p>
+
+<p>Let’s create an object and call met() on the created object and pass two arguments to met().</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [4]: obj = A()
+
+In [5]: obj.met(1,2)
+1 2                #output
+</code></pre></div></div>
+
+<p>####What happened here?
+When we called met(), we passed two arguments although met() expects three argument as per its definition. When we wrote obj.met(1, 2), interpreter took care of sending instance <em>obj</em> as the first argument to met() and 1 and 2 were passed as second and third arguments respectively.</p>
+
+<p>Let’s try calling met() without an instance or in other words let’s call the method using class.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [6]: A.met(1,2)
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+/home/akshar/branding_git/netconference/&lt;ipython-input-6-e8b323dba928&gt; in &lt;module&gt;()
+----&gt; 1 A.met(1,2)
+
+TypeError: unbound method met() must be called with A instance as first argument (got int instance instead)
+</code></pre></div></div>
+
+<p>We defined met() as an instance method of class A, so it expected an instance of A as the first argument. As its very clear from the error, met() expected an instance of A as the first argument but got an ‘int’ instead.</p>
+
+<p>If we pass an instance of A as the first argument, it will work as expected.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [7]: A.met(obj, 3, 4)
+3 4                  #output
+</code></pre></div></div>
+
+<p>Notice that we called the method on class A and not on an instance of A. But we took care of sending an instance of A as the first argument to met() and it worked as expected.</p>
+
+<p>Let’s see static method now.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [8]: class B(object):
+   ...:     @staticmethod
+   ...:     def met(a, b):
+   ...:         print a,b
+   ...: 
+</code></pre></div></div>
+
+<p>####What does <em>@staticmethod</em> above the method definition do?
+Its a <em>decorator</em> which changes a method to static method. It means the method is no longer an instance method, which means that the method does not expect its first argument to be an instance. So, for our method definition, the method does not expect its first argument to be an instance of B.
+Even if we call the method on an instance of B, current instance will not be passed as the first argument to this method, since its a <em>static method</em>. For <em>instance method</em> that we saw earlier the current instance was passed as the first argument.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [9]: B.met(5,6)
+5 6                     #output
+</code></pre></div></div>
+
+<p>Here we were able to call the method on the class and were not required to pass an instance of B as the first argument.</p>
+
+<p>Let’s call this method on an instance.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [10]: b = B()
+
+In [11]: b.met(5,6)
+5 6
+</code></pre></div></div>
+
+<p>Here we called the method on an instance and passed two arguments. Since its a static method, the current instance i.e <em>b</em> was not passed as the first argument to met().
+Had it not been a static method, current instance would have been passed as first argument, 5 as second argument and 6 as third argument.</p>
+
+<p>###Understanding method <em>__new__</em> of a class. We will also see how to override method __new__ in a class.
+First let’s see a little bit about <em>__init__</em></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [13]: class A(object):
+   ....:     def __init__(self, a, b):
+   ....:         print "init gets called"
+   ....:         print "self is", self
+   ....:         self.a, self.b = a,b
+   ....: 
+</code></pre></div></div>
+
+<p>In __init__, we print something as we enter the method which is to validate that __init__ has been called. Then we print the first argument which is self and then we perform some assignments. __init__ is an instance method and expects the first argument to be an instance.</p>
+
+<p>Let’s call the class passing it two arguments. Keep in mind the part <strong>call the class</strong>, we are going to again use it in next few lines. If you have any confusion about the part <em>calling the class</em>, it will be clear in next few lines.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [16]: a = A(1,2)
+init gets called                                    #output
+self is &lt;__main__.A object at 0x3357210&gt;            #output
+</code></pre></div></div>
+
+<p>Notice the second line of output which is “self is &lt;__main__.A object at 0x3357210&gt;”. As apparent from second line of output, when __init__ is entered, object/instance has already been created by that time. Its only the assignment which is done in __init__, althought you could do some other stuff as well. But __init__ doesn’t create the instance. __init__ receives the created instance as the first argument.</p>
+
+<p>####What creates the object?
+Method __new__() creates the object.</p>
+
+<p>####What is __new__?</p>
+<ol>
+  <li>__new__ is a static method which creates an instance. We will see the method signature soon. One reason i could think of having __new__ as a static method is because the instance has not been created yet when __new__ is called. So, they could not have had it as an instance method.</li>
+  <li>__new__ gets called when you <em>call the class</em>. <em>Call the class</em> means issuing the statement “a=A(1,2)”. Here A(1,2) is like calling the class. A is a class and we put two parenthesis in front of it and put some arguments between the parenthesis. So, its like “calling the class” similar to calling a method.</li>
+  <li>__new__ must return the created object.</li>
+  <li>Only when __new__ returns the created instance then __init__ gets called. If __new__ does not return an instance then __init__ would not be called. Remember __new__ is always called before __init__.</li>
+  <li>__new__ gets passed all the arguments that we pass while calling the class. Also, it gets passed one extra argument that we will see soon.</li>
+</ol>
+
+<p>####How was the instance created in the last example when we didn’t define __new__?
+class A extends from object(Here we mean the class named object) i.e subclasses from object. object defines a method __new__, so A gets this method from object since its extending object. This inherited __new__ created the instance of A.</p>
+
+<p>####Method signature of __new__
+__new__ receives the class whose instance need to be created as the first argument. This statement could be a little confusing, just continue reading and see the next example and again read it after seeing the example, it will be clear. The other arguments received by __new__ are same as what were passed while calling the class.</p>
+
+<p>So, __new__ receives all the arguments that we pass while calling the class. Also, it receives one extra argument. This extra argument is the class whose instance need to be created and it will be received as first argument by __new__.</p>
+
+<p>So, signature of __new__ could be written as:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>__new__(cls, *args, **kwargs)
+</code></pre></div></div>
+
+<p>Let’s see an example.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [22]: class A(object):
+   ....:     def __new__(cls, *args, **kwargs):
+   ....:         print cls
+   ....:         print "args is", args
+   ....:         print "kwargs is", kwargs
+   ....: 
+</code></pre></div></div>
+
+<p>Here we override __new__ that we inherit from the superclass. We are printing all the arguments that this method receives so that we can check what gets passed to __new__.
+Let’s try to create an instance of A by calling the class.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [23]: a=A()
+&lt;class '__main__.A'&gt;                              #output
+args is ()                                        #output
+kwargs is {}                                      #output
+</code></pre></div></div>
+
+<p>As we mentioned earlier, __new__ gets called when we call the class. As is apparent from the output __new__ was called and it printed three lines of output.</p>
+
+<p>First line of output prints the first argument received by __new__. As we can see, it is  <em>class A</em> itself. <strong>We tried to create an instance of A and __new__ of A received class A itself as the first argument.</strong> 
+This is what we meant when we said “__new__ receives the class whose instance need to be created as the first argument”. Now go back to the section “Method signature of __new__” and read it again.</p>
+
+<p>While calling the class we did not pass any arguments. So our output shows that args and kwargs did not receive anything.</p>
+
+<p>You can verify that all the arguments passed while calling the class gets sent to __new__. Just call the class passing it some arguments.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [25]: a=A(1,2,named=5)
+&lt;class '__main__.A'&gt;                              #output
+args is (1, 2)                                    #output
+kwargs is {'named': 5}                            #output
+</code></pre></div></div>
+
+<p>So, whatever arguments we passed while calling the class were passed to __new__ and were received by args and kwargs in __new__.</p>
+
+<p>Let’s check whether an object really gets created with how we have currently overridden __new__.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [26]: a = A(1,2)
+&lt;class '__main__.A'&gt;                              #output
+args is (1, 2)                                    #output
+kwargs is {}                                      #output
+
+In [27]: print a
+None                                              #output
+</code></pre></div></div>
+
+<p>We tried to create an instance and then tried printing the instance. But an instance of <em>A</em> was not created as apparent from the last print statement which printed None.</p>
+
+<p>####Why did this happen?
+As we know if we don’t return any value from a method, it implicitly returns None.
+Under the section “What is __new__”, we mentioned that __new__ must return the created instance.
+Here we did not return the created instance from __new__, so None was implicitly returned and was assigned to <em>a</em>.</p>
+
+<p>Let’s combine __new__ and __init__.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [29]: class A(object):
+   ....:     def __new__(cls, *args, **kwargs):
+   ....:         print cls
+   ....:         print args
+   ....:         print kwargs
+   ....:     def __init__(self, a, b):
+   ....:         print "init gets called"
+   ....:         print "self is", self
+   ....:         self.a, self.b = a, b
+   ....: 
+</code></pre></div></div>
+
+<p>Let’s try to create an instance of A.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [31]: a=A(1,2)
+&lt;class '__main__.A'&gt;                              #output
+(1, 2)                                            #output
+{}                                                #output
+</code></pre></div></div>
+
+<p>As we mentioned earlier when a class gets called, first __new__ is called. Only when __new__ returns an instance then __init__ is called.</p>
+
+<p>In our previous example __new__ did not return an instance. So __init__ was not called. Had __init__ been called we would have seen the print statements that we have inside __init__.</p>
+
+<p>Also since __new__ did not return an instance, <em>a</em> will still be None. Verify that.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [32]: print a
+None                                              #output
+</code></pre></div></div>
+
+<p>Let’s redefine the class to make it proper. We should return an instance from __new__, so that __init__ gets called and we get the desired behaviour.</p>
+
+<p>In case we don’t override __new__, __new__ of parent class creates the instance and then __init__ gets called. In case we are overriding __new__, we should call the __new__ of parent class to get the created instance. However if you know how object creation works at the low level and you can implement it in your overridden __new__, you don’t need to call parent __new__ to get the created instance. I don’t know such details of how object creation work and will use the parent __new__ to get the created instance.</p>
+
+<p>Once we get the created instance we can perform any extra operations we wish before returning the instance from __new__ method.</p>
+
+<p>For demonstration purpose, let us take a weird example where we need to add an attribute named ‘created_at’ to the created instance. For our case lets consider it needs to be done inside the __new__ method, althought we could have done it inside __init__.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [33]: import datetime
+
+In [35]: class A(object):
+   ....:     def __new__(cls, *args, **kwargs):
+   ....:         new_instance = object.__new__(cls, *args, **kwargs)
+   ....:         setattr(new_instance, 'created_at', datetime.datetime.now())
+   ....:         return new_instance
+   ....:     def __init__(self, a, b):
+   ....:         print "inside init"
+   ....:         self.a, self.b = a, b
+   ....:
+</code></pre></div></div>
+
+<p>In the first line of __new__, we called the __new__ of parent class to get the created instance. __new__ of parent class should be passed the same arguments that we received in the overridden __new__. __new__ of parent class i.e __new__ of class <em>object</em> knows how to create an instance and it returns the created instance.</p>
+
+<p>In the next line, we used inbuilt method setattr() to set an attribute ‘created_at’ on the newly created instance. The value we set for this attribute is the current time. This line is equivalent to writing new_instance.created_at=datetime.datetime.now().</p>
+
+<p>In the final line we returned the newly created instance. Since we are returning an instance from __new__, __init__ will be called passing it whatever arguments were used in the class call. Let’s verify this.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [36]: obj1 = A(1,2)
+inside init                                    #output
+</code></pre></div></div>
+
+<p>This statement suggests that __init__ was called. Let’s print the created instance.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [37]: obj1
+Out[37]: &lt;__main__.A at 0x3357390&gt;
+</code></pre></div></div>
+
+<p>Notice that earlier when we were not returning anything from __new__ and were trying to print it, we were getting output as None. But this time the output shows that obj1 refers to an instance of A.</p>
+
+<p>We can verify that obj1 has an attribute ‘created_at’ and __init__ was properly executed by printing the three attributes of obj1.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [37]: print obj1.created_at
+2012-06-09 22:44:30.376914                    #output
+
+In [38]: print obj1.a, obj1.b
+1 2                                           #output
+</code></pre></div></div>
+
+<p>Let’s see our final example.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [60]: class B(object):
+   ....:     pass
+   ....: 
+
+In [61]: class A(object):
+   ....:     def __new__(cls, *args, **kwargs):
+   ....:         new_instance = object.__new__(B, *args, **kwargs)
+   ....:         return new_instance
+   ....: 
+</code></pre></div></div>
+
+<p>Pay attention to first line of A’s new. Instead of passing <em>cls</em> as the first argument to <em>object.__new__</em>, we pass <em>class B</em> as first argument.
+Let’s see what happens in such case.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [62]: a = A()
+
+In [63]: print a
+&lt;__main__.B object at 0x7f912c036750&gt;                    #Output. Tried creating an instance of A but got an instance of B
+</code></pre></div></div>
+
+<p>We tried to create an instance of A. But when we printed it, we realise that an instance of B has been created.</p>
+
+<p>This happened because we passed <em>class B</em> as the first argument to <em>object.__new__</em>. This shows that whatever class we pass to superclass’ __new__, an instance of that class will be created.</p>
+
+<p>Remember __new__ receives the class whose instance need to be created as first argument. So for any __new__, the first argument (which is <em>cls</em> for our case) will always refer to the class inside which __new__ is defined. So, for our case, <em>cls</em> will be <em>class A</em>.</p>
+
+<p>Here we wanted to create an instance of A. So, <em>class A</em> must be passed as first argument to <em>object.__new__</em>. Inside __new__ of <em>class A</em>, <em>cls</em> refers to <em>class A</em>. So, we need to pass <em>cls</em> as first argument to <em>object.__new__</em>.</p>
+
+<p>That’s why if we want proper behaviour we need to pass the same arguments to the superclass’ __new__ as it was received by the overridden __new__.</p>
+
+<p>We can make that single line change in A’s __new__ and our code will behave as expected.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [64]: class A(object):
+   ....:     def __new__(cls, *args, **kwargs):
+   ....:         new_instance = object.__new__(cls, *args, **kwargs)
+   ....:         return new_instance
+   ....:   
+
+In [65]: a=A()
+
+In [66]: print a
+&lt;__main__.A object at 0x7f912c0368d0&gt;                    #Output. We got an instance of A
+</code></pre></div></div>
+
+<p>That was all about method __new__. Hopefully next post would be about metaclasses and there we can see some more useful uses of __new__.</p>
+
+<p>Hope you liked the post.</p>
+
+<p>post.</p>
+
+
+  </div><a class="u-url" href="/__new__/2012/06/10/__new__-python.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

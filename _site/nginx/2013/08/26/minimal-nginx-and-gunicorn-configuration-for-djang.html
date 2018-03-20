@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Minimal Nginx and Gunicorn configuration for Django projects | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Minimal Nginx and Gunicorn configuration for Django projects" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="We will see how to deploy a Django project with nginx and gunicorn. It was easier for me to understand nginx and gunicorn on development machine and then move to a publicly accessible server. So, we will cover this post in a similar sequence: ####On development machine Use django’s runserver to serve the site. Stop runserver and start using gunicorn instead. Add nginx to this configuration. ####On server Deploy the project on a publicly accessible server using same stack. ###Use runserver We will use a minimal project with two apps and few static files. You can view this project at github. Project structure: |-- manage.py |-- other_app | |-- __init__.py | |-- models.py | |-- static | | `-- other_app | | `-- styles.css | |-- tests.py | |-- urls.py | `-- views.py |-- project_static | `-- base.css |-- requirements.txt |-- some_app | |-- __init__.py | |-- models.py | |-- static | | `-- some_app | | `-- styles.css | |-- tests.py | |-- urls.py | `-- views.py |-- templates | |-- other_app | | `-- home.html | `-- some_app | `-- home.html |-- test.db `-- test_project |-- __init__.py |-- settings.py |-- test_settings.py |-- urls.py `-- wsgi.py This project was started using django-admin.py startproject test_project, so this structure is inside folder test_project. Cloning and trying it out would help you follow along, so go ahead and clone this project. Our assumption is that we are working from the same level as manage.py. Runserver and verify that you can access http://localhost:8000/some_app/home http://localhost:8000/other_app/home First url should have a red background and the second one should have a blue background. This project uses some static resources, you should check our post on serving static file if you are confused about serving static files during development. ###Stop runserver and start using Gunicorn Stop the Django development server. Make sure you have gunicorn installed, else install it with pip install gunicorn Gunicorn is a WSGI compliant server and you need to pass your application object to it. You should read about Basics of WSGI if you are not comfortable with wsgi. Django provides an application object. The default structure provided by django-admin startproject gives a wsgi.py file which contains the application. You need to pass this application to gunicorn. Run gunicorn passing it the application: gunicorn test_project.wsgi:application Note: In the recent django versions the wsgi file extension has been changed it is a python module(ex: test_project_wsgi.py) and so you can serve it with just module name like below gunicorn test_project:application Refresh your page at http://localhost:8000/some_app/home. Your page should be served, however the red background must have vanished. Red background vanished because the static files(stylesheets) are not being served anymore. They are not being served because we do not have any url pattern for /static/ in urls.py. Earlier they were served because we were using Django development server, i.e runserver, which does some magical things behind the scence to serve static files. ###Add nginx to this configuration Gunicorn is meant to serve dynamic content, it should not be used to serve static files. We will add nginx to serve static files. We want to serve static files from port 8000 and so it is required that gunicorn listens on some different port. Stop gunicorn and run it on port 8001. gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 Now you will not be able to see your page at http://localhost:8000/some_app/home/. It will be available on port 8001 at http://localhost:8001/some_app/home. Make sure you have nginx installed or install it with: sudo apt-get install nginx Nginx acts as a reverse proxy here. All our request will initially come to nginx. It’s for nginx to decide what requests it wants to serve and what requests it wants to pass to some other server. In our case, we want nginx to serve requests for static resources and to pass any other request to gunicorn. We need to tell nginx the location of our static resources and for that we need to make sure all our static resources are at a single location. Run python manage.py collectstatic to collect all the static resources at location specified by STATIC_ROOT. Set STATIC_ROOT in settings.py: STATIC_ROOT = os.path.join(PROJECT_DIR, &#39;../staticfiles/&#39;) Run collectstatic: python manage.py collectstatic You should see that a directory staticfiles gets created at the same level as manage.py. All your static files must have got copied to this directory. Get the path of this directory, we need it in the alias directive of nginx cofiguration. Create a file /etc/nginx/sites-enabled/example and add following content to it. server { listen localhost:8000; location / { proxy_pass http://127.0.0.1:8001; } location /static/ { autoindex on; alias /home/akshar/staticvirt/test_project/staticfiles/; } } Your alias directive will differ from mine. Make sure nginx is running: sudo service nginx restart Nginx is listening for requests now. Refresh page at http://localhost:8000/some_app/home/, the page should be visible with red background which conforms that static files are being served properly. ####Explanation: listen directive tells that nginx is listening for any request that comes at localhost:8000. There are two location directives. Bottom location can overide top location. Bottom will have preference over top. When a request starting with / comes, its being passed to port 8001. eg: If request comes for http://localhost:8000/some_app/home, nginx tries to match it with one of the location defined in the configuration file. In this case, it matches with first location. Nginx sees that a proxy_pass is defined in this case so it passes this request to the proxy_pass which is http://127.0.0.1:8001. Gunicorn is listening at port 8001, so gunicorn will repond to this request. When a request starting with /static/ comes, bottom location is used as it has preference over the top location. When a request comes for http://localhost:8000/static/some_app/styles.css, Nginx looks into the directory pointed to by alias which is staticfiles. It tries to find some_app/styles.css inside this directory and if this file is available then serves the file. Now we are comfortable with serving django sites with nginx and gunicorn. ###Deploy on a publicly accessible server. I will use domain pythoninternals.com for illustration. We need to do the following things on the server where A record of domain pythoninternals.com points. We don’t need any change for gunicorn and can run it in the same way: gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 Create file /etc/nginx/sites-enabled/example on the server and add content: server { listen 80; server_name pythoninternals.com; location / { proxy_pass http://127.0.0.1:8001; } location /static/ { alias /home/ubuntu/staticvirt/test_project/staticfiles/; } } This file is almost similar to the nginx conf we had on development machine. Make sure that you have collected the static files in directory staticfiles. Some differences in this nginx conf and dev machine’s nginx conf are: It’s listening on port 80. When a request is made for domain pythoninternal.com, it comes on the default port which is 80. So, nginx must be listening for any request on port 80. server_name makes sure that this configuration file will only be used for pythoninternals.com. There might be another domain called abcde.com being served from this same server, we don’t want this configuration to be used for abcde.com. That’s why we specify the server_name. After this a request for pythoninternals.com/some_app/home would be served properly from this server. Running gunicorn the way we did, will keep it in the foreground and we will have to stop gunicorn to exit from the server. So, we need to run it as a daemon. Run gunicorn as daemon: gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 --daemon With this, gunicorn runs as a background process and we can quit from the server without affecting gunicorn. Till now, we have set various configurations for gunicorn, like –bind and –daemon, on the terminal. The suggested way to do it is using configuration file. You can read about it at another post we wrote and should move these configurations to a separate file." />
+<meta property="og:description" content="We will see how to deploy a Django project with nginx and gunicorn. It was easier for me to understand nginx and gunicorn on development machine and then move to a publicly accessible server. So, we will cover this post in a similar sequence: ####On development machine Use django’s runserver to serve the site. Stop runserver and start using gunicorn instead. Add nginx to this configuration. ####On server Deploy the project on a publicly accessible server using same stack. ###Use runserver We will use a minimal project with two apps and few static files. You can view this project at github. Project structure: |-- manage.py |-- other_app | |-- __init__.py | |-- models.py | |-- static | | `-- other_app | | `-- styles.css | |-- tests.py | |-- urls.py | `-- views.py |-- project_static | `-- base.css |-- requirements.txt |-- some_app | |-- __init__.py | |-- models.py | |-- static | | `-- some_app | | `-- styles.css | |-- tests.py | |-- urls.py | `-- views.py |-- templates | |-- other_app | | `-- home.html | `-- some_app | `-- home.html |-- test.db `-- test_project |-- __init__.py |-- settings.py |-- test_settings.py |-- urls.py `-- wsgi.py This project was started using django-admin.py startproject test_project, so this structure is inside folder test_project. Cloning and trying it out would help you follow along, so go ahead and clone this project. Our assumption is that we are working from the same level as manage.py. Runserver and verify that you can access http://localhost:8000/some_app/home http://localhost:8000/other_app/home First url should have a red background and the second one should have a blue background. This project uses some static resources, you should check our post on serving static file if you are confused about serving static files during development. ###Stop runserver and start using Gunicorn Stop the Django development server. Make sure you have gunicorn installed, else install it with pip install gunicorn Gunicorn is a WSGI compliant server and you need to pass your application object to it. You should read about Basics of WSGI if you are not comfortable with wsgi. Django provides an application object. The default structure provided by django-admin startproject gives a wsgi.py file which contains the application. You need to pass this application to gunicorn. Run gunicorn passing it the application: gunicorn test_project.wsgi:application Note: In the recent django versions the wsgi file extension has been changed it is a python module(ex: test_project_wsgi.py) and so you can serve it with just module name like below gunicorn test_project:application Refresh your page at http://localhost:8000/some_app/home. Your page should be served, however the red background must have vanished. Red background vanished because the static files(stylesheets) are not being served anymore. They are not being served because we do not have any url pattern for /static/ in urls.py. Earlier they were served because we were using Django development server, i.e runserver, which does some magical things behind the scence to serve static files. ###Add nginx to this configuration Gunicorn is meant to serve dynamic content, it should not be used to serve static files. We will add nginx to serve static files. We want to serve static files from port 8000 and so it is required that gunicorn listens on some different port. Stop gunicorn and run it on port 8001. gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 Now you will not be able to see your page at http://localhost:8000/some_app/home/. It will be available on port 8001 at http://localhost:8001/some_app/home. Make sure you have nginx installed or install it with: sudo apt-get install nginx Nginx acts as a reverse proxy here. All our request will initially come to nginx. It’s for nginx to decide what requests it wants to serve and what requests it wants to pass to some other server. In our case, we want nginx to serve requests for static resources and to pass any other request to gunicorn. We need to tell nginx the location of our static resources and for that we need to make sure all our static resources are at a single location. Run python manage.py collectstatic to collect all the static resources at location specified by STATIC_ROOT. Set STATIC_ROOT in settings.py: STATIC_ROOT = os.path.join(PROJECT_DIR, &#39;../staticfiles/&#39;) Run collectstatic: python manage.py collectstatic You should see that a directory staticfiles gets created at the same level as manage.py. All your static files must have got copied to this directory. Get the path of this directory, we need it in the alias directive of nginx cofiguration. Create a file /etc/nginx/sites-enabled/example and add following content to it. server { listen localhost:8000; location / { proxy_pass http://127.0.0.1:8001; } location /static/ { autoindex on; alias /home/akshar/staticvirt/test_project/staticfiles/; } } Your alias directive will differ from mine. Make sure nginx is running: sudo service nginx restart Nginx is listening for requests now. Refresh page at http://localhost:8000/some_app/home/, the page should be visible with red background which conforms that static files are being served properly. ####Explanation: listen directive tells that nginx is listening for any request that comes at localhost:8000. There are two location directives. Bottom location can overide top location. Bottom will have preference over top. When a request starting with / comes, its being passed to port 8001. eg: If request comes for http://localhost:8000/some_app/home, nginx tries to match it with one of the location defined in the configuration file. In this case, it matches with first location. Nginx sees that a proxy_pass is defined in this case so it passes this request to the proxy_pass which is http://127.0.0.1:8001. Gunicorn is listening at port 8001, so gunicorn will repond to this request. When a request starting with /static/ comes, bottom location is used as it has preference over the top location. When a request comes for http://localhost:8000/static/some_app/styles.css, Nginx looks into the directory pointed to by alias which is staticfiles. It tries to find some_app/styles.css inside this directory and if this file is available then serves the file. Now we are comfortable with serving django sites with nginx and gunicorn. ###Deploy on a publicly accessible server. I will use domain pythoninternals.com for illustration. We need to do the following things on the server where A record of domain pythoninternals.com points. We don’t need any change for gunicorn and can run it in the same way: gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 Create file /etc/nginx/sites-enabled/example on the server and add content: server { listen 80; server_name pythoninternals.com; location / { proxy_pass http://127.0.0.1:8001; } location /static/ { alias /home/ubuntu/staticvirt/test_project/staticfiles/; } } This file is almost similar to the nginx conf we had on development machine. Make sure that you have collected the static files in directory staticfiles. Some differences in this nginx conf and dev machine’s nginx conf are: It’s listening on port 80. When a request is made for domain pythoninternal.com, it comes on the default port which is 80. So, nginx must be listening for any request on port 80. server_name makes sure that this configuration file will only be used for pythoninternals.com. There might be another domain called abcde.com being served from this same server, we don’t want this configuration to be used for abcde.com. That’s why we specify the server_name. After this a request for pythoninternals.com/some_app/home would be served properly from this server. Running gunicorn the way we did, will keep it in the foreground and we will have to stop gunicorn to exit from the server. So, we need to run it as a daemon. Run gunicorn as daemon: gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 --daemon With this, gunicorn runs as a background process and we can quit from the server without affecting gunicorn. Till now, we have set various configurations for gunicorn, like –bind and –daemon, on the terminal. The suggested way to do it is using configuration file. You can read about it at another post we wrote and should move these configurations to a separate file." />
+<link rel="canonical" href="http://localhost:4000/nginx/2013/08/26/minimal-nginx-and-gunicorn-configuration-for-djang.html" />
+<meta property="og:url" content="http://localhost:4000/nginx/2013/08/26/minimal-nginx-and-gunicorn-configuration-for-djang.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2013-08-26T18:05:50+05:30" />
+<script type="application/ld+json">
+{"description":"We will see how to deploy a Django project with nginx and gunicorn. It was easier for me to understand nginx and gunicorn on development machine and then move to a publicly accessible server. So, we will cover this post in a similar sequence: ####On development machine Use django’s runserver to serve the site. Stop runserver and start using gunicorn instead. Add nginx to this configuration. ####On server Deploy the project on a publicly accessible server using same stack. ###Use runserver We will use a minimal project with two apps and few static files. You can view this project at github. Project structure: |-- manage.py |-- other_app | |-- __init__.py | |-- models.py | |-- static | | `-- other_app | | `-- styles.css | |-- tests.py | |-- urls.py | `-- views.py |-- project_static | `-- base.css |-- requirements.txt |-- some_app | |-- __init__.py | |-- models.py | |-- static | | `-- some_app | | `-- styles.css | |-- tests.py | |-- urls.py | `-- views.py |-- templates | |-- other_app | | `-- home.html | `-- some_app | `-- home.html |-- test.db `-- test_project |-- __init__.py |-- settings.py |-- test_settings.py |-- urls.py `-- wsgi.py This project was started using django-admin.py startproject test_project, so this structure is inside folder test_project. Cloning and trying it out would help you follow along, so go ahead and clone this project. Our assumption is that we are working from the same level as manage.py. Runserver and verify that you can access http://localhost:8000/some_app/home http://localhost:8000/other_app/home First url should have a red background and the second one should have a blue background. This project uses some static resources, you should check our post on serving static file if you are confused about serving static files during development. ###Stop runserver and start using Gunicorn Stop the Django development server. Make sure you have gunicorn installed, else install it with pip install gunicorn Gunicorn is a WSGI compliant server and you need to pass your application object to it. You should read about Basics of WSGI if you are not comfortable with wsgi. Django provides an application object. The default structure provided by django-admin startproject gives a wsgi.py file which contains the application. You need to pass this application to gunicorn. Run gunicorn passing it the application: gunicorn test_project.wsgi:application Note: In the recent django versions the wsgi file extension has been changed it is a python module(ex: test_project_wsgi.py) and so you can serve it with just module name like below gunicorn test_project:application Refresh your page at http://localhost:8000/some_app/home. Your page should be served, however the red background must have vanished. Red background vanished because the static files(stylesheets) are not being served anymore. They are not being served because we do not have any url pattern for /static/ in urls.py. Earlier they were served because we were using Django development server, i.e runserver, which does some magical things behind the scence to serve static files. ###Add nginx to this configuration Gunicorn is meant to serve dynamic content, it should not be used to serve static files. We will add nginx to serve static files. We want to serve static files from port 8000 and so it is required that gunicorn listens on some different port. Stop gunicorn and run it on port 8001. gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 Now you will not be able to see your page at http://localhost:8000/some_app/home/. It will be available on port 8001 at http://localhost:8001/some_app/home. Make sure you have nginx installed or install it with: sudo apt-get install nginx Nginx acts as a reverse proxy here. All our request will initially come to nginx. It’s for nginx to decide what requests it wants to serve and what requests it wants to pass to some other server. In our case, we want nginx to serve requests for static resources and to pass any other request to gunicorn. We need to tell nginx the location of our static resources and for that we need to make sure all our static resources are at a single location. Run python manage.py collectstatic to collect all the static resources at location specified by STATIC_ROOT. Set STATIC_ROOT in settings.py: STATIC_ROOT = os.path.join(PROJECT_DIR, &#39;../staticfiles/&#39;) Run collectstatic: python manage.py collectstatic You should see that a directory staticfiles gets created at the same level as manage.py. All your static files must have got copied to this directory. Get the path of this directory, we need it in the alias directive of nginx cofiguration. Create a file /etc/nginx/sites-enabled/example and add following content to it. server { listen localhost:8000; location / { proxy_pass http://127.0.0.1:8001; } location /static/ { autoindex on; alias /home/akshar/staticvirt/test_project/staticfiles/; } } Your alias directive will differ from mine. Make sure nginx is running: sudo service nginx restart Nginx is listening for requests now. Refresh page at http://localhost:8000/some_app/home/, the page should be visible with red background which conforms that static files are being served properly. ####Explanation: listen directive tells that nginx is listening for any request that comes at localhost:8000. There are two location directives. Bottom location can overide top location. Bottom will have preference over top. When a request starting with / comes, its being passed to port 8001. eg: If request comes for http://localhost:8000/some_app/home, nginx tries to match it with one of the location defined in the configuration file. In this case, it matches with first location. Nginx sees that a proxy_pass is defined in this case so it passes this request to the proxy_pass which is http://127.0.0.1:8001. Gunicorn is listening at port 8001, so gunicorn will repond to this request. When a request starting with /static/ comes, bottom location is used as it has preference over the top location. When a request comes for http://localhost:8000/static/some_app/styles.css, Nginx looks into the directory pointed to by alias which is staticfiles. It tries to find some_app/styles.css inside this directory and if this file is available then serves the file. Now we are comfortable with serving django sites with nginx and gunicorn. ###Deploy on a publicly accessible server. I will use domain pythoninternals.com for illustration. We need to do the following things on the server where A record of domain pythoninternals.com points. We don’t need any change for gunicorn and can run it in the same way: gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 Create file /etc/nginx/sites-enabled/example on the server and add content: server { listen 80; server_name pythoninternals.com; location / { proxy_pass http://127.0.0.1:8001; } location /static/ { alias /home/ubuntu/staticvirt/test_project/staticfiles/; } } This file is almost similar to the nginx conf we had on development machine. Make sure that you have collected the static files in directory staticfiles. Some differences in this nginx conf and dev machine’s nginx conf are: It’s listening on port 80. When a request is made for domain pythoninternal.com, it comes on the default port which is 80. So, nginx must be listening for any request on port 80. server_name makes sure that this configuration file will only be used for pythoninternals.com. There might be another domain called abcde.com being served from this same server, we don’t want this configuration to be used for abcde.com. That’s why we specify the server_name. After this a request for pythoninternals.com/some_app/home would be served properly from this server. Running gunicorn the way we did, will keep it in the foreground and we will have to stop gunicorn to exit from the server. So, we need to run it as a daemon. Run gunicorn as daemon: gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 --daemon With this, gunicorn runs as a background process and we can quit from the server without affecting gunicorn. Till now, we have set various configurations for gunicorn, like –bind and –daemon, on the terminal. The suggested way to do it is using configuration file. You can read about it at another post we wrote and should move these configurations to a separate file.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/nginx/2013/08/26/minimal-nginx-and-gunicorn-configuration-for-djang.html","headline":"Minimal Nginx and Gunicorn configuration for Django projects","dateModified":"2013-08-26T18:05:50+05:30","datePublished":"2013-08-26T18:05:50+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/nginx/2013/08/26/minimal-nginx-and-gunicorn-configuration-for-djang.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Minimal Nginx and Gunicorn configuration for Django projects</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2013-08-26T18:05:50+05:30" itemprop="datePublished">Aug 26, 2013
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>We will see how to deploy a Django project with nginx and gunicorn.</p>
+
+<p>It was easier for me to understand nginx and gunicorn on development machine and then move to a publicly accessible server. So, we will cover this post in a similar sequence:</p>
+
+<p>####On development machine</p>
+
+<ul>
+  <li>Use django’s <code class="highlighter-rouge">runserver</code> to serve the site.</li>
+  <li>Stop <code class="highlighter-rouge">runserver</code> and start using gunicorn instead.</li>
+  <li>Add nginx to this configuration.</li>
+</ul>
+
+<p>####On server</p>
+
+<ul>
+  <li>Deploy the project on a publicly accessible server using same stack.</li>
+</ul>
+
+<p><br /></p>
+
+<p>###Use runserver</p>
+
+<p>We will use a minimal project with two apps and few static files. You can view this project at <a href="https://github.com/akshar-raaj/static-files-in-django" target="_blank">github</a>.</p>
+
+<p>Project structure:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|-- manage.py
+|-- other_app
+|   |-- __init__.py
+|   |-- models.py
+|   |-- static
+|   |   `-- other_app
+|   |       `-- styles.css
+|   |-- tests.py
+|   |-- urls.py
+|   `-- views.py
+|-- project_static
+|   `-- base.css
+|-- requirements.txt
+|-- some_app
+|   |-- __init__.py
+|   |-- models.py
+|   |-- static
+|   |   `-- some_app
+|   |       `-- styles.css
+|   |-- tests.py
+|   |-- urls.py
+|   `-- views.py
+|-- templates
+|   |-- other_app
+|   |   `-- home.html
+|   `-- some_app
+|       `-- home.html
+|-- test.db
+`-- test_project
+    |-- __init__.py
+    |-- settings.py
+    |-- test_settings.py
+    |-- urls.py
+    `-- wsgi.py
+</code></pre></div></div>
+
+<p>This project was started using <strong>django-admin.py startproject test_project</strong>, so this structure is inside folder <code class="highlighter-rouge">test_project</code>.</p>
+
+<p>Cloning and trying it out would help you follow along, <a href="https://github.com/akshar-raaj/static-files-in-django" target="_blank">so go ahead and clone this project</a>.</p>
+
+<p>Our assumption is that we are working from the same level as <code class="highlighter-rouge">manage.py</code>.</p>
+
+<p>Runserver and verify that you can access</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/some_app/home
+http://localhost:8000/other_app/home
+</code></pre></div></div>
+
+<p>First url should have a red background and the second one should have a blue background.</p>
+
+<p>This project uses some static resources, you should check our post on <a href="http://agiliq.com/blog/2013/03/serving-static-files-in-django/">serving static file</a> if you are confused about serving static files during development.</p>
+
+<p>###Stop runserver and start using Gunicorn</p>
+
+<p>Stop the Django development server.</p>
+
+<p>Make sure you have gunicorn installed, else install it with</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip install gunicorn
+</code></pre></div></div>
+
+<p>Gunicorn is a WSGI compliant server and you need to pass your <strong>application</strong> object to it. You should read about <a href="http://agiliq.com/blog/2013/07/basics-wsgi/">Basics of WSGI</a> if you are not comfortable with wsgi.</p>
+
+<p>Django provides an <strong>application</strong> object. The default structure provided by <code class="highlighter-rouge">django-admin startproject</code> gives a <code class="highlighter-rouge">wsgi.py</code> file which contains the <code class="highlighter-rouge">application</code>. You need to pass this <code class="highlighter-rouge">application</code> to gunicorn.</p>
+
+<p>Run gunicorn passing it the <code class="highlighter-rouge">application</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gunicorn test_project.wsgi:application
+</code></pre></div></div>
+
+<p>Note: In the recent django versions the wsgi file extension has been changed it is a python module(ex: test_project_wsgi.py) and so you can serve it with just module name like below</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gunicorn test_project:application
+</code></pre></div></div>
+
+<p>Refresh your page at <strong>http://localhost:8000/some_app/home</strong>. Your page should be served, however the red background must have vanished.</p>
+
+<p>Red background vanished because the static files(stylesheets) are not being served anymore. They are not being served because we do not have any url pattern for <code class="highlighter-rouge">/static/</code> in urls.py. Earlier they were served because we were using Django development server, i.e runserver, which does some magical things behind the scence to serve static files.</p>
+
+<p>###Add nginx to this configuration</p>
+
+<p>Gunicorn is meant to serve dynamic content, it should not be used to serve static files. We will add nginx to serve static files.</p>
+
+<p>We want to serve static files from port 8000 and so it is required that gunicorn listens on some different port. Stop gunicorn and run it on port 8001.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gunicorn test_project.wsgi:application --bind=127.0.0.1:8001
+</code></pre></div></div>
+
+<p>Now you will not be able to see your page at <strong>http://localhost:8000/some_app/home/</strong>. It will be available on port 8001 at <strong>http://localhost:8001/some_app/home</strong>.</p>
+
+<p>Make sure you have nginx installed or install it with:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo apt-get install nginx
+</code></pre></div></div>
+
+<p>Nginx acts as a reverse proxy here. All our request will initially come to nginx. It’s for nginx to decide what requests it wants to serve and what requests it wants to pass to some other server.</p>
+
+<p>In our case, we want nginx to serve requests for static resources and to pass any other request to gunicorn.</p>
+
+<p>We need to tell nginx the location of our static resources and for that we need to make sure all our static resources are at a single location. Run <code class="highlighter-rouge">python manage.py collectstatic</code> to collect all the static resources at location specified by STATIC_ROOT.</p>
+
+<p>Set STATIC_ROOT in settings.py:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>STATIC_ROOT = os.path.join(PROJECT_DIR, '../staticfiles/')
+</code></pre></div></div>
+
+<p>Run collectstatic:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python manage.py collectstatic
+</code></pre></div></div>
+
+<p>You should see that a directory <code class="highlighter-rouge">staticfiles</code> gets created at the same level as manage.py. All your static files must have got copied to this directory. Get the path of this directory, we need it in the <code class="highlighter-rouge">alias</code> directive of nginx cofiguration.</p>
+
+<p>Create a file <code class="highlighter-rouge">/etc/nginx/sites-enabled/example</code> and add following content to it.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+    listen localhost:8000;
+
+    location / {
+        proxy_pass http://127.0.0.1:8001;
+    }
+
+    location /static/ {
+        autoindex on;
+        alias /home/akshar/staticvirt/test_project/staticfiles/;
+    }
+}
+</code></pre></div></div>
+
+<p>Your <code class="highlighter-rouge">alias</code> directive will differ from mine.</p>
+
+<p>Make sure nginx is running:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo service nginx restart
+</code></pre></div></div>
+
+<p>Nginx is listening for requests now.</p>
+
+<p>Refresh page at <code class="highlighter-rouge">http://localhost:8000/some_app/home/</code>, the page should be visible with red background which conforms that static files are being served properly.</p>
+
+<p>####Explanation:</p>
+<ul>
+  <li><code class="highlighter-rouge">listen</code> directive tells that nginx is listening for any request that comes at <code class="highlighter-rouge">localhost:8000</code>.</li>
+  <li>There are two <code class="highlighter-rouge">location</code> directives.</li>
+  <li>Bottom <code class="highlighter-rouge">location</code> can overide top <code class="highlighter-rouge">location</code>. Bottom will have preference over top.</li>
+  <li>When a request starting with <code class="highlighter-rouge">/</code> comes, its being passed to port 8001.</li>
+</ul>
+
+<p>eg: If request comes for <code class="highlighter-rouge">http://localhost:8000/some_app/home</code>, nginx tries to match it with one of the <code class="highlighter-rouge">location</code> defined in the configuration file. In this case, it matches with first location. Nginx sees that a <code class="highlighter-rouge">proxy_pass</code> is defined in this case so it passes this request to the proxy_pass which is http://127.0.0.1:8001. Gunicorn is listening at port 8001, so gunicorn will repond to this request.</p>
+
+<ul>
+  <li>When a request starting with <code class="highlighter-rouge">/static/</code> comes, bottom <code class="highlighter-rouge">location</code> is used as it has preference over the top <code class="highlighter-rouge">location</code>.</li>
+</ul>
+
+<p>When a request comes for <code class="highlighter-rouge">http://localhost:8000/static/some_app/styles.css</code>, Nginx looks into the directory pointed to by <code class="highlighter-rouge">alias</code> which is <strong>staticfiles</strong>. It tries to find <strong>some_app/styles.css</strong> inside this directory and if this file is available then serves the file.</p>
+
+<p>Now we are comfortable with serving django sites with nginx and gunicorn.</p>
+
+<p>###Deploy on a publicly accessible server.</p>
+
+<p>I will use domain <code class="highlighter-rouge">pythoninternals.com</code> for illustration. We need to do the following things on the server where A record of domain <code class="highlighter-rouge">pythoninternals.com</code> points.</p>
+
+<p>We don’t need any change for gunicorn and can run it in the same way:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gunicorn test_project.wsgi:application --bind=127.0.0.1:8001
+</code></pre></div></div>
+
+<p>Create file <code class="highlighter-rouge">/etc/nginx/sites-enabled/example</code> on the server and add content:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+  listen 80; 
+  server_name pythoninternals.com;
+  location / { 
+    proxy_pass http://127.0.0.1:8001;
+  }
+
+  location /static/ {
+    alias /home/ubuntu/staticvirt/test_project/staticfiles/;
+  }
+}
+</code></pre></div></div>
+
+<p>This file is almost similar to the nginx conf we had on development machine.</p>
+
+<p>Make sure that you have collected the static files in directory <code class="highlighter-rouge">staticfiles</code>.</p>
+
+<p>Some differences in this nginx conf and dev machine’s nginx conf are:</p>
+
+<ul>
+  <li>It’s listening on port 80. When a request is made for domain <code class="highlighter-rouge">pythoninternal.com</code>, it comes on the default port which is 80. So, nginx must be listening for any request on port 80.</li>
+  <li><code class="highlighter-rouge">server_name</code> makes sure that this configuration file will only be used for <code class="highlighter-rouge">pythoninternals.com</code>.</li>
+  <li>There might be another domain called <code class="highlighter-rouge">abcde.com</code> being served from this same server, we don’t want this configuration to be used for <code class="highlighter-rouge">abcde.com</code>. That’s why we specify the <code class="highlighter-rouge">server_name</code>.</li>
+</ul>
+
+<p>After this a request for <code class="highlighter-rouge">pythoninternals.com/some_app/home</code> would be served properly from this server.</p>
+
+<p>Running gunicorn the way we did, will keep it in the foreground and we will have to stop gunicorn to exit from the server. So, we need to run it as a daemon.</p>
+
+<p>Run gunicorn as daemon:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gunicorn test_project.wsgi:application --bind=127.0.0.1:8001 --daemon
+</code></pre></div></div>
+
+<p>With this, gunicorn runs as a background process and we can quit from the server without affecting gunicorn.</p>
+
+<p>Till now, we have set various configurations for gunicorn, like –bind and –daemon, on the terminal. The suggested way to do it is using configuration file. You can read about it at <a href="http://agiliq.com/blog/2014/06/minimal-gunicorn-configuration/" target="_blank">another post we wrote</a> and should move these configurations to a separate file.</p>
+
+
+  </div><a class="u-url" href="/nginx/2013/08/26/minimal-nginx-and-gunicorn-configuration-for-djang.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

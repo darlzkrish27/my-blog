@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>How we built a Twitter Application | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="How we built a Twitter Application" />
+<meta name="author" content="lakshman" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Twitter, just like many other Web2.0 sites, has an excellent API. So much so, writing a twitter app is considered to be “Hello World” of Web2.0 Programming. I wrote an application recently. It is DM++. By default, this application allows you to receive direct messages from twitter users you have @replied even if you currently don’t follow them. You can even configure application to be able to receive direct messages from people you have @replied in only last 2 days, or receive Dm from all other twitter users. Look how many people are currently complaining Cant DM U as U dont follow me or read our Faq Now, let me illustrate some steps in building this application. One of the modules is where I need to find out whether the userx follows usery. This request needs authentication headers added for twitter to respond, else U receive a “Not authorized” response import urllib2,base64,simplejson def is_follows(follower, following): theurl = &#39;http://twitter.com/friendships/exists.json?user_a=%s&amp;user_b=%s&#39;%(follower, following) username = &#39;uname&#39; password = &#39;pwd&#39; handle = urllib2.Request(theurl) authheader = &quot;Basic %s&quot; % base64.encodestring(&#39;%s:%s&#39; % (username, password)) handle.add_header(&quot;Authorization&quot;, authheader) try: return simplejson.load(urllib2.urlopen(handle)) except IOError, e: # This is reached when allocated API requests to IP are completed. print &quot;parsing the is_follows json from twitter, failed&quot; return False if __name__==&#39;__main__&#39;: print is_follows(u&#39;scorpion032&#39;,u&#39;scobleizer&#39;) This is an independent module, intended so, as this functionality is best that way, simplest without the bloat of any other functions and it is portable. There is a very good Python-twitter wrapper by Google, many functions on twitter are now very simple, for anything more than finding out if userx follows usery as above, this can be very useful. import twitter api=twitter.Api(&#39;uname&#39;,&#39;pwd&#39;) Thats it and you have an authenticated api object from which U can do nearly all twitter functions. Infact it is working with this wrapper, that tempted me to write this application. There are a host of things you can do with this wrapper including what is shown below, that I have used. This code retrieves all Direct Messages that are received since it was last retrieved. We store the fetchinfo table pk=1 field with the last date time it was retrieved try: f=FetchInfo.objects.get(pk=1).last_datetime except: f=None dm_list=api.GetDirectMessages(since=f) Following snippet sends the Direct Messages to the users that can receive it, else it is marked filtered. ‘canhesend()’ is a function where we find verify if the user is able to send direct messages based on his access_level setting if canhesend(adm.sent_by.username,user): try: api.PostDirectMessage(user,&quot;via @&quot;+adm.sent_by.username+&quot;: &quot;+adm.text) api.PostDirectMessage(adm.sent_by.username,&quot;Your Dm has been sent to @&quot;+user) adm.is_sent=True adm.save() except HTTPError: adm.is_filter=True adm.save() else: adm.is_filter=True adm.save() adm is the parameter that loops on direct messages. Among other important things see how we seperate the usernames and text which are sent to us, there is a very nice input from stackoverflow, which we incorporated. We have a text of the format &#39;@abc [@def ..] This part is text&#39; which we want seperated to user names and text part. We want retrieved in the following format: l=[&#39;abc&#39;,&#39;def&#39;] s=&#39;This part is text&#39; This is how we went about doing it: import re rx = re.compile(&quot;((?:@\w+ +)+)(.*)&quot;) t=&#39;@abc @def @xyz Hello this part is text and my email is foo@ba.r&#39; a,s = rx.match(t).groups() l = re.split(&#39;[@ ]+&#39;,a)[1:-1] print l print s" />
+<meta property="og:description" content="Twitter, just like many other Web2.0 sites, has an excellent API. So much so, writing a twitter app is considered to be “Hello World” of Web2.0 Programming. I wrote an application recently. It is DM++. By default, this application allows you to receive direct messages from twitter users you have @replied even if you currently don’t follow them. You can even configure application to be able to receive direct messages from people you have @replied in only last 2 days, or receive Dm from all other twitter users. Look how many people are currently complaining Cant DM U as U dont follow me or read our Faq Now, let me illustrate some steps in building this application. One of the modules is where I need to find out whether the userx follows usery. This request needs authentication headers added for twitter to respond, else U receive a “Not authorized” response import urllib2,base64,simplejson def is_follows(follower, following): theurl = &#39;http://twitter.com/friendships/exists.json?user_a=%s&amp;user_b=%s&#39;%(follower, following) username = &#39;uname&#39; password = &#39;pwd&#39; handle = urllib2.Request(theurl) authheader = &quot;Basic %s&quot; % base64.encodestring(&#39;%s:%s&#39; % (username, password)) handle.add_header(&quot;Authorization&quot;, authheader) try: return simplejson.load(urllib2.urlopen(handle)) except IOError, e: # This is reached when allocated API requests to IP are completed. print &quot;parsing the is_follows json from twitter, failed&quot; return False if __name__==&#39;__main__&#39;: print is_follows(u&#39;scorpion032&#39;,u&#39;scobleizer&#39;) This is an independent module, intended so, as this functionality is best that way, simplest without the bloat of any other functions and it is portable. There is a very good Python-twitter wrapper by Google, many functions on twitter are now very simple, for anything more than finding out if userx follows usery as above, this can be very useful. import twitter api=twitter.Api(&#39;uname&#39;,&#39;pwd&#39;) Thats it and you have an authenticated api object from which U can do nearly all twitter functions. Infact it is working with this wrapper, that tempted me to write this application. There are a host of things you can do with this wrapper including what is shown below, that I have used. This code retrieves all Direct Messages that are received since it was last retrieved. We store the fetchinfo table pk=1 field with the last date time it was retrieved try: f=FetchInfo.objects.get(pk=1).last_datetime except: f=None dm_list=api.GetDirectMessages(since=f) Following snippet sends the Direct Messages to the users that can receive it, else it is marked filtered. ‘canhesend()’ is a function where we find verify if the user is able to send direct messages based on his access_level setting if canhesend(adm.sent_by.username,user): try: api.PostDirectMessage(user,&quot;via @&quot;+adm.sent_by.username+&quot;: &quot;+adm.text) api.PostDirectMessage(adm.sent_by.username,&quot;Your Dm has been sent to @&quot;+user) adm.is_sent=True adm.save() except HTTPError: adm.is_filter=True adm.save() else: adm.is_filter=True adm.save() adm is the parameter that loops on direct messages. Among other important things see how we seperate the usernames and text which are sent to us, there is a very nice input from stackoverflow, which we incorporated. We have a text of the format &#39;@abc [@def ..] This part is text&#39; which we want seperated to user names and text part. We want retrieved in the following format: l=[&#39;abc&#39;,&#39;def&#39;] s=&#39;This part is text&#39; This is how we went about doing it: import re rx = re.compile(&quot;((?:@\w+ +)+)(.*)&quot;) t=&#39;@abc @def @xyz Hello this part is text and my email is foo@ba.r&#39; a,s = rx.match(t).groups() l = re.split(&#39;[@ ]+&#39;,a)[1:-1] print l print s" />
+<link rel="canonical" href="http://localhost:4000/web2.0/2009/02/19/how-we-built-a-twitter-application.html" />
+<meta property="og:url" content="http://localhost:4000/web2.0/2009/02/19/how-we-built-a-twitter-application.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-02-19T13:50:52+05:30" />
+<script type="application/ld+json">
+{"description":"Twitter, just like many other Web2.0 sites, has an excellent API. So much so, writing a twitter app is considered to be “Hello World” of Web2.0 Programming. I wrote an application recently. It is DM++. By default, this application allows you to receive direct messages from twitter users you have @replied even if you currently don’t follow them. You can even configure application to be able to receive direct messages from people you have @replied in only last 2 days, or receive Dm from all other twitter users. Look how many people are currently complaining Cant DM U as U dont follow me or read our Faq Now, let me illustrate some steps in building this application. One of the modules is where I need to find out whether the userx follows usery. This request needs authentication headers added for twitter to respond, else U receive a “Not authorized” response import urllib2,base64,simplejson def is_follows(follower, following): theurl = &#39;http://twitter.com/friendships/exists.json?user_a=%s&amp;user_b=%s&#39;%(follower, following) username = &#39;uname&#39; password = &#39;pwd&#39; handle = urllib2.Request(theurl) authheader = &quot;Basic %s&quot; % base64.encodestring(&#39;%s:%s&#39; % (username, password)) handle.add_header(&quot;Authorization&quot;, authheader) try: return simplejson.load(urllib2.urlopen(handle)) except IOError, e: # This is reached when allocated API requests to IP are completed. print &quot;parsing the is_follows json from twitter, failed&quot; return False if __name__==&#39;__main__&#39;: print is_follows(u&#39;scorpion032&#39;,u&#39;scobleizer&#39;) This is an independent module, intended so, as this functionality is best that way, simplest without the bloat of any other functions and it is portable. There is a very good Python-twitter wrapper by Google, many functions on twitter are now very simple, for anything more than finding out if userx follows usery as above, this can be very useful. import twitter api=twitter.Api(&#39;uname&#39;,&#39;pwd&#39;) Thats it and you have an authenticated api object from which U can do nearly all twitter functions. Infact it is working with this wrapper, that tempted me to write this application. There are a host of things you can do with this wrapper including what is shown below, that I have used. This code retrieves all Direct Messages that are received since it was last retrieved. We store the fetchinfo table pk=1 field with the last date time it was retrieved try: f=FetchInfo.objects.get(pk=1).last_datetime except: f=None dm_list=api.GetDirectMessages(since=f) Following snippet sends the Direct Messages to the users that can receive it, else it is marked filtered. ‘canhesend()’ is a function where we find verify if the user is able to send direct messages based on his access_level setting if canhesend(adm.sent_by.username,user): try: api.PostDirectMessage(user,&quot;via @&quot;+adm.sent_by.username+&quot;: &quot;+adm.text) api.PostDirectMessage(adm.sent_by.username,&quot;Your Dm has been sent to @&quot;+user) adm.is_sent=True adm.save() except HTTPError: adm.is_filter=True adm.save() else: adm.is_filter=True adm.save() adm is the parameter that loops on direct messages. Among other important things see how we seperate the usernames and text which are sent to us, there is a very nice input from stackoverflow, which we incorporated. We have a text of the format &#39;@abc [@def ..] This part is text&#39; which we want seperated to user names and text part. We want retrieved in the following format: l=[&#39;abc&#39;,&#39;def&#39;] s=&#39;This part is text&#39; This is how we went about doing it: import re rx = re.compile(&quot;((?:@\\w+ +)+)(.*)&quot;) t=&#39;@abc @def @xyz Hello this part is text and my email is foo@ba.r&#39; a,s = rx.match(t).groups() l = re.split(&#39;[@ ]+&#39;,a)[1:-1] print l print s","author":{"@type":"Person","name":"lakshman"},"@type":"BlogPosting","url":"http://localhost:4000/web2.0/2009/02/19/how-we-built-a-twitter-application.html","headline":"How we built a Twitter Application","dateModified":"2009-02-19T13:50:52+05:30","datePublished":"2009-02-19T13:50:52+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/web2.0/2009/02/19/how-we-built-a-twitter-application.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">How we built a Twitter Application</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-02-19T13:50:52+05:30" itemprop="datePublished">Feb 19, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">lakshman</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Twitter, just like many other Web2.0 sites, has an excellent API. So much so, writing a twitter app is considered to be “Hello World” of Web2.0 Programming.</p>
+
+<p>I wrote an application recently. It is <a href="http://dmplusplus.com">DM++</a>. By default, this application allows you to receive direct messages from twitter users you have @replied even if you currently don’t follow them. You can even configure application to be able to receive direct messages from people you have @replied in only last 2 days, or receive Dm from all other twitter users.</p>
+
+<p>Look how many people are currently complaining <a href="http://search.twitter.com/search?q=%22cant+dm%22">Cant DM U as U dont follow me</a> or read our <a href="http://faq.dmplusplus.com">Faq</a></p>
+
+<p>Now, let me illustrate some steps in building this application.</p>
+
+<p>One of the modules is where I need to find out whether the userx follows usery. This request needs authentication headers added for twitter to respond, else U receive a “Not authorized” response</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import urllib2,base64,simplejson
+
+def is_follows(follower, following):
+    
+    theurl = 'http://twitter.com/friendships/exists.json?user_a=%s&amp;user_b=%s'%(follower, following)
+    
+    username = 'uname'
+    password = 'pwd'
+    
+    handle = urllib2.Request(theurl)
+    
+    authheader =  "Basic %s" % base64.encodestring('%s:%s' % (username, password))
+    
+    handle.add_header("Authorization", authheader)
+    
+    try:
+        return simplejson.load(urllib2.urlopen(handle))
+    except IOError, e:
+        # This is reached when allocated API requests to IP are completed.
+        print "parsing the is_follows json from twitter, failed"
+    return False
+    
+
+if __name__=='__main__':
+    print is_follows(u'scorpion032',u'scobleizer')
+</code></pre></div></div>
+
+<p>This is an independent module, intended so, as this functionality is best that way, simplest without the bloat of any other functions and it is portable.</p>
+
+<p>There is a very good <a href="http://code.google.com/p/python-twitter/">Python-twitter wrapper</a> by Google, many functions on twitter are now very simple, for anything more than finding out if userx follows usery as above, this can be very useful.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import twitter
+api=twitter.Api('uname','pwd')
+</code></pre></div></div>
+
+<p>Thats it and you have an authenticated api object from which U can do nearly all twitter functions. Infact it is working with this wrapper, that tempted me to write this application. There are a host of things you can do with this wrapper including what is shown below, that I have used.</p>
+
+<p>This code retrieves all Direct Messages that are received since it was last retrieved. We store the fetchinfo table pk=1 field with the last date time it was retrieved</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>try:
+    f=FetchInfo.objects.get(pk=1).last_datetime
+except:
+    f=None   
+dm_list=api.GetDirectMessages(since=f)
+</code></pre></div></div>
+
+<p>Following snippet sends the Direct Messages to the users that can receive it, else it is marked filtered.
+‘canhesend()’ is a function where we find verify if the user is able to send direct messages based on his access_level setting</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    if canhesend(adm.sent_by.username,user):
+            try:
+                api.PostDirectMessage(user,"via @"+adm.sent_by.username+": "+adm.text)
+                api.PostDirectMessage(adm.sent_by.username,"Your Dm has been sent to @"+user)
+                adm.is_sent=True
+                adm.save()
+            except HTTPError:
+                adm.is_filter=True
+                adm.save()
+        else:
+            adm.is_filter=True
+            adm.save()
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">adm</code> is the parameter that loops on direct messages.</p>
+
+<p>Among other important things see how we seperate the usernames and text which are sent to us, there is a very nice input from <a href="http://stackoverflow.com/questions/558105/string-separation-in-required-format-pythonic-way-with-or-w-o-regex/563299#563299">stackoverflow</a>, which we incorporated.</p>
+
+<p>We have a text of the format 
+<code class="highlighter-rouge">'@abc [@def ..] This part is text'</code>
+which we want seperated to user names and text part. We want retrieved in the following format:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>l=['abc','def']
+s='This part is text'
+</code></pre></div></div>
+
+<p>This is how we went about doing it:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import re
+rx = re.compile("((?:@\w+ +)+)(.*)")
+t='@abc   @def  @xyz Hello this part is text and my email is foo@ba.r'
+a,s = rx.match(t).groups()
+l = re.split('[@ ]+',a)[1:-1]
+print l
+print s
+</code></pre></div></div>
+
+
+  </div><a class="u-url" href="/web2.0/2009/02/19/how-we-built-a-twitter-application.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

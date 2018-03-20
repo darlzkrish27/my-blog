@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Android Fragments 101 | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Android Fragments 101" />
+<meta name="author" content="ikram" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Prerequisite: You are already aware of the basics of building a HelloWorld in Android and know how to use the APIs provided in the support library. The code example is available on github. _____________________ Ever wanted a code snippet from an Activity to be available to other activities? Perhaps a Button or a ListView, maybe a Layout or any View/ViewGroup for that matter? Fragments let us do just that. Necessity is the mother of invention. Before understanding what Fragments are and how they work, we must first realize their existence in the first place. The Problem Suppose we have an Android app with two Activities- FirstActivity and SecondActivity. FirstActivity contains two Views, a TextView (textView) and a Button (button1); and button1 has an onClick() callback that Toast’s a simple message “Button pressed”. SecondActivity contains both the Views present in FirstActivity and a Button (button2). Now we want to utilize the two layout components(Views) of FirstActivity in SecondActivity, we can go about this with two approaches: Copy and Paste the xml elements of the two Views. Create a separate layout for common Views and reuse it using &lt;include /&gt; layout element. More about this here. Electing the second approach makes sense cause it enables us to make reusable layouts. Everything seems great till now. We are able to make reusable layouts and use them as many times as we want. Now recollect that we have an onClick() callback assigned to button1. How do we reuse the same callback functionality of button1 across multiple Activities? &lt;include /&gt; lets us reuse layouts and not the Activity source. This is where Fragments come into play. Fragments ![image](http://iontech.files.wordpress.com/2013/01/androidfragmentation1-264x300.png) Fragments encompass both layout resource and Java source. Hence, unlike &lt;include /&gt;, they allow us to reuse the View components along with their functionality, if needed. Fragments were first introduced in Honeycomb(API 11), living under the android.app package. Note: API 11 implies that Fragments have no support for devices less than Honeycomb and, for the record, as of writing this post, more than 50% of Android devices worldwide run versions of Android below Honeycomb. Developer dissapointed? You don’t have to be, cause google has been cautious enough to add the Fragment APIs to the support library. Yay! In the support library Fragment APIs sit in the android.support.v4.app package. This post assumes that your minSdk support is below API 11. Hence we concentrate on the Fragment APIs of the support library. Diving into code Performing code reuse with Fragments involves three major steps: Creating reusable View components - Creating a layout for the fragment. Creating reusable Java source - Writing the layout’s corresponding Fragment class. Employing the reusable components in Activity - Making an Activity to host this Fragment. 1. Creating reusable View components Creating a layout for the Fragment This is done precisely as we do it for our activity layouts. The layout contains a root element (ViewGroup) defining the layout, For instance in our example we use a LinearLayout and its child elements(the reusable Views) that we want to have in our fragment. fragment_common.xml &lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; android:orientation=&quot;vertical&quot; android:layout_width=&quot;fill_parent&quot; android:layout_height=&quot;fill_parent&quot;&gt; &lt;TextView android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:text=&quot;@string/textView&quot; android:id=&quot;@+id/textView&quot; android:layout_gravity=&quot;center&quot; android:layout_margin=&quot;5dp&quot;/&gt; &lt;Button android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:text=&quot;@string/button1&quot; android:id=&quot;@+id/button1&quot; android:layout_gravity=&quot;center&quot;/&gt; &lt;/LinearLayout&gt; 2. Creating reusable Java source Writing the layout’s corresponding Fragment class CommonFragment.java This class will inherit Fragment class and must override the onCreateView() method. In this method we inflate the fragment layout using the following line of code. View view = inflater.inflate(R.layout.fragment_common, container, false); container is the parent ViewGroup that the fragment’s UI should be attached to. Once inflation is done, we can perform various operations on the component views of the fragment. Accessing the view elements from the layout is done exactly as we do in an Activity (using findViewById()) except that we use the View for the fragment’s UI or an instance of the host Activity. In Activity we access Views(a Button for our example) as follows Button button1 = (Button) findViewById(R.id.button1); In Fragment, we need to use the inflated view(if in `onCreateView()`) or get the instance of the host activity and access the views through this instance(when in a [lifecycle callback](http://developer.android.com/guide/components/fragments.html#Lifecycle &quot;Fragment lifecycle callbacks&quot;) after `onCreateView()`, I generally do it in `onActivityCreated()`). Button button1 = (Button) view.findViewById(R.id.button1); or Button button1 = (Button) getActivity().findViewById(R.id.button1); `getActivity()` returns the instance of the Activity that is hosting this Fragment. Finally, in onCreateView() we must return the View for the fragment’s UI. return view; 3. Employing the reusable components in Activity Making an Activity to host this Fragment This is done in two ways, statically by adding &lt;fragment /&gt; elements into the Activity layout or dynamically, at run time, by using FragmentTransactions. Note: First thing we need to ensure is that our Activity extends FragmentActivity class instead of the regular Activity. If the minSdk is API 11 or higher, then we can leave our inheritance to Activity class and not bother about FragmentActivity. a. Static approach to hosting the Fragments Adding &lt;fragment /&gt; element in activity layout activity_static.xml Inorder to statically add a Fragment into your Activity, just add &lt;fragment /&gt; element with the necessary layout attributes and the android:name attribute set to the fully qualified class name of the corresponding Fragment. &lt;fragment android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:name=&quot;com.github.iontech.fragments_example.CommonFragment&quot; android:id=&quot;@+id/fragment&quot; android:layout_gravity=&quot;center&quot;/&gt; ##### b. Dynamic approach ###### Using `FragmentTransaction`s ADynamicFragmentActivity.java Can be done using FragmentManager and FragmentTransaction classes. We call add(), in our FragmentActivity implementation, on an instance of FragmentTransaction to add a fragment to the host Activity. But that is not enough to show the fragment on the screen, i.e. the FragmentTransaction is not complete. We must call commit() to finish the transaction. CommonFragment fragment = new CommonFragment(); FragmentManager manager = getSupportFragmentManager(); FragmentTransaction transaction = manager.beginTransaction(); transaction.add(R.id.dynamicFragmentLayout, fragment); transaction.commit(); Similarly Fragments can be removed(remove()) as well as replaced(replace()) from the activity all at runtime. Congratulations, now you can use Fragments to write reusable code and easily host them over multiple activities. Till next time." />
+<meta property="og:description" content="Prerequisite: You are already aware of the basics of building a HelloWorld in Android and know how to use the APIs provided in the support library. The code example is available on github. _____________________ Ever wanted a code snippet from an Activity to be available to other activities? Perhaps a Button or a ListView, maybe a Layout or any View/ViewGroup for that matter? Fragments let us do just that. Necessity is the mother of invention. Before understanding what Fragments are and how they work, we must first realize their existence in the first place. The Problem Suppose we have an Android app with two Activities- FirstActivity and SecondActivity. FirstActivity contains two Views, a TextView (textView) and a Button (button1); and button1 has an onClick() callback that Toast’s a simple message “Button pressed”. SecondActivity contains both the Views present in FirstActivity and a Button (button2). Now we want to utilize the two layout components(Views) of FirstActivity in SecondActivity, we can go about this with two approaches: Copy and Paste the xml elements of the two Views. Create a separate layout for common Views and reuse it using &lt;include /&gt; layout element. More about this here. Electing the second approach makes sense cause it enables us to make reusable layouts. Everything seems great till now. We are able to make reusable layouts and use them as many times as we want. Now recollect that we have an onClick() callback assigned to button1. How do we reuse the same callback functionality of button1 across multiple Activities? &lt;include /&gt; lets us reuse layouts and not the Activity source. This is where Fragments come into play. Fragments ![image](http://iontech.files.wordpress.com/2013/01/androidfragmentation1-264x300.png) Fragments encompass both layout resource and Java source. Hence, unlike &lt;include /&gt;, they allow us to reuse the View components along with their functionality, if needed. Fragments were first introduced in Honeycomb(API 11), living under the android.app package. Note: API 11 implies that Fragments have no support for devices less than Honeycomb and, for the record, as of writing this post, more than 50% of Android devices worldwide run versions of Android below Honeycomb. Developer dissapointed? You don’t have to be, cause google has been cautious enough to add the Fragment APIs to the support library. Yay! In the support library Fragment APIs sit in the android.support.v4.app package. This post assumes that your minSdk support is below API 11. Hence we concentrate on the Fragment APIs of the support library. Diving into code Performing code reuse with Fragments involves three major steps: Creating reusable View components - Creating a layout for the fragment. Creating reusable Java source - Writing the layout’s corresponding Fragment class. Employing the reusable components in Activity - Making an Activity to host this Fragment. 1. Creating reusable View components Creating a layout for the Fragment This is done precisely as we do it for our activity layouts. The layout contains a root element (ViewGroup) defining the layout, For instance in our example we use a LinearLayout and its child elements(the reusable Views) that we want to have in our fragment. fragment_common.xml &lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; android:orientation=&quot;vertical&quot; android:layout_width=&quot;fill_parent&quot; android:layout_height=&quot;fill_parent&quot;&gt; &lt;TextView android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:text=&quot;@string/textView&quot; android:id=&quot;@+id/textView&quot; android:layout_gravity=&quot;center&quot; android:layout_margin=&quot;5dp&quot;/&gt; &lt;Button android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:text=&quot;@string/button1&quot; android:id=&quot;@+id/button1&quot; android:layout_gravity=&quot;center&quot;/&gt; &lt;/LinearLayout&gt; 2. Creating reusable Java source Writing the layout’s corresponding Fragment class CommonFragment.java This class will inherit Fragment class and must override the onCreateView() method. In this method we inflate the fragment layout using the following line of code. View view = inflater.inflate(R.layout.fragment_common, container, false); container is the parent ViewGroup that the fragment’s UI should be attached to. Once inflation is done, we can perform various operations on the component views of the fragment. Accessing the view elements from the layout is done exactly as we do in an Activity (using findViewById()) except that we use the View for the fragment’s UI or an instance of the host Activity. In Activity we access Views(a Button for our example) as follows Button button1 = (Button) findViewById(R.id.button1); In Fragment, we need to use the inflated view(if in `onCreateView()`) or get the instance of the host activity and access the views through this instance(when in a [lifecycle callback](http://developer.android.com/guide/components/fragments.html#Lifecycle &quot;Fragment lifecycle callbacks&quot;) after `onCreateView()`, I generally do it in `onActivityCreated()`). Button button1 = (Button) view.findViewById(R.id.button1); or Button button1 = (Button) getActivity().findViewById(R.id.button1); `getActivity()` returns the instance of the Activity that is hosting this Fragment. Finally, in onCreateView() we must return the View for the fragment’s UI. return view; 3. Employing the reusable components in Activity Making an Activity to host this Fragment This is done in two ways, statically by adding &lt;fragment /&gt; elements into the Activity layout or dynamically, at run time, by using FragmentTransactions. Note: First thing we need to ensure is that our Activity extends FragmentActivity class instead of the regular Activity. If the minSdk is API 11 or higher, then we can leave our inheritance to Activity class and not bother about FragmentActivity. a. Static approach to hosting the Fragments Adding &lt;fragment /&gt; element in activity layout activity_static.xml Inorder to statically add a Fragment into your Activity, just add &lt;fragment /&gt; element with the necessary layout attributes and the android:name attribute set to the fully qualified class name of the corresponding Fragment. &lt;fragment android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:name=&quot;com.github.iontech.fragments_example.CommonFragment&quot; android:id=&quot;@+id/fragment&quot; android:layout_gravity=&quot;center&quot;/&gt; ##### b. Dynamic approach ###### Using `FragmentTransaction`s ADynamicFragmentActivity.java Can be done using FragmentManager and FragmentTransaction classes. We call add(), in our FragmentActivity implementation, on an instance of FragmentTransaction to add a fragment to the host Activity. But that is not enough to show the fragment on the screen, i.e. the FragmentTransaction is not complete. We must call commit() to finish the transaction. CommonFragment fragment = new CommonFragment(); FragmentManager manager = getSupportFragmentManager(); FragmentTransaction transaction = manager.beginTransaction(); transaction.add(R.id.dynamicFragmentLayout, fragment); transaction.commit(); Similarly Fragments can be removed(remove()) as well as replaced(replace()) from the activity all at runtime. Congratulations, now you can use Fragments to write reusable code and easily host them over multiple activities. Till next time." />
+<link rel="canonical" href="http://localhost:4000/android/2013/01/01/android-fragments-101.html" />
+<meta property="og:url" content="http://localhost:4000/android/2013/01/01/android-fragments-101.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2013-01-01T11:30:00+05:30" />
+<script type="application/ld+json">
+{"description":"Prerequisite: You are already aware of the basics of building a HelloWorld in Android and know how to use the APIs provided in the support library. The code example is available on github. _____________________ Ever wanted a code snippet from an Activity to be available to other activities? Perhaps a Button or a ListView, maybe a Layout or any View/ViewGroup for that matter? Fragments let us do just that. Necessity is the mother of invention. Before understanding what Fragments are and how they work, we must first realize their existence in the first place. The Problem Suppose we have an Android app with two Activities- FirstActivity and SecondActivity. FirstActivity contains two Views, a TextView (textView) and a Button (button1); and button1 has an onClick() callback that Toast’s a simple message “Button pressed”. SecondActivity contains both the Views present in FirstActivity and a Button (button2). Now we want to utilize the two layout components(Views) of FirstActivity in SecondActivity, we can go about this with two approaches: Copy and Paste the xml elements of the two Views. Create a separate layout for common Views and reuse it using &lt;include /&gt; layout element. More about this here. Electing the second approach makes sense cause it enables us to make reusable layouts. Everything seems great till now. We are able to make reusable layouts and use them as many times as we want. Now recollect that we have an onClick() callback assigned to button1. How do we reuse the same callback functionality of button1 across multiple Activities? &lt;include /&gt; lets us reuse layouts and not the Activity source. This is where Fragments come into play. Fragments ![image](http://iontech.files.wordpress.com/2013/01/androidfragmentation1-264x300.png) Fragments encompass both layout resource and Java source. Hence, unlike &lt;include /&gt;, they allow us to reuse the View components along with their functionality, if needed. Fragments were first introduced in Honeycomb(API 11), living under the android.app package. Note: API 11 implies that Fragments have no support for devices less than Honeycomb and, for the record, as of writing this post, more than 50% of Android devices worldwide run versions of Android below Honeycomb. Developer dissapointed? You don’t have to be, cause google has been cautious enough to add the Fragment APIs to the support library. Yay! In the support library Fragment APIs sit in the android.support.v4.app package. This post assumes that your minSdk support is below API 11. Hence we concentrate on the Fragment APIs of the support library. Diving into code Performing code reuse with Fragments involves three major steps: Creating reusable View components - Creating a layout for the fragment. Creating reusable Java source - Writing the layout’s corresponding Fragment class. Employing the reusable components in Activity - Making an Activity to host this Fragment. 1. Creating reusable View components Creating a layout for the Fragment This is done precisely as we do it for our activity layouts. The layout contains a root element (ViewGroup) defining the layout, For instance in our example we use a LinearLayout and its child elements(the reusable Views) that we want to have in our fragment. fragment_common.xml &lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; android:orientation=&quot;vertical&quot; android:layout_width=&quot;fill_parent&quot; android:layout_height=&quot;fill_parent&quot;&gt; &lt;TextView android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:text=&quot;@string/textView&quot; android:id=&quot;@+id/textView&quot; android:layout_gravity=&quot;center&quot; android:layout_margin=&quot;5dp&quot;/&gt; &lt;Button android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:text=&quot;@string/button1&quot; android:id=&quot;@+id/button1&quot; android:layout_gravity=&quot;center&quot;/&gt; &lt;/LinearLayout&gt; 2. Creating reusable Java source Writing the layout’s corresponding Fragment class CommonFragment.java This class will inherit Fragment class and must override the onCreateView() method. In this method we inflate the fragment layout using the following line of code. View view = inflater.inflate(R.layout.fragment_common, container, false); container is the parent ViewGroup that the fragment’s UI should be attached to. Once inflation is done, we can perform various operations on the component views of the fragment. Accessing the view elements from the layout is done exactly as we do in an Activity (using findViewById()) except that we use the View for the fragment’s UI or an instance of the host Activity. In Activity we access Views(a Button for our example) as follows Button button1 = (Button) findViewById(R.id.button1); In Fragment, we need to use the inflated view(if in `onCreateView()`) or get the instance of the host activity and access the views through this instance(when in a [lifecycle callback](http://developer.android.com/guide/components/fragments.html#Lifecycle &quot;Fragment lifecycle callbacks&quot;) after `onCreateView()`, I generally do it in `onActivityCreated()`). Button button1 = (Button) view.findViewById(R.id.button1); or Button button1 = (Button) getActivity().findViewById(R.id.button1); `getActivity()` returns the instance of the Activity that is hosting this Fragment. Finally, in onCreateView() we must return the View for the fragment’s UI. return view; 3. Employing the reusable components in Activity Making an Activity to host this Fragment This is done in two ways, statically by adding &lt;fragment /&gt; elements into the Activity layout or dynamically, at run time, by using FragmentTransactions. Note: First thing we need to ensure is that our Activity extends FragmentActivity class instead of the regular Activity. If the minSdk is API 11 or higher, then we can leave our inheritance to Activity class and not bother about FragmentActivity. a. Static approach to hosting the Fragments Adding &lt;fragment /&gt; element in activity layout activity_static.xml Inorder to statically add a Fragment into your Activity, just add &lt;fragment /&gt; element with the necessary layout attributes and the android:name attribute set to the fully qualified class name of the corresponding Fragment. &lt;fragment android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:name=&quot;com.github.iontech.fragments_example.CommonFragment&quot; android:id=&quot;@+id/fragment&quot; android:layout_gravity=&quot;center&quot;/&gt; ##### b. Dynamic approach ###### Using `FragmentTransaction`s ADynamicFragmentActivity.java Can be done using FragmentManager and FragmentTransaction classes. We call add(), in our FragmentActivity implementation, on an instance of FragmentTransaction to add a fragment to the host Activity. But that is not enough to show the fragment on the screen, i.e. the FragmentTransaction is not complete. We must call commit() to finish the transaction. CommonFragment fragment = new CommonFragment(); FragmentManager manager = getSupportFragmentManager(); FragmentTransaction transaction = manager.beginTransaction(); transaction.add(R.id.dynamicFragmentLayout, fragment); transaction.commit(); Similarly Fragments can be removed(remove()) as well as replaced(replace()) from the activity all at runtime. Congratulations, now you can use Fragments to write reusable code and easily host them over multiple activities. Till next time.","author":{"@type":"Person","name":"ikram"},"@type":"BlogPosting","url":"http://localhost:4000/android/2013/01/01/android-fragments-101.html","headline":"Android Fragments 101","dateModified":"2013-01-01T11:30:00+05:30","datePublished":"2013-01-01T11:30:00+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/android/2013/01/01/android-fragments-101.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Android Fragments 101</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2013-01-01T11:30:00+05:30" itemprop="datePublished">Jan 1, 2013
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">ikram</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><em><strong>Prerequisite</strong>: You are already aware of the <a href="http://developer.android.com/training/index.html">basics of building a HelloWorld</a> in Android and know <a href="http://developer.android.com/training/basics/fragments/support-lib.html">how to use the APIs provided in the support library</a>.</em></p>
+
+<p><em>The code example is available on <a href="http://github.com/iontech/Fragments_Example" title="Fragments Example">github</a>.</em>
+<strong>__</strong><strong>__</strong><strong>__</strong><strong>__</strong><strong>__</strong><strong>__</strong><strong>__</strong><strong>__</strong><strong>__</strong><strong>__</strong>_
+Ever wanted a code snippet from an Activity to be available to other activities? Perhaps a Button or a ListView, maybe a Layout or any View/ViewGroup for that matter? Fragments let us do just that.</p>
+
+<p>Necessity is the mother of invention.<br />
+Before understanding what Fragments are and how they work, we must first realize their existence in the first place.</p>
+
+<h2 id="the-problem">The Problem</h2>
+<p>Suppose we have an Android app with two Activities- <a href="https://github.com/iontech/Fragments_Example/blob/master/src/main/java/com/github/iontech/fragments_example/FirstActivity.java"><em>FirstActivity</em></a> and <a href="https://github.com/iontech/Fragments_Example/blob/master/src/main/java/com/github/iontech/fragments_example/SecondActivity.java"><em>SecondActivity</em></a>.<br />
+<em>FirstActivity</em> contains two Views, a <code class="highlighter-rouge">TextView</code> (<em>textView</em>) and a <code class="highlighter-rouge">Button</code> (<em>button1</em>); and <em>button1</em> has an <code class="highlighter-rouge">onClick()</code> callback that <code class="highlighter-rouge">Toast</code>’s a simple message “Button pressed”.<br />
+<em>SecondActivity</em> contains both the Views present in <em>FirstActivity</em> and a <code class="highlighter-rouge">Button</code> (<em>button2</em>).</p>
+
+<p>Now we want to utilize the two layout components(Views) of <em>FirstActivity</em> in <em>SecondActivity</em>, we can go about this with two approaches:</p>
+
+<ol>
+  <li>Copy and Paste the xml elements of the two Views.</li>
+  <li>Create a separate layout for common Views and reuse it using <code class="highlighter-rouge">&lt;include /&gt;</code> layout element.<br />
+ More about this <a href="http://developer.android.com/training/improving-layouts/reusing-layouts.html">here</a>.</li>
+</ol>
+
+<p>Electing the second approach makes sense cause it enables us to make reusable layouts. Everything seems great till now. We are able to make reusable layouts and use them as many times as we want.</p>
+
+<p>Now recollect that we have an <code class="highlighter-rouge">onClick()</code> callback assigned to <em>button1</em>. How do we reuse the same callback functionality of <em>button1</em> across multiple Activities? <code class="highlighter-rouge">&lt;include /&gt;</code> lets us reuse layouts and not the Activity source.<br />
+This is where Fragments come into play.</p>
+
+<h2 id="fragments">Fragments</h2>
+<center> ![image](http://iontech.files.wordpress.com/2013/01/androidfragmentation1-264x300.png) </center>
+<p>Fragments encompass both layout resource and Java source. Hence, unlike <code class="highlighter-rouge">&lt;include /&gt;</code>, they allow us to reuse the View components along with their functionality, if needed.
+Fragments were first introduced in Honeycomb(API 11), living under the <code class="highlighter-rouge">android.app</code> package.<br />
+<strong>Note</strong>: API 11 implies that Fragments have no support for devices less than Honeycomb and, for the record, as of writing this post, <a href="http://developer.android.com/about/dashboards/index.html">more than 50% of Android devices worldwide run versions of Android below Honeycomb</a>. Developer dissapointed? You don’t have to be, cause google has been cautious enough to add the Fragment APIs to the support library. Yay!</p>
+
+<p>In the support library Fragment APIs sit in the <code class="highlighter-rouge">android.support.v4.app</code> package. This post assumes that your <code class="highlighter-rouge">minSdk</code> support is below API 11. Hence we concentrate on the Fragment APIs of the support library.</p>
+
+<h3 id="diving-into-code">Diving into code</h3>
+
+<p>Performing code reuse with Fragments involves three major steps:</p>
+
+<ol>
+  <li>Creating reusable View components - Creating a layout for the fragment.</li>
+  <li>Creating reusable Java source - Writing the layout’s corresponding Fragment class.</li>
+  <li>Employing the reusable components in Activity - Making an Activity to host this Fragment.</li>
+</ol>
+
+<h4 id="1-creating-reusable-view-components">1. Creating reusable View components</h4>
+<h5 id="creating-a-layout-for-the-fragment">Creating a layout for the Fragment</h5>
+<p>This is done precisely as we do it for our activity layouts. The layout contains a root element (ViewGroup) defining the layout, For instance in our example we use a LinearLayout and its child elements(the reusable Views) that we want to have in our fragment.</p>
+
+<blockquote>
+  <p><a href="https://github.com/iontech/Fragments_Example/blob/master/res/layout/fragment_common.xml">fragment_common.xml</a></p>
+</blockquote>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+		  android:layout_width="fill_parent"
+		  android:layout_height="fill_parent"&gt;
+
+	&lt;TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/textView"
+			android:id="@+id/textView" android:layout_gravity="center"
+			android:layout_margin="5dp"/&gt;
+
+	&lt;Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/button1"
+			android:id="@+id/button1"
+			android:layout_gravity="center"/&gt;
+
+&lt;/LinearLayout&gt;
+</code></pre></div></div>
+
+<h4 id="2-creating-reusable-java-source">2. Creating reusable Java source</h4>
+<h5 id="writing-the-layouts-corresponding-fragment-class">Writing the layout’s corresponding Fragment class</h5>
+
+<blockquote>
+  <p><a href="https://github.com/iontech/Fragments_Example/blob/master/src/main/java/com/github/iontech/fragments_example/CommonFragment.java">CommonFragment.java</a></p>
+</blockquote>
+
+<p>This class will inherit <code class="highlighter-rouge">Fragment</code> class and must override the <code class="highlighter-rouge">onCreateView()</code> method.
+In this method we inflate the fragment layout using the following line of code.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>View view = inflater.inflate(R.layout.fragment_common, container, false);
+</code></pre></div></div>
+
+<p><em>container</em> is the parent ViewGroup that the fragment’s UI should be attached to.
+Once inflation is done, we can perform various operations on the component views of the fragment.
+Accessing the view elements from the layout is done exactly as we do in an Activity (using <code class="highlighter-rouge">findViewById()</code>) except that we use the <code class="highlighter-rouge">View</code> for the fragment’s UI or an instance of the host Activity.</p>
+
+<p>In Activity we access Views(a Button for our example) as follows</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Button button1 = (Button) findViewById(R.id.button1);     In Fragment, we need to use the inflated view(if in `onCreateView()`) or get the instance of the host activity and access the views through this instance(when in a [lifecycle callback](http://developer.android.com/guide/components/fragments.html#Lifecycle "Fragment lifecycle callbacks") after `onCreateView()`, I generally do it in `onActivityCreated()`).
+
+Button button1 = (Button) view.findViewById(R.id.button1); or
+
+Button button1 = (Button) getActivity().findViewById(R.id.button1); `getActivity()` returns the instance of the Activity that is hosting this Fragment.
+</code></pre></div></div>
+
+<p>Finally, in <code class="highlighter-rouge">onCreateView()</code> we must return the View for the fragment’s UI.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>return view;
+</code></pre></div></div>
+
+<h4 id="3-employing-the-reusable-components-in-activity">3. Employing the reusable components in Activity</h4>
+<h5 id="making-an-activity-to-host-this-fragment">Making an Activity to host this Fragment</h5>
+<p>This is done in two ways, statically by adding <code class="highlighter-rouge">&lt;fragment /&gt;</code> elements into the Activity layout or dynamically, at run time, by using <code class="highlighter-rouge">FragmentTransaction</code>s.
+<strong>Note</strong>: First thing we need to ensure is that our Activity extends <code class="highlighter-rouge">FragmentActivity</code> class instead of the regular <code class="highlighter-rouge">Activity</code>.
+If the <code class="highlighter-rouge">minSdk</code> is API 11 or higher, then we can leave our inheritance to <code class="highlighter-rouge">Activity</code> class and not bother about <code class="highlighter-rouge">FragmentActivity</code>.</p>
+
+<h5 id="a-static-approach-to-hosting-the-fragments">a. Static approach to hosting the Fragments</h5>
+<h6 id="adding-fragment--element-in-activity-layout">Adding <code class="highlighter-rouge">&lt;fragment /&gt;</code> element in activity layout</h6>
+
+<blockquote>
+  <p><a href="https://github.com/iontech/Fragments_Example/blob/master/res/layout/activity_static.xml">activity_static.xml</a></p>
+</blockquote>
+
+<p>Inorder to statically add a Fragment into your Activity, just add <code class="highlighter-rouge">&lt;fragment /&gt;</code> element with the necessary layout attributes and the <code class="highlighter-rouge">android:name</code> attribute set to the fully qualified class name of the corresponding Fragment.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;fragment android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:name="com.github.iontech.fragments_example.CommonFragment"
+		  android:id="@+id/fragment" android:layout_gravity="center"/&gt; ##### b. Dynamic approach ###### Using `FragmentTransaction`s
+</code></pre></div></div>
+
+<blockquote>
+  <p><a href="https://github.com/iontech/Fragments_Example/blob/master/src/main/java/com/github/iontech/fragments_example/ADynamicFragmentActivity.java">ADynamicFragmentActivity.java</a></p>
+</blockquote>
+
+<p>Can be done using <code class="highlighter-rouge">FragmentManager</code> and <code class="highlighter-rouge">FragmentTransaction</code> classes. We call <code class="highlighter-rouge">add()</code>, in our FragmentActivity implementation, on an instance of <code class="highlighter-rouge">FragmentTransaction</code> to add a fragment to the host Activity. But that is not enough to show the fragment on the screen, i.e. the FragmentTransaction is not complete. We must call <code class="highlighter-rouge">commit()</code> to finish the transaction.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CommonFragment fragment = new CommonFragment();
+FragmentManager manager = getSupportFragmentManager();
+FragmentTransaction transaction = manager.beginTransaction();
+transaction.add(R.id.dynamicFragmentLayout, fragment);
+transaction.commit();
+</code></pre></div></div>
+
+<p>Similarly Fragments can be removed(<code class="highlighter-rouge">remove()</code>) as well as replaced(<code class="highlighter-rouge">replace()</code>) from the activity all at runtime.</p>
+
+<p>Congratulations, now you can use Fragments to write reusable code and easily host them over multiple activities.</p>
+
+<p>Till next time.</p>
+
+<p>next time.</p>
+
+
+  </div><a class="u-url" href="/android/2013/01/01/android-fragments-101.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

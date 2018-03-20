@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Using a Postman http client for efficient HTTP testing | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Using a Postman http client for efficient HTTP testing" />
+<meta name="author" content="Rakesh" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Interacting with the API’s have become a significant part of software development and constructing and testing them effectively will always boost up the business firm. POSTMAN HTTP and REST client is one of its kind which makes the API testing process effortless. It is available as both a Google Packaged App and a Google Chrome in-browser app. It has got clean and intuitive user interface, with all the important features accessible within one click. The performance of the API testing process gets drastically affected by following features it has: Create request quickly Collections Environments Built-in authentication helpers Create request quickly The Postman interface makes the process of request creation real quick. The four important parts of the HTTP request, i.e. URL, method, headers and the request body are given with effective tools to work with. URL : The URL input field stores URL’s stored previously and will show an auto-complete drop down as we begin entering our URL. Sometimes it becomes troublesome while testing complicated URLs which contains a lot of URL parameters, the POSTMAN REST client contains URL params button. Once it is clicked it displays a key value editor in which we can add the URL parameters. Headers: There is Headers button which displays a header editor added to an auto-complete drop down of all the common headers. The best part of headers in POSTMAN are we can save commonly used headers together in a header-preset. For example, I work on a project which contains a different Authorization key for local and my Amazon server so if I create a header preset to my local and Amazon by clicking the “Add preset” button the headers can be prefilled and I need not change the header key values manually all the time. Method: Changing the method is straightforward. We can select the method like GET, POST, PUT, PATCH, DELETE, etc. In the drop down from the select control. The request body editor area will change depending on whether the method can have a body attached to it or not. Request body: Using POSTMAN we can send almost any kind of HTTP request. The Request body contains three areas: form-data, urlencoded, raw. The form-data editor lets us set key/value pairs for our data. A raw request can contain anything, we can also send the formatting type along with the correct header. Collections We tend to test different requests in a project and it will make our testing process simple if we can organize all the API calls separately basing on the similarities. A collection is a group of individual requests which are accessible on the left sidebar. The requests are further organized into folders to completely mirror our API. To make the request more descriptive we can add the meta data like name and description which makes the searching a needed request a painless job. We can easily create a collection by clicking on the “new collection” icon on the sidebar. If we have a request that is loaded in the request editor already we can save it to a specific collection by clicking “Add to collection”. This feature helps us to replay the same task of testing a request effortlessly. Environments Often while working with APIs we will need to have different setups. For example, our local machine, the development server or the production API. Environments give us the ability to customize requests using variables. We need not worry about remembering all the values once they are in POSTMAN saved in an environment. As an add on there is a capability to download the environments and can be saved as a JSON file. Environments also help you separate sensitive data from your collection like keys and passwords. This feature helps us to switch the context quickly basing on the server we are working on. Built-in authentication helpers Postman supports Basic Auth, Digest Auth and OAuth 1 helpers. It becomes easier with POSTMAN while dealing with different types authentications like Digest Auth which are bit complicated than Basic Auth due its flexible interface. Example: In the above example I am trying to get the “mentions” of my twitter timeline. I am using Oauth 1.0 to authenticate the API. Once I select the OAuth 1.0 in the “type of authentication” it shows up the Keys and we can fill up the values over there. The next part contains the URL and the URL params. We may tend to change the count value and since_id to test the API, it becomes simple when we try to fill those values in the URL params. The left side bar is my collection, which contains different API requests. Bonus Stuff: API management software An API management software always increases the productivity. Every day an API can receive a thousand or potentially millions of requests. Before the API processes those requests it has to deal with some important functionalities: Identity/ Authentication Traffic controls Rate limiting Performance Security Scalability Filtering Encryption Logging, etc., Once the above things are handled perfectly, we can accomplish our goal. To deal with them service providers like APIGEE, 3scale and Mashery came into the picture. The important service they provide is API proxy. An API proxy can protect API’s against attack and misuse. They have the capability to translate between JSON and XML. They also can track the API usage and performance. Let’s create a proxy using 3scale to get an idea of using the proxy. Create an account on 3scale. http://www.3scale.net/logmein/ Setup the application Declare the API backend, i.e. the endpoint host of our API. The proxy will direct all traffic from sandbox development endpoint after processing authentication, authorization, rate limits and statistics. Turn on the sandbox proxy Go to the Applications tab and get the credentials i.e the user_key. Now we can access the sandbox endpoint which may look something like this http://api.2445579856672.proxy.3scale.net/ from the dashboard. Added to that we can also create mapping rules for every request by specifying the Rule and patterns of the request so that we can test a specific request functionality and whether the endpoint is working properly or not form 3scale itself. The API management software service providers like APIGEE, 3scale also provide different services like Analytics services, API consoles, API modelling, API management etc.," />
+<meta property="og:description" content="Interacting with the API’s have become a significant part of software development and constructing and testing them effectively will always boost up the business firm. POSTMAN HTTP and REST client is one of its kind which makes the API testing process effortless. It is available as both a Google Packaged App and a Google Chrome in-browser app. It has got clean and intuitive user interface, with all the important features accessible within one click. The performance of the API testing process gets drastically affected by following features it has: Create request quickly Collections Environments Built-in authentication helpers Create request quickly The Postman interface makes the process of request creation real quick. The four important parts of the HTTP request, i.e. URL, method, headers and the request body are given with effective tools to work with. URL : The URL input field stores URL’s stored previously and will show an auto-complete drop down as we begin entering our URL. Sometimes it becomes troublesome while testing complicated URLs which contains a lot of URL parameters, the POSTMAN REST client contains URL params button. Once it is clicked it displays a key value editor in which we can add the URL parameters. Headers: There is Headers button which displays a header editor added to an auto-complete drop down of all the common headers. The best part of headers in POSTMAN are we can save commonly used headers together in a header-preset. For example, I work on a project which contains a different Authorization key for local and my Amazon server so if I create a header preset to my local and Amazon by clicking the “Add preset” button the headers can be prefilled and I need not change the header key values manually all the time. Method: Changing the method is straightforward. We can select the method like GET, POST, PUT, PATCH, DELETE, etc. In the drop down from the select control. The request body editor area will change depending on whether the method can have a body attached to it or not. Request body: Using POSTMAN we can send almost any kind of HTTP request. The Request body contains three areas: form-data, urlencoded, raw. The form-data editor lets us set key/value pairs for our data. A raw request can contain anything, we can also send the formatting type along with the correct header. Collections We tend to test different requests in a project and it will make our testing process simple if we can organize all the API calls separately basing on the similarities. A collection is a group of individual requests which are accessible on the left sidebar. The requests are further organized into folders to completely mirror our API. To make the request more descriptive we can add the meta data like name and description which makes the searching a needed request a painless job. We can easily create a collection by clicking on the “new collection” icon on the sidebar. If we have a request that is loaded in the request editor already we can save it to a specific collection by clicking “Add to collection”. This feature helps us to replay the same task of testing a request effortlessly. Environments Often while working with APIs we will need to have different setups. For example, our local machine, the development server or the production API. Environments give us the ability to customize requests using variables. We need not worry about remembering all the values once they are in POSTMAN saved in an environment. As an add on there is a capability to download the environments and can be saved as a JSON file. Environments also help you separate sensitive data from your collection like keys and passwords. This feature helps us to switch the context quickly basing on the server we are working on. Built-in authentication helpers Postman supports Basic Auth, Digest Auth and OAuth 1 helpers. It becomes easier with POSTMAN while dealing with different types authentications like Digest Auth which are bit complicated than Basic Auth due its flexible interface. Example: In the above example I am trying to get the “mentions” of my twitter timeline. I am using Oauth 1.0 to authenticate the API. Once I select the OAuth 1.0 in the “type of authentication” it shows up the Keys and we can fill up the values over there. The next part contains the URL and the URL params. We may tend to change the count value and since_id to test the API, it becomes simple when we try to fill those values in the URL params. The left side bar is my collection, which contains different API requests. Bonus Stuff: API management software An API management software always increases the productivity. Every day an API can receive a thousand or potentially millions of requests. Before the API processes those requests it has to deal with some important functionalities: Identity/ Authentication Traffic controls Rate limiting Performance Security Scalability Filtering Encryption Logging, etc., Once the above things are handled perfectly, we can accomplish our goal. To deal with them service providers like APIGEE, 3scale and Mashery came into the picture. The important service they provide is API proxy. An API proxy can protect API’s against attack and misuse. They have the capability to translate between JSON and XML. They also can track the API usage and performance. Let’s create a proxy using 3scale to get an idea of using the proxy. Create an account on 3scale. http://www.3scale.net/logmein/ Setup the application Declare the API backend, i.e. the endpoint host of our API. The proxy will direct all traffic from sandbox development endpoint after processing authentication, authorization, rate limits and statistics. Turn on the sandbox proxy Go to the Applications tab and get the credentials i.e the user_key. Now we can access the sandbox endpoint which may look something like this http://api.2445579856672.proxy.3scale.net/ from the dashboard. Added to that we can also create mapping rules for every request by specifying the Rule and patterns of the request so that we can test a specific request functionality and whether the endpoint is working properly or not form 3scale itself. The API management software service providers like APIGEE, 3scale also provide different services like Analytics services, API consoles, API modelling, API management etc.," />
+<link rel="canonical" href="http://localhost:4000/http/client/2014/09/08/using-postman.html" />
+<meta property="og:url" content="http://localhost:4000/http/client/2014/09/08/using-postman.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-09-08T16:05:43+05:30" />
+<script type="application/ld+json">
+{"description":"Interacting with the API’s have become a significant part of software development and constructing and testing them effectively will always boost up the business firm. POSTMAN HTTP and REST client is one of its kind which makes the API testing process effortless. It is available as both a Google Packaged App and a Google Chrome in-browser app. It has got clean and intuitive user interface, with all the important features accessible within one click. The performance of the API testing process gets drastically affected by following features it has: Create request quickly Collections Environments Built-in authentication helpers Create request quickly The Postman interface makes the process of request creation real quick. The four important parts of the HTTP request, i.e. URL, method, headers and the request body are given with effective tools to work with. URL : The URL input field stores URL’s stored previously and will show an auto-complete drop down as we begin entering our URL. Sometimes it becomes troublesome while testing complicated URLs which contains a lot of URL parameters, the POSTMAN REST client contains URL params button. Once it is clicked it displays a key value editor in which we can add the URL parameters. Headers: There is Headers button which displays a header editor added to an auto-complete drop down of all the common headers. The best part of headers in POSTMAN are we can save commonly used headers together in a header-preset. For example, I work on a project which contains a different Authorization key for local and my Amazon server so if I create a header preset to my local and Amazon by clicking the “Add preset” button the headers can be prefilled and I need not change the header key values manually all the time. Method: Changing the method is straightforward. We can select the method like GET, POST, PUT, PATCH, DELETE, etc. In the drop down from the select control. The request body editor area will change depending on whether the method can have a body attached to it or not. Request body: Using POSTMAN we can send almost any kind of HTTP request. The Request body contains three areas: form-data, urlencoded, raw. The form-data editor lets us set key/value pairs for our data. A raw request can contain anything, we can also send the formatting type along with the correct header. Collections We tend to test different requests in a project and it will make our testing process simple if we can organize all the API calls separately basing on the similarities. A collection is a group of individual requests which are accessible on the left sidebar. The requests are further organized into folders to completely mirror our API. To make the request more descriptive we can add the meta data like name and description which makes the searching a needed request a painless job. We can easily create a collection by clicking on the “new collection” icon on the sidebar. If we have a request that is loaded in the request editor already we can save it to a specific collection by clicking “Add to collection”. This feature helps us to replay the same task of testing a request effortlessly. Environments Often while working with APIs we will need to have different setups. For example, our local machine, the development server or the production API. Environments give us the ability to customize requests using variables. We need not worry about remembering all the values once they are in POSTMAN saved in an environment. As an add on there is a capability to download the environments and can be saved as a JSON file. Environments also help you separate sensitive data from your collection like keys and passwords. This feature helps us to switch the context quickly basing on the server we are working on. Built-in authentication helpers Postman supports Basic Auth, Digest Auth and OAuth 1 helpers. It becomes easier with POSTMAN while dealing with different types authentications like Digest Auth which are bit complicated than Basic Auth due its flexible interface. Example: In the above example I am trying to get the “mentions” of my twitter timeline. I am using Oauth 1.0 to authenticate the API. Once I select the OAuth 1.0 in the “type of authentication” it shows up the Keys and we can fill up the values over there. The next part contains the URL and the URL params. We may tend to change the count value and since_id to test the API, it becomes simple when we try to fill those values in the URL params. The left side bar is my collection, which contains different API requests. Bonus Stuff: API management software An API management software always increases the productivity. Every day an API can receive a thousand or potentially millions of requests. Before the API processes those requests it has to deal with some important functionalities: Identity/ Authentication Traffic controls Rate limiting Performance Security Scalability Filtering Encryption Logging, etc., Once the above things are handled perfectly, we can accomplish our goal. To deal with them service providers like APIGEE, 3scale and Mashery came into the picture. The important service they provide is API proxy. An API proxy can protect API’s against attack and misuse. They have the capability to translate between JSON and XML. They also can track the API usage and performance. Let’s create a proxy using 3scale to get an idea of using the proxy. Create an account on 3scale. http://www.3scale.net/logmein/ Setup the application Declare the API backend, i.e. the endpoint host of our API. The proxy will direct all traffic from sandbox development endpoint after processing authentication, authorization, rate limits and statistics. Turn on the sandbox proxy Go to the Applications tab and get the credentials i.e the user_key. Now we can access the sandbox endpoint which may look something like this http://api.2445579856672.proxy.3scale.net/ from the dashboard. Added to that we can also create mapping rules for every request by specifying the Rule and patterns of the request so that we can test a specific request functionality and whether the endpoint is working properly or not form 3scale itself. The API management software service providers like APIGEE, 3scale also provide different services like Analytics services, API consoles, API modelling, API management etc.,","author":{"@type":"Person","name":"Rakesh"},"@type":"BlogPosting","url":"http://localhost:4000/http/client/2014/09/08/using-postman.html","headline":"Using a Postman http client for efficient HTTP testing","dateModified":"2014-09-08T16:05:43+05:30","datePublished":"2014-09-08T16:05:43+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/http/client/2014/09/08/using-postman.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Using a Postman http client for efficient HTTP testing</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-09-08T16:05:43+05:30" itemprop="datePublished">Sep 8, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Rakesh</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Interacting with the API’s have become a significant part of software development and constructing and testing them effectively will always boost up the business firm.</p>
+
+<p>POSTMAN HTTP and REST client is one of its kind which makes the API testing process effortless. It is available as both a Google Packaged App and a Google Chrome in-browser app. It has got clean and intuitive user interface, with all the important features accessible within one click. The performance of the API testing process gets drastically affected by following features it has:</p>
+
+<ol>
+  <li>Create request quickly</li>
+  <li>Collections</li>
+  <li>Environments</li>
+  <li>
+    <p>Built-in authentication helpers</p>
+  </li>
+  <li>
+    <h2 id="create-request-quickly">Create request quickly</h2>
+  </li>
+</ol>
+
+<p>The Postman interface makes the process of request creation real quick. The four important parts of the HTTP request, i.e. URL, method, headers and the request body are given with effective tools to work with.</p>
+
+<p>URL :</p>
+
+<p>The URL input field stores URL’s stored previously and will show an auto-complete drop down as we begin entering our URL.
+Sometimes it becomes troublesome while testing complicated URLs which contains a lot of URL parameters, the POSTMAN REST client contains URL params button. Once it is clicked it displays a key value editor in which we can add the URL parameters.</p>
+
+<p>Headers:</p>
+
+<p>There is Headers button which displays a header editor added to an auto-complete drop down of all the common headers. The best part of headers in POSTMAN are we can save commonly used headers together in a header-preset. For example, I work on a project which contains a different Authorization key for local and my Amazon server so if I create a header preset to my local and Amazon by clicking the “Add preset” button the headers can be prefilled and I need not change the header key values manually all the time.</p>
+
+<p>Method:</p>
+
+<p>Changing the method is straightforward. We can select the method like GET, POST, PUT, PATCH, DELETE, etc. In the drop down from the select control. The request body editor area will change depending on whether the method can have a body attached to it or not.</p>
+
+<p>Request body:</p>
+
+<p>Using POSTMAN we can send almost any kind of HTTP request. The Request body contains three areas: form-data, urlencoded, raw. The form-data editor lets us set key/value pairs for our data. A raw request can contain anything, we can also send the formatting type along with the correct header.</p>
+
+<ol>
+  <li>
+    <h2 id="collections">Collections</h2>
+  </li>
+</ol>
+
+<p>We tend to test different requests in a project and it will make our testing process simple if we can organize all the API calls separately basing on the similarities. A collection is a group of individual requests which are accessible on the left sidebar. The requests are further organized into folders to completely mirror our API. To make the request more descriptive we can add the meta data like name and description which makes the searching a needed request a painless job.</p>
+
+<p>We can easily create a collection by clicking on the “new collection” icon on the sidebar. If we have a request that is loaded in the request editor already we can save it to a specific collection by clicking “Add to collection”. This feature helps us to replay the same task of testing a request effortlessly.</p>
+
+<ol>
+  <li>
+    <h2 id="environments">Environments</h2>
+  </li>
+</ol>
+
+<p>Often while working with APIs we will need to have different setups. For example, our local machine, the development server or the production API. Environments give us the ability to customize requests using variables. We need not worry about remembering all the values once they are in POSTMAN saved in an environment. As an add on there is a capability to download the environments and can be saved as a JSON file. Environments also help you separate sensitive data from your collection like keys and passwords. This feature helps us to switch the context quickly basing on the server we are working on.</p>
+
+<ol>
+  <li>
+    <h2 id="built-in-authentication-helpers">Built-in authentication helpers</h2>
+  </li>
+</ol>
+
+<p>Postman supports Basic Auth, Digest Auth and OAuth 1 helpers. It becomes easier with POSTMAN while dealing with different types authentications like Digest Auth which are bit complicated than Basic Auth due its flexible interface.</p>
+
+<p>Example:</p>
+
+<p><img src="http://i.imgur.com/ru1RLtc.png" alt="Postman example" style="width:830px" /></p>
+
+<p>In the above example I am trying to get the “mentions” of my twitter timeline. I am using Oauth 1.0 to authenticate the API. Once I select the OAuth 1.0 in the “type of authentication” it shows up the Keys and we can fill up the values over there. The next part contains the URL and the URL params. We may tend to change the count value and since_id to test the API, it becomes simple when we try to fill those values in the URL params. The left side bar is my collection, which contains different API requests.</p>
+
+<h2 id="bonus-stuff--api-management-software">Bonus Stuff:  API management software</h2>
+
+<p>An API management software always increases the productivity. Every day an API can receive a thousand or potentially millions of requests. Before the API processes those requests it has to deal with some important functionalities:</p>
+
+<ol>
+  <li>Identity/ Authentication</li>
+  <li>Traffic controls</li>
+  <li>Rate limiting</li>
+  <li>Performance</li>
+  <li>Security</li>
+  <li>Scalability</li>
+  <li>Filtering</li>
+  <li>Encryption</li>
+  <li>Logging, etc.,</li>
+</ol>
+
+<p>Once the above things are handled perfectly, we can accomplish our goal. To deal with them service providers like APIGEE, 3scale and Mashery came into the picture. The important service they provide is API proxy. An API proxy can protect API’s against attack and misuse. They have the capability to translate between JSON and XML. They also can track the API usage and performance.</p>
+
+<p>Let’s create a proxy using 3scale to get an idea of using the proxy.</p>
+
+<ol>
+  <li>Create an account on 3scale. http://www.3scale.net/logmein/</li>
+  <li>Setup the application</li>
+  <li>Declare the API backend, i.e. the endpoint host of our API. The proxy will direct all traffic from sandbox development endpoint after processing authentication, authorization, rate limits and statistics.</li>
+  <li>Turn on the sandbox proxy</li>
+  <li>Go to the Applications tab and get the credentials i.e the user_key.</li>
+  <li>Now we can access the  sandbox endpoint which may look something like this http://api.2445579856672.proxy.3scale.net/ from the dashboard.</li>
+</ol>
+
+<p>Added to that we can also create mapping rules for every request by specifying the Rule and patterns of the request so that we can test a specific request functionality and whether the endpoint is working properly or not form 3scale itself.</p>
+
+<p>The API management software service providers like APIGEE, 3scale also provide different services like Analytics services, API consoles, API modelling, API management etc.,</p>
+
+
+  </div><a class="u-url" href="/http/client/2014/09/08/using-postman.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

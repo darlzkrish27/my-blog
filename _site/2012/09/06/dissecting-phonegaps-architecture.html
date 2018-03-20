@@ -1,0 +1,109 @@
+<hr />
+<p>layout: post
+title:	“Dissecting Phonegap's architecture”
+date:   2012-09-06 00:00:00
+author:   thejaswi
+categories:   ios</p>
+
+<p><a href="http://incubator.apache.org/cordova/">Apache Cordova</a> is a open source
+cross-platform framework for building native mobile applications using
+HTML, CSS and JavaScript. It started off as Phonegap, a project of
+Nitobi Software before it was acquired by Adobe Systems. The code for
+the platform was donated to the Apache Software foundation and is
+currently being incubated as "Apache Cordova".</p>
+
+<p><a href="http://phonegap.com/">Phonegap</a> is now a distribution of Apache Cordova
+(analogous to Ubuntu being a Linux distribution) brought to you by
+Adobe. Since Apache Cordova is licensed under the permissive Apache
+Software License, Adobe Phonegap may technically be integrated with
+proprietary software (though there's no evidence for the same yet).</p>
+
+<p>This post is not going to discuss how to build a cross-platform mobile
+app using Phonegap and if you are here expecting that, you are better
+off checking their
+<a href="http://docs.phonegap.com/en/2.0.0/guide_getting-started_index.md.html">docs</a>.
+In this post, we are going to see how Phonegap apps work ie how the
+javascript component is able to communicate with the native APIs and
+vice-versa.</p>
+
+<p>The Cordova guys have taken a lot of pain keep a consistent JS interface
+on the client side but underneath there is a large divergence between
+each platform.</p>
+
+<p>We are going to discuss the architectures of android and iOS since these
+are the most widely used platforms and restrict ourselves to version 2.0
+of Cordova.</p>
+
+<p>Every phonegap app has the following components:</p>
+
+<ul>
+  <li>A chrome-less browser. On iOS and Android, it is WebKit (UIWebView
+on iOS and WebView on android to be specific).</li>
+  <li>JS to Native bridge to allow for communication between the HTML
+application and the native platform.</li>
+  <li>A native to JS bridge to allow the native platform to talk to the
+HTML application.</li>
+</ul>
+
+<p><a href="http://agiliq.com/dumps/images/20120906/android_phonegap.png"><img src="http://agiliq.com/dumps/images/20120906/android_phonegap.png" alt="Android Phonegap architecture" />{.align-center
+width=”470px”
+height=”332px”}</a></p>
+
+<p>In android, by default the JS to Native Bridge is set to Prompt (yes,
+you saw it right, the venerable JS prompt dialog box). The JS functions
+(like camera, contacts etc) are converted to Prompt commands by the
+cordova javascript and intercepted by the WebView
+<a href="http://developer.android.com/reference/android/webkit/WebChromeClient.html#onJsPrompt(android.webkit.WebView,%20java.lang.String,%20java.lang.String,%20java.lang.String,%20android.webkit.JsPromptResult)">onJsPrompt</a>
+and based on a specific signature calls the respective native plugin
+(camera, contacts etc).</p>
+
+<p>It is also possible to change the JS to Native bridge and another way of
+communication is through the JS_Object bridge. When the WebView is
+loaded and the JS bridge is set, the WebView adds a <a href="http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object,%20java.lang.String)">Javascript
+Interface</a>
+which calls a Java object (calling the respective native plugin based on
+the arguments of the interface).</p>
+
+<p>There is yet another JS to Native bridge (currently experimental) which
+calls the native plugins by triggering changes in the location URL.</p>
+
+<p>Now we come to the other end of the communication ie the Native to JS
+bridge. By default, the bridge is set to polling and the javascript
+keeps polling the native side for a response every 50 milliseconds. This
+is very suboptimal but the solution works on the largest number of
+devices and in most setups.</p>
+
+<p>Just like the JS to Native bridge, the Native to JS bridge can also be
+changed. Another Native to JS bridge is the XHR bridge (called the
+HANGING_GET internally as a reference to a long lived XHR connection).
+This bridge runs a callback server locally and responds to the XHR
+requests.</p>
+
+<p>There is yet another bridge that uses Java internal reflection on the
+webview to call the methods but is available only on Android 3.2+. There
+are a couple of other bridges but don't seem to be in use at this point
+in time.</p>
+
+<p>Now let's look at how the iOS phonegap apps work.</p>
+
+<p><a href="http://agiliq.com/dumps/images/20120906/ios_phonegap.png"><img src="http://agiliq.com/dumps/images/20120906/ios_phonegap.png" alt="iOS Phonegap architecture" />{.align-center
+width=”470px”
+height=”332px”}</a></p>
+
+<p>Compared to Android, iOS has fewer bridges. On iOS 4.2 and below, the JS
+and Native bridge communicate with each other through an iframe. The JS
+calls are stored in a JS queue which is read and executed by the native
+component.</p>
+
+<p>The other bridge is an XHR bridge which makes calls to a fake URL with
+the commands in the header. These commands are intercepted, serialized
+and then executed.</p>
+
+<p>For the Native to JS bridge, the iOS phonegap apps have only one bridge
+and all the communication happens through a UIWebView method called
+<a href="https://developer.apple.com/library/ios/#documentation/UIKit/Reference/UIWebView_Class/Reference/Reference.html">stringByEvaluatingJavaScriptFromString</a>.</p>
+
+<p>Now that we know how Phonegap apps work, we can write better apps and
+plugins and guess where we can improve our application's performance.</p>
+
+<p>ml</p>

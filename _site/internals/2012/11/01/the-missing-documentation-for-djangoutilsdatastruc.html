@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>The missing documentation for django.utils.datastructures | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="The missing documentation for django.utils.datastructures" />
+<meta name="author" content="thejaswi" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="::: {.note} ::: {.admonition-title} Note :::" />
+<meta property="og:description" content="::: {.note} ::: {.admonition-title} Note :::" />
+<link rel="canonical" href="http://localhost:4000/internals/2012/11/01/the-missing-documentation-for-djangoutilsdatastruc.html" />
+<meta property="og:url" content="http://localhost:4000/internals/2012/11/01/the-missing-documentation-for-djangoutilsdatastruc.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2012-11-01T05:30:00+05:30" />
+<script type="application/ld+json">
+{"description":"::: {.note} ::: {.admonition-title} Note :::","author":{"@type":"Person","name":"thejaswi"},"@type":"BlogPosting","url":"http://localhost:4000/internals/2012/11/01/the-missing-documentation-for-djangoutilsdatastruc.html","headline":"The missing documentation for django.utils.datastructures","dateModified":"2012-11-01T05:30:00+05:30","datePublished":"2012-11-01T05:30:00+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/internals/2012/11/01/the-missing-documentation-for-djangoutilsdatastruc.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">The missing documentation for django.utils.datastructures</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2012-11-01T05:30:00+05:30" itemprop="datePublished">Nov 1, 2012
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">thejaswi</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>::: {.note}
+::: {.admonition-title}
+Note
+:::</p>
+
+<p><code class="highlighter-rouge">django.utils.datastructures</code> is intentionally not documented by the
+django core devs because it is an internal API and is liable to change
+without any notice. This file is not governed by django's lenient
+backwards-compatible policy. You have been sufficiently warned!
+:::</p>
+
+<p>With the note out of the way, let's look at the interesting
+<a href="https://en.wikipedia.org/wiki/Data_structure">datastructures</a> in this
+file. You may ask why we should learn about those when we shouldn't be
+using them? Reading code is the best way of learning and this file has
+some beautiful code.</p>
+
+<p><code class="highlighter-rouge">MergeDict</code> is the first of the datastructures in the file. It provides
+a dictionary like interface but can look up from multiple dictionaries
+provided during the initialization.</p>
+
+<p>Here's an example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; md = MergeDict({"foo": "bar", "moo": "cow"}, {"abc": "def"})
+&gt;&gt;&gt; md["foo"]
+'bar'
+&gt;&gt;&gt; md["abc"]
+'def'
+&gt;&gt;&gt; md.get("abc")
+'def'
+&gt;&gt;&gt; md["xyz"]
+KeyError:
+&gt;&gt;&gt; md.items()
+[('foo', 'bar'), ('moo', 'cow'), ('abc', 'def')]
+&gt;&gt;&gt; md.keys()
+['foo', 'moo', 'abc']
+&gt;&gt;&gt; md.values()
+['bar', 'cow', 'def']
+</code></pre></div></div>
+
+<p>The MergeDict is used within django in attaching values with a form
+widget and in <code class="highlighter-rouge">request.REQUEST</code>.</p>
+
+<p>The built-in dictionary does not maintain the order of the items but the
+<code class="highlighter-rouge">SortedDict</code> is a subclass of the built-in dictionary that maintains the
+keys in exactly the same order they were inserted.</p>
+
+<p>Here's an example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; dd = {"foo": "bar", "moo": "cow", "abc": "def"}
+{"abc": "def", "foo": "bar", "moo": "cow"}
+&gt;&gt;&gt; sd = SortedDict((("foo", "bar"), ("moo", "cow"), ("abc", "def")))
+{"foo": "bar", "moo": "cow", "abc": "def"}
+&gt;&gt;&gt; dd["xyz"] = "pqr"
+&gt;&gt;&gt; dd
+{'abc': 'def', 'foo': 'bar', 'moo': 'cow', 'xyz': 'pqr'}
+&gt;&gt;&gt; dd["lmn"] = "ghi"
+&gt;&gt;&gt; dd
+{'abc': 'def', 'foo': 'bar', 'lmn': 'ghi', 'moo': 'cow', 'xyz': 'pqr'}
+&gt;&gt;&gt; sd["xyz"] = "pqr"
+&gt;&gt;&gt; sd
+{'foo': 'bar', 'moo': 'cow', 'abc': 'def', 'xyz': 'pqr'}
+&gt;&gt;&gt; sd["lmn"] = "ghi"
+{'foo': 'bar', 'moo': 'cow', 'abc': 'def', 'xyz': 'pqr', 'lmn': 'ghi'}
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">SortedDict</code> is fairly widely used inside of django generally to
+build a hierarchy (like models and it's parents), maintaining the order
+of the form fields while iterating etc.</p>
+
+<p>In python 2.7, a new datastructure was introduced that mimics the
+SortedDict in the
+<a href="http://docs.python.org/2/library/collections.html">collections</a> module
+and is called
+<a href="http://docs.python.org/2/library/collections.html#collections.OrderedDict">OrderedDict</a>.</p>
+
+<p><code class="highlighter-rouge">MultiValueDict</code> is a dictionary subclass that can handle multiple
+values assigned to a key.</p>
+
+<p>Here's an example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; dd = {"abc": "def", "foo": ["bar1", "bar2"]}
+&gt;&gt;&gt; dd["foo"]
+['bar1', 'bar2']
+&gt;&gt;&gt; mvd = MultiValueDict({"abc": "def", "foo": ["bar1", "bar2"]})
+&gt;&gt;&gt; mvd["foo"]
+'bar2'
+&gt;&gt;&gt; mvd.getlist("foo")
+['bar1', 'bar2']
+&gt;&gt;&gt; mvd.getlist('blah')
+[]
+&gt;&gt;&gt; mvd.getlist('abc')
+'def'
+&gt;&gt;&gt; mvd.setlist('xyz', ['pqr', 'ghi'])
+&gt;&gt;&gt; mvd
+&lt;MultiValueDict: {'xyz': ['pqr', 'ghi'], 'abc': 'def', 'foo': ['foo1', 'foo2']}&gt;
+&gt;&gt;&gt; mvd.appendlist('xyz', 'ijk')
+&gt;&gt;&gt; mvd
+&lt;MultiValueDict: {'xyz': ['pqr', 'ghi', 'ijk'], 'abc': 'def', 'foo': ['foo1', 'foo2']}&gt;
+&gt;&gt;&gt; mvd.update({'xyz': 'lmn'})
+&gt;&gt;&gt; mvd
+&lt;MultiValueDict: {'xyz': ['pqr', 'ghi', 'ijk', 'lmn'], 'abc': 'def', 'foo': ['foo1', 'foo2']}&gt;
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">MultiValueDict</code> is used in binding data to <code class="highlighter-rouge">request.POST</code>, the
+files to <code class="highlighter-rouge">request.FILES</code> and in the get parameter parsing.</p>
+
+<p>The <code class="highlighter-rouge">ImmutableList</code> is an immutable datastructure that raises errors
+when it is attempted to be mutated.</p>
+
+<p>Here's an example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; il = ImmutableList(['foo', 'bar', 'abc'])
+&gt;&gt;&gt; il += 'lmn'
+AttributeError: ImmutableList object is immutable.
+&gt;&gt;&gt; il = ImmutableList(['foo', 'bar', 'abc'], warning='Custom warning')
+&gt;&gt;&gt; il[1] = 123
+AttributeError: Custom warning
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">ImmutableList</code> is used in <code class="highlighter-rouge">request.upload_handlers</code> to prevent
+modification after the <code class="highlighter-rouge">request.POST</code> or <code class="highlighter-rouge">request.FILES</code> have been
+accessed.</p>
+
+<p>The <code class="highlighter-rouge">DictWrapper</code> is a subclass of the built-in dictionary that prefixes
+the keys. It takes a dictionary, a function and a prefix as arguments.
+If a specific key lookup begins with the prefix then the value is passed
+through the function before it is returned.</p>
+
+<p>Here's an example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; dw = DictWrapper({'foo': 'bar', 'moo': 'cow'}, lambda x: x, 'abc_')
+&gt;&gt;&gt; dw['foo']
+'bar'
+&gt;&gt;&gt; dw['abc_foo']
+'bar'
+&gt;&gt;&gt; dw['xyz_foo']
+KeyError: 'xyz_foo'
+&gt;&gt;&gt; def post_process_value(value):
+...     return "The value is " + value
+&gt;&gt;&gt; dw = DictWrapper({'foo': 'bar', 'moo': 'cow'}, post_process_value, 'abc_')
+&gt;&gt;&gt; dw['foo']
+'bar'
+&gt;&gt;&gt; dw['abc_foo']
+'The value is bar'
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">DictWrapper</code> is used in quoting names for SQL queries with the key
+prefix.</p>
+
+<p>Hope you enjoyed learning about these hidden gems and how django works
+under the hood but take the note on the top into consideration.</p>
+
+  </div><a class="u-url" href="/internals/2012/11/01/the-missing-documentation-for-djangoutilsdatastruc.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>On Captcha | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="On Captcha" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="When building public facing websites, spam is a real problem. Captcha has been teated as the first line of defence aginst this problem. If you must use captcha, here are some best practices working with them. Can you do without one? A lot of places captcha’s are put to filter spam in user generated comment. One of the largest sources of UGC is comments on wordpress blogs. They do not use a captcha, and instead pass all comments through Akismet to verify which comments are spam, and reject the spams. In many cases, such a system would work for you. Can you use a simpler alternative? Unless you run a site with millions of monthly users, the spammers are not going to write a bot specifically for youur site. So if you have a text question asking “what is 2 + 2”, the bots are not going to get past that, as the question is unique to your site. Of course, gmail/yahoo can not use this approach, as bots get written for them specifically, but for you site it might. This proposed approach has been called SAPTCHA and anecdotal evidence suggests that it works very well in practice. Prefer recaptcha Recaptcha is an existing implementation of captcha, which allows you to plug in a captcha system, to your existing pages. Using this over home grown captcha’s offers advantages like Its is battle tested, in being both secure against bots and having a level of usability. It automatically provides and alternate means of validation. Which brings us to our third point. Provide alternate means of validation to visually impaired people. This might be in the form of an audio captcha, an option to email the administrator. Do captcha validation only once This seems so obvious, and yet many sites require you to complete captcha multiple times, in case of any error in the form. Once an user has completed captcha, the form must be displayed without captcha in case of errors. If you use Django, these are already very easy to use with existing apps. Django recaotcha Django akismet Python defensio You should follow me on twitter here." />
+<meta property="og:description" content="When building public facing websites, spam is a real problem. Captcha has been teated as the first line of defence aginst this problem. If you must use captcha, here are some best practices working with them. Can you do without one? A lot of places captcha’s are put to filter spam in user generated comment. One of the largest sources of UGC is comments on wordpress blogs. They do not use a captcha, and instead pass all comments through Akismet to verify which comments are spam, and reject the spams. In many cases, such a system would work for you. Can you use a simpler alternative? Unless you run a site with millions of monthly users, the spammers are not going to write a bot specifically for youur site. So if you have a text question asking “what is 2 + 2”, the bots are not going to get past that, as the question is unique to your site. Of course, gmail/yahoo can not use this approach, as bots get written for them specifically, but for you site it might. This proposed approach has been called SAPTCHA and anecdotal evidence suggests that it works very well in practice. Prefer recaptcha Recaptcha is an existing implementation of captcha, which allows you to plug in a captcha system, to your existing pages. Using this over home grown captcha’s offers advantages like Its is battle tested, in being both secure against bots and having a level of usability. It automatically provides and alternate means of validation. Which brings us to our third point. Provide alternate means of validation to visually impaired people. This might be in the form of an audio captcha, an option to email the administrator. Do captcha validation only once This seems so obvious, and yet many sites require you to complete captcha multiple times, in case of any error in the form. Once an user has completed captcha, the form must be displayed without captcha in case of errors. If you use Django, these are already very easy to use with existing apps. Django recaotcha Django akismet Python defensio You should follow me on twitter here." />
+<link rel="canonical" href="http://localhost:4000/tips/2009/07/16/on-captcha.html" />
+<meta property="og:url" content="http://localhost:4000/tips/2009/07/16/on-captcha.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-07-16T14:05:35+05:30" />
+<script type="application/ld+json">
+{"description":"When building public facing websites, spam is a real problem. Captcha has been teated as the first line of defence aginst this problem. If you must use captcha, here are some best practices working with them. Can you do without one? A lot of places captcha’s are put to filter spam in user generated comment. One of the largest sources of UGC is comments on wordpress blogs. They do not use a captcha, and instead pass all comments through Akismet to verify which comments are spam, and reject the spams. In many cases, such a system would work for you. Can you use a simpler alternative? Unless you run a site with millions of monthly users, the spammers are not going to write a bot specifically for youur site. So if you have a text question asking “what is 2 + 2”, the bots are not going to get past that, as the question is unique to your site. Of course, gmail/yahoo can not use this approach, as bots get written for them specifically, but for you site it might. This proposed approach has been called SAPTCHA and anecdotal evidence suggests that it works very well in practice. Prefer recaptcha Recaptcha is an existing implementation of captcha, which allows you to plug in a captcha system, to your existing pages. Using this over home grown captcha’s offers advantages like Its is battle tested, in being both secure against bots and having a level of usability. It automatically provides and alternate means of validation. Which brings us to our third point. Provide alternate means of validation to visually impaired people. This might be in the form of an audio captcha, an option to email the administrator. Do captcha validation only once This seems so obvious, and yet many sites require you to complete captcha multiple times, in case of any error in the form. Once an user has completed captcha, the form must be displayed without captcha in case of errors. If you use Django, these are already very easy to use with existing apps. Django recaotcha Django akismet Python defensio You should follow me on twitter here.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/tips/2009/07/16/on-captcha.html","headline":"On Captcha","dateModified":"2009-07-16T14:05:35+05:30","datePublished":"2009-07-16T14:05:35+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/tips/2009/07/16/on-captcha.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">On Captcha</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-07-16T14:05:35+05:30" itemprop="datePublished">Jul 16, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>When building public facing websites, spam is a real problem. Captcha has been teated as the first line of defence aginst this problem. If you must use captcha, here are some best practices working with them.</p>
+
+<h3 id="can-you-do-without-one">Can you do without one?</h3>
+<p>A lot of places captcha’s are put to filter spam in user generated comment. One of the largest sources of UGC is comments on wordpress blogs. They do not use a captcha, and instead pass all comments through Akismet to verify which comments are spam, and reject the spams. In many cases, such a system would work for you.</p>
+
+<h3 id="can-you-use-a-simpler-alternative">Can you use a simpler alternative?</h3>
+
+<p>Unless you run a site with millions of monthly users, the spammers are not going to write a bot specifically for youur site. So if you have a text question asking “what is 2 + 2”, the bots are not going to get past that, as the question is unique to your site. Of course, gmail/yahoo can not use this approach, as bots get written for them specifically, but for you site it might.</p>
+
+<p>This proposed approach has been called <a href="http://dmytry.pandromeda.com/texts/captcha_and_saptcha.html">SAPTCHA</a> and anecdotal evidence suggests that it works very well in practice.</p>
+
+<h3 id="prefer-recaptcha">Prefer recaptcha</h3>
+
+<p><a href="http://recaptcha.net/">Recaptcha</a> is an existing implementation of captcha, which allows you to plug in a captcha system, to your existing pages. Using this over home grown captcha’s offers advantages like</p>
+
+<ol>
+  <li>Its is battle tested, in being both secure against bots and having a level of usability.</li>
+  <li>It automatically provides and alternate means of validation. Which brings us to our third point.</li>
+</ol>
+
+<h3 id="provide-alternate-means-of-validation-to-visually-impaired-people">Provide alternate means of validation to visually impaired people.</h3>
+
+<p>This might be in the form of an audio captcha, an option to email the administrator.</p>
+
+<h3 id="do-captcha-validation-only-once">Do captcha validation only once</h3>
+
+<p>This seems so obvious, and yet many sites require you to complete captcha multiple times, in case of any error in the form. Once an user has completed captcha, the form must be displayed without captcha in case of errors.</p>
+
+<hr />
+
+<p>If you use Django, these are already very easy to use with existing apps.</p>
+
+<ol>
+  <li><a href="http://www.djangosnippets.org/snippets/433/">Django recaotcha</a></li>
+  <li><a href="http://www.djangosnippets.org/snippets/1255/">Django akismet</a></li>
+  <li><a href="http://defensio.com/downloads/python/">Python defensio</a></li>
+</ol>
+
+<hr />
+
+<p>You should follow me on twitter <a href="http://twitter.com/uswaretech">here</a><a href="http://dustincurtis.com/you_should_follow_me_on_twitter.html">.</a></p>
+
+
+  </div><a class="u-url" href="/tips/2009/07/16/on-captcha.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

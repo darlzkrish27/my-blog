@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Process and Threads for Beginners | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Process and Threads for Beginners" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="We will cover this post in following sequence: Process and multiprocessing Threads and multithreading ###Process and multiprocessing A process is an executable instance of a program. ####Example: You write a java program and save it as abcd.java and run it with java abcd. While this program is executing it is a process. File abcd.java is not a process, but when it’s executing it is a process. You write a Python program and save it as abcd.py and run it with python abcd.py. So, while this program is executing it is a process. Once the program terminates, the process ends. You are reading this blog in a browser. The code for browser must have been written in some programming language. And that code is executing right now to enable you to work in the browser. So, a process is running. When you close the browser, the specific process for the browser ends. Your program works with some data, and data is stored in some variables. Variables are stored in memory. So, when a process starts, OS assigns it some memory which the process can use. The way to find all the executing process in a UNIX system is: ps aux Open a file in vim on a terminal. vim threads.txt Open another terminal and find vim processes. ps aux | grep vim You will find that a vim process is running. If you close vim on first terminal and try to find the vim processes again, you won’t find it anymore. Now start two instances of vim on two separate terminals: vim abcd.txt vim efgh.txt Check all the vim processes again using ps aux | grep vim, and this time you will find that two vim processes are running on the system. So, this tells that a process is an executable instance of a program. ####Multitasking and Multiprocessing A program is a sequence of instruction. A processor can only execute one instruction at a time. Multiprocessing means that multiple processes can run simultaneously i.e at any instant of time multiple processes can run. This can never be possible in a system with a single processor, because processor can execute only one instruction at a particular instant of time. And that instruction can only be associated with a single process, so it’s like a single process running at a particular instant. Multitasking means that two or more processes appear to run simultaneously. #####Example: Suppose you have a system with a single processor. You want to download some files and simultaneously you want to write a program in your editor. So, download mechanism and your editor are two separate processes. But the processor can only run instruction of one process at a time. So, it keeps switching between two processes, and only one process is actually running at any particular instant of time. So, here it appears that two processes are running simultaneosly but they aren’t. Hence multitasking is at play here, and not multiprocessing. Now consider you have a system with multiple processor. So, download process can run on one processor and editor process on another processor. In this case, both the processes are actually running simultaneously and hence it is multiprocessing. Few things about Processes: When a process starts, OS assigns it some memory. Memory is not shared between different processes. ###Threads and multithreading Thread exist within a process. So, a process can have multiple threads. A thread is an independent sequence of execution within a process. Let’s consider an example to find out why we require threads. #####Example: We want a scraping program, this program will fetch five different urls and parse the response recieved from these different urls and print it. So, we will have a list/array and store the urls in that array. This list is stored in the memory associated with the scraping process. Usual way of writing it: Loop through the array. Fetch first url. Wait for the response. Print the response after recieving it. Hit the next url in the list. Keep looping through the list until all the urls are hit. In this way, processor goes through the urls in sequence and it doesn’t hit a url unless it gets a response for the previous url. But hitting a url and recieving a response from it takes times. So, processor is idle while it is waiting for the response from a url and it is a waste of processor’s time. And it is a waste of your time too looking at the terminal for all the urls to be processed sequentially. So, while the processor is waiting for the response, we can ask the processor to hit another url and in this way minimise the processor’s idle time. Threads come into picture here and if threads come into picture our program becomes multithreaded. Multithreaded version for the same program: We will create five different threads. Each thread will act on a single url. Processor works on one thread and hits the url associated with that thread. Processor becomes idle because getting the response will take some time. It starts working on another thread and hits the url associated with this thread. This happens before the processor recieves the response from the first url. So, our program is not sequential in this case and it is a multithreaded program. At some point response for the first url is recieved and processor switches back to first thread and prints it. Again it switches to some other thread. Processor idle time is greatly minimised in this multithreaded version. The sequence described here might not match what processor actually does because it is highly unpredictable to tell which thread gets executed when. #####Threads with single processor and multiple processor Remember the section where we talked how a machine with single processor can never perform actual multiprocessing. A machine with single processor might or might not provide any advantage even if the program is multithreaded. A multithreaded program will perform faster than a single threaded program on a single processor machine in following scenarios: Program requires talking over the network i.e getting response from some url Program needs to wait for I/O It happens because network and I/O operations take time during which processor can remain idle in a single-threaded program. In a multithreaded program, another threads can execute while one thread is waiting for some network operation or I/O. So a multithreaded program will be faster in such scenario. If the operations are quick operations, like arithmetic operation or assigning some variable etc, then a multithreaded program will not perform any better than a single threaded program if the machine has a single processor. Reason being that the processor is not idle and hence no time is saved by switching between threads. But if the machine has multiple processors, or multiple cores, a multithreaded program will always be faster that single-threaded program becuase different threads can execute concurrently on different processors." />
+<meta property="og:description" content="We will cover this post in following sequence: Process and multiprocessing Threads and multithreading ###Process and multiprocessing A process is an executable instance of a program. ####Example: You write a java program and save it as abcd.java and run it with java abcd. While this program is executing it is a process. File abcd.java is not a process, but when it’s executing it is a process. You write a Python program and save it as abcd.py and run it with python abcd.py. So, while this program is executing it is a process. Once the program terminates, the process ends. You are reading this blog in a browser. The code for browser must have been written in some programming language. And that code is executing right now to enable you to work in the browser. So, a process is running. When you close the browser, the specific process for the browser ends. Your program works with some data, and data is stored in some variables. Variables are stored in memory. So, when a process starts, OS assigns it some memory which the process can use. The way to find all the executing process in a UNIX system is: ps aux Open a file in vim on a terminal. vim threads.txt Open another terminal and find vim processes. ps aux | grep vim You will find that a vim process is running. If you close vim on first terminal and try to find the vim processes again, you won’t find it anymore. Now start two instances of vim on two separate terminals: vim abcd.txt vim efgh.txt Check all the vim processes again using ps aux | grep vim, and this time you will find that two vim processes are running on the system. So, this tells that a process is an executable instance of a program. ####Multitasking and Multiprocessing A program is a sequence of instruction. A processor can only execute one instruction at a time. Multiprocessing means that multiple processes can run simultaneously i.e at any instant of time multiple processes can run. This can never be possible in a system with a single processor, because processor can execute only one instruction at a particular instant of time. And that instruction can only be associated with a single process, so it’s like a single process running at a particular instant. Multitasking means that two or more processes appear to run simultaneously. #####Example: Suppose you have a system with a single processor. You want to download some files and simultaneously you want to write a program in your editor. So, download mechanism and your editor are two separate processes. But the processor can only run instruction of one process at a time. So, it keeps switching between two processes, and only one process is actually running at any particular instant of time. So, here it appears that two processes are running simultaneosly but they aren’t. Hence multitasking is at play here, and not multiprocessing. Now consider you have a system with multiple processor. So, download process can run on one processor and editor process on another processor. In this case, both the processes are actually running simultaneously and hence it is multiprocessing. Few things about Processes: When a process starts, OS assigns it some memory. Memory is not shared between different processes. ###Threads and multithreading Thread exist within a process. So, a process can have multiple threads. A thread is an independent sequence of execution within a process. Let’s consider an example to find out why we require threads. #####Example: We want a scraping program, this program will fetch five different urls and parse the response recieved from these different urls and print it. So, we will have a list/array and store the urls in that array. This list is stored in the memory associated with the scraping process. Usual way of writing it: Loop through the array. Fetch first url. Wait for the response. Print the response after recieving it. Hit the next url in the list. Keep looping through the list until all the urls are hit. In this way, processor goes through the urls in sequence and it doesn’t hit a url unless it gets a response for the previous url. But hitting a url and recieving a response from it takes times. So, processor is idle while it is waiting for the response from a url and it is a waste of processor’s time. And it is a waste of your time too looking at the terminal for all the urls to be processed sequentially. So, while the processor is waiting for the response, we can ask the processor to hit another url and in this way minimise the processor’s idle time. Threads come into picture here and if threads come into picture our program becomes multithreaded. Multithreaded version for the same program: We will create five different threads. Each thread will act on a single url. Processor works on one thread and hits the url associated with that thread. Processor becomes idle because getting the response will take some time. It starts working on another thread and hits the url associated with this thread. This happens before the processor recieves the response from the first url. So, our program is not sequential in this case and it is a multithreaded program. At some point response for the first url is recieved and processor switches back to first thread and prints it. Again it switches to some other thread. Processor idle time is greatly minimised in this multithreaded version. The sequence described here might not match what processor actually does because it is highly unpredictable to tell which thread gets executed when. #####Threads with single processor and multiple processor Remember the section where we talked how a machine with single processor can never perform actual multiprocessing. A machine with single processor might or might not provide any advantage even if the program is multithreaded. A multithreaded program will perform faster than a single threaded program on a single processor machine in following scenarios: Program requires talking over the network i.e getting response from some url Program needs to wait for I/O It happens because network and I/O operations take time during which processor can remain idle in a single-threaded program. In a multithreaded program, another threads can execute while one thread is waiting for some network operation or I/O. So a multithreaded program will be faster in such scenario. If the operations are quick operations, like arithmetic operation or assigning some variable etc, then a multithreaded program will not perform any better than a single threaded program if the machine has a single processor. Reason being that the processor is not idle and hence no time is saved by switching between threads. But if the machine has multiple processors, or multiple cores, a multithreaded program will always be faster that single-threaded program becuase different threads can execute concurrently on different processors." />
+<link rel="canonical" href="http://localhost:4000/process/2013/09/11/process-and-threads-for-beginners.html" />
+<meta property="og:url" content="http://localhost:4000/process/2013/09/11/process-and-threads-for-beginners.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2013-09-11T12:33:39+05:30" />
+<script type="application/ld+json">
+{"description":"We will cover this post in following sequence: Process and multiprocessing Threads and multithreading ###Process and multiprocessing A process is an executable instance of a program. ####Example: You write a java program and save it as abcd.java and run it with java abcd. While this program is executing it is a process. File abcd.java is not a process, but when it’s executing it is a process. You write a Python program and save it as abcd.py and run it with python abcd.py. So, while this program is executing it is a process. Once the program terminates, the process ends. You are reading this blog in a browser. The code for browser must have been written in some programming language. And that code is executing right now to enable you to work in the browser. So, a process is running. When you close the browser, the specific process for the browser ends. Your program works with some data, and data is stored in some variables. Variables are stored in memory. So, when a process starts, OS assigns it some memory which the process can use. The way to find all the executing process in a UNIX system is: ps aux Open a file in vim on a terminal. vim threads.txt Open another terminal and find vim processes. ps aux | grep vim You will find that a vim process is running. If you close vim on first terminal and try to find the vim processes again, you won’t find it anymore. Now start two instances of vim on two separate terminals: vim abcd.txt vim efgh.txt Check all the vim processes again using ps aux | grep vim, and this time you will find that two vim processes are running on the system. So, this tells that a process is an executable instance of a program. ####Multitasking and Multiprocessing A program is a sequence of instruction. A processor can only execute one instruction at a time. Multiprocessing means that multiple processes can run simultaneously i.e at any instant of time multiple processes can run. This can never be possible in a system with a single processor, because processor can execute only one instruction at a particular instant of time. And that instruction can only be associated with a single process, so it’s like a single process running at a particular instant. Multitasking means that two or more processes appear to run simultaneously. #####Example: Suppose you have a system with a single processor. You want to download some files and simultaneously you want to write a program in your editor. So, download mechanism and your editor are two separate processes. But the processor can only run instruction of one process at a time. So, it keeps switching between two processes, and only one process is actually running at any particular instant of time. So, here it appears that two processes are running simultaneosly but they aren’t. Hence multitasking is at play here, and not multiprocessing. Now consider you have a system with multiple processor. So, download process can run on one processor and editor process on another processor. In this case, both the processes are actually running simultaneously and hence it is multiprocessing. Few things about Processes: When a process starts, OS assigns it some memory. Memory is not shared between different processes. ###Threads and multithreading Thread exist within a process. So, a process can have multiple threads. A thread is an independent sequence of execution within a process. Let’s consider an example to find out why we require threads. #####Example: We want a scraping program, this program will fetch five different urls and parse the response recieved from these different urls and print it. So, we will have a list/array and store the urls in that array. This list is stored in the memory associated with the scraping process. Usual way of writing it: Loop through the array. Fetch first url. Wait for the response. Print the response after recieving it. Hit the next url in the list. Keep looping through the list until all the urls are hit. In this way, processor goes through the urls in sequence and it doesn’t hit a url unless it gets a response for the previous url. But hitting a url and recieving a response from it takes times. So, processor is idle while it is waiting for the response from a url and it is a waste of processor’s time. And it is a waste of your time too looking at the terminal for all the urls to be processed sequentially. So, while the processor is waiting for the response, we can ask the processor to hit another url and in this way minimise the processor’s idle time. Threads come into picture here and if threads come into picture our program becomes multithreaded. Multithreaded version for the same program: We will create five different threads. Each thread will act on a single url. Processor works on one thread and hits the url associated with that thread. Processor becomes idle because getting the response will take some time. It starts working on another thread and hits the url associated with this thread. This happens before the processor recieves the response from the first url. So, our program is not sequential in this case and it is a multithreaded program. At some point response for the first url is recieved and processor switches back to first thread and prints it. Again it switches to some other thread. Processor idle time is greatly minimised in this multithreaded version. The sequence described here might not match what processor actually does because it is highly unpredictable to tell which thread gets executed when. #####Threads with single processor and multiple processor Remember the section where we talked how a machine with single processor can never perform actual multiprocessing. A machine with single processor might or might not provide any advantage even if the program is multithreaded. A multithreaded program will perform faster than a single threaded program on a single processor machine in following scenarios: Program requires talking over the network i.e getting response from some url Program needs to wait for I/O It happens because network and I/O operations take time during which processor can remain idle in a single-threaded program. In a multithreaded program, another threads can execute while one thread is waiting for some network operation or I/O. So a multithreaded program will be faster in such scenario. If the operations are quick operations, like arithmetic operation or assigning some variable etc, then a multithreaded program will not perform any better than a single threaded program if the machine has a single processor. Reason being that the processor is not idle and hence no time is saved by switching between threads. But if the machine has multiple processors, or multiple cores, a multithreaded program will always be faster that single-threaded program becuase different threads can execute concurrently on different processors.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/process/2013/09/11/process-and-threads-for-beginners.html","headline":"Process and Threads for Beginners","dateModified":"2013-09-11T12:33:39+05:30","datePublished":"2013-09-11T12:33:39+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/process/2013/09/11/process-and-threads-for-beginners.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Process and Threads for Beginners</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2013-09-11T12:33:39+05:30" itemprop="datePublished">Sep 11, 2013
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>We will cover this post in following sequence:</p>
+
+<ul>
+  <li>Process and multiprocessing</li>
+  <li>Threads and multithreading</li>
+</ul>
+
+<p>###Process and multiprocessing</p>
+
+<p>A process is an executable instance of a program.</p>
+
+<p>####Example:
+You write a java program and save it as <strong>abcd.java</strong> and run it with <strong>java abcd</strong>. While this program is executing it is a process. File <strong>abcd.java</strong> is not a process, but when it’s executing it is a process.</p>
+
+<p>You write a Python program and save it as <strong>abcd.py</strong> and run it with <strong>python abcd.py</strong>. So, while this program is executing it is a process. Once the program terminates, the process ends.</p>
+
+<p>You are reading this blog in a browser. The code for browser must have been written in some programming language. And that code is executing right now to enable you to work in the browser. So, a process is running. When you close the browser, the specific process for the browser ends.</p>
+
+<p>Your program works with some data, and data is stored in some variables. Variables are stored in memory. So, when a process starts, OS assigns it some memory which the process can use.</p>
+
+<p>The way to find all the executing process in a UNIX system is:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ps aux
+</code></pre></div></div>
+
+<p>Open a file in <code class="highlighter-rouge">vim</code> on a terminal.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim threads.txt
+</code></pre></div></div>
+
+<p>Open another terminal and find vim processes.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ps aux | grep vim
+</code></pre></div></div>
+
+<p>You will find that a vim process is running.</p>
+
+<p>If you close vim on first terminal and try to find the vim processes again, you won’t find it anymore.</p>
+
+<p>Now start two instances of vim on two separate terminals:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vim abcd.txt
+vim efgh.txt 
+</code></pre></div></div>
+
+<p>Check all the vim processes again using <code class="highlighter-rouge">ps aux | grep vim</code>, and this time you will find that two vim processes are running on the system.</p>
+
+<p>So, this tells that a process is an <strong>executable instance</strong> of a program.</p>
+
+<p>####Multitasking and Multiprocessing
+A program is a sequence of instruction. A processor can only execute one instruction at a time.</p>
+
+<p>Multiprocessing means that multiple processes can run simultaneously i.e at any instant of time multiple processes can run. This can never be possible in a system with a single processor, because processor can execute only one instruction at a particular instant of time. And that instruction can only be associated with a single process, so it’s like a single process running at a particular instant.</p>
+
+<p>Multitasking means that two or more processes <strong>appear</strong> to run simultaneously.</p>
+
+<p>#####Example:</p>
+
+<p>Suppose you have a system with a single processor. You want to download some files and simultaneously you want to write a program in your editor. So, download mechanism and your editor are two separate processes. But the processor can only run instruction of one process at a time. So, it keeps switching between two processes, and only one process is actually running at any particular instant of time. So, here it <strong>appears</strong> that two processes are running simultaneosly but they aren’t. Hence multitasking is at play here, and not multiprocessing.</p>
+
+<p>Now consider you have a system with multiple processor. So, download process can run on one processor and editor process on another processor. In this case, both the processes are actually running simultaneously and hence it is multiprocessing.</p>
+
+<p>Few things about Processes:</p>
+
+<ul>
+  <li>When a process starts, OS assigns it some memory.</li>
+  <li>Memory is not shared between different processes.</li>
+</ul>
+
+<p>###Threads and multithreading
+Thread exist within a process. So, a process can have multiple threads.</p>
+
+<p>A thread is an independent sequence of execution within a process. Let’s consider an example to find out why we require threads.</p>
+
+<p>#####Example:
+We want a scraping program, this program will fetch five different urls and parse the response recieved from these different urls and print it. So, we will have a list/array and store the urls in that array. This list is stored in the memory associated with the scraping process.</p>
+
+<p>Usual way of writing it:</p>
+
+<ul>
+  <li>Loop through the array.</li>
+  <li>Fetch first url.</li>
+  <li>Wait for the response.</li>
+  <li>Print the response after recieving it.</li>
+  <li>Hit the next url in the list.</li>
+  <li>Keep looping through the list until all the urls are hit.</li>
+  <li>In this way, processor goes through the urls in sequence and it doesn’t hit a url unless it gets a response for the previous url.</li>
+</ul>
+
+<p>But hitting a url and recieving a response from it takes times. So, processor is idle while it is waiting for the response from a url and it is a waste of processor’s time. And it is a waste of your time too looking at the terminal for all the urls to be processed sequentially. So, while the processor is waiting for the response, we can ask the processor to hit another url and in this way minimise the processor’s idle time. Threads come into picture here and if threads come into picture our program becomes multithreaded.</p>
+
+<p>Multithreaded version for the same program:</p>
+
+<ul>
+  <li>We will create five different threads. Each thread will act on a single url.</li>
+  <li>Processor works on one thread and hits the url associated with that thread.</li>
+  <li>Processor becomes idle because getting the response will take some time.</li>
+  <li>It starts working on another thread and hits the url associated with this thread. This happens before the processor recieves the response from the first url.</li>
+  <li>So, our program is not sequential in this case and it is a multithreaded program.</li>
+  <li>At some point response for the first url is recieved and processor switches back to first thread and prints it.</li>
+  <li>Again it switches to some other thread.</li>
+  <li>Processor idle time is greatly minimised in this multithreaded version.</li>
+</ul>
+
+<p>The sequence described here might not match what processor actually does because it is highly unpredictable to tell which thread gets executed when.</p>
+
+<p>#####Threads with single processor and multiple processor
+Remember the section where we talked how a machine with single processor can never perform actual multiprocessing.</p>
+
+<p>A machine with single processor might or might not provide any advantage even if the program is multithreaded.</p>
+
+<p>A multithreaded program will perform faster than a single threaded program on a single processor machine in following scenarios:</p>
+
+<ul>
+  <li>Program requires talking over the network i.e getting response from some url</li>
+  <li>Program needs to wait for I/O</li>
+</ul>
+
+<p>It happens because network and I/O operations take time during which processor can remain idle in a single-threaded program. In a multithreaded program, another threads can execute while one thread is waiting for some network operation or I/O. So a multithreaded program will be faster in such scenario.</p>
+
+<p>If the operations are quick operations, like arithmetic operation or assigning some variable etc, then a multithreaded program will not perform any better than a single threaded program if the machine has a single processor. Reason being that the processor is not idle and hence no time is saved by switching between threads.</p>
+
+<p>But if the machine has multiple processors, or multiple cores, a multithreaded program will always be faster that single-threaded program becuase different threads can execute concurrently on different processors.</p>
+
+
+  </div><a class="u-url" href="/process/2013/09/11/process-and-threads-for-beginners.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

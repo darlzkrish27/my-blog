@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Deploying a Django app on Amazon EC2 instance. | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Deploying a Django app on Amazon EC2 instance." />
+<meta name="author" content="Rakesh" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this tutorial we are going to launch an EC2 instance and deploy a Django app. I am going to use nginx, gunicorn in this process. From an eagle’s eye this is going to be our walk-through in this blog post. Launch an Amazon EC2 instance Deploying Django App on Amazon EC2 Creating a load balancer Autoscaling an instance. Launching an Amazon EC2 instance: Before we launch your instance, we should be sure setting up with Amazon EC2. Here we go to set them up following the below steps: Sign Up for AWS Create an IAM User Create a Key Pair Create a Virtual Private Cloud (VPC) Create a Security Group Creating an instance from an Amazon Machine Image reduces the redundant work of specifying all the details of the instance as the AMI provides the information required to launch an instance. So lets create an AMI in this process of creating an instance. The following are the steps to create an instance through the console. Open the Amazon EC2 console. In the navigation bar at the top of the screen, the current region is displayed. Click the region’s name to select the region for the instance. From the Amazon EC2 console dashboard, click Launch Instance. The Choose an Amazon Machine Image (AMI) page displays a list of basic configurations called Amazon Machine Images (AMIs) Choose the AMI to use and click Select. Start by selecting the type of AMI to use by using these categories on the left pane. On the Choose an Instance Type page, select the hardware configuration and the size of the instance to launch. On the Configure Instance Details page, change the settings as needed, and then click Next: Add Storage. On the Add Storage page, you can specify volumes to attach to the instance, besides the volumes specified by the AMI. On the Tag Instance page, specify tags for the instance by providing key and value combinations. Click Create Tag to add more than one tag to your resource. On the Configure Security Group page, you can define firewall rules for your instance. These rules specify which incoming network traffic is delivered to your instance. On the Review Instance Launch page, check the details of your instance, and make any necessary changes by clicking the appropriate Edit link. In the Select an existing key pair or create a new key pair dialog box, you can choose an existing key pair, or create a new one. And we are done with the creation of the instance. Deploying the app: Now lets deploy our Django app on Amazon EC2. There are many ways to deploy it and I am depicting a simple method here. 1. Get the key pair that we have created in the launching process of the Amazon instance and change give execute permissions to it. Save the key-pair in your ~/.ssh directory. Once you are done with that connect to your instance using the ssh. $ ssh -i ~/.ssh/keypair.pem ubuntu@ec2-XX-XX-X-XXX.compute-X.amazonaws.com 2.Update and upgrade the repository. $ sudo apt-get update $ sudo apt-get upgrade 3.Install python and some basic packages. $ sudo apt-get install python-pip $ sudo apt-get install python-dev $ sudo apt-get install build-essential 4. Install virtualenvwrapper. $ pip install virtualenvwrapper 5.Add the below lines in ~/.bashrc export WORKON_HOME=$HOME/.virtualenvs source /usr/local/bin/virtualenvwrapper.sh 6.And source it. $ source ~/.bashrc 7.Create a Django App Lets create a sample application to test the deployment process. First, create a virtualenv and activate it. $ mkvirtualenv testapp $ workon testapp 8.Install django and create the app (testapp) pip install django (testapp) django-admin.py startproject testapp (testapp) cd testapp (testapp) python manage.py runserver 9.Working with nginx Nginx is an open source reverse proxy server, which has the capability to handle our static files and redirect all other stuff to our Django server. Installing Nginx: $ sudo apt-get install nginx We can test whether our nginx is working or not by following the below steps. $ sudo service nginx start If we go to the URL, i.e. http://ec2-XX-XX-X-XXX.compute-X.amazonaws.com and it should show us “Welcome to nginx”. Now stop the server to configure it further. $ sudo service nginx stop Lets make Nginx run as ubuntu user. $ sudo vim /etc/nginx/nginx.conf And now edit the first line containing the User name. It should look like the below way at the end. user ubuntu ubuntu; We should configure our app now, to get it done, edit this file: $ sudo vim /etc/nginx/sites-enabled/default Change the values according to our need. Some basic things would be: access_log /home/ubuntu/testapp/nginx-access.log; error_log /home/ubuntu/testapp/nginx-error.log info; Also change the location of the static file directory. 10.Working with Gunicorn Gunicorn is a Python web server gateway interface HTTP server for Unix, which natively supports WSGI and Django, helps in process management, creating multiple worker configurations and for creating various server hooks for extensibilty. (testapp)$ pip install gunicorn Let’s create a script to start gunicorn. $ cd ~/testapp $ vim start_gnicorn.sh The start_gunicorn should like this: APPNAME=testapp APPDIR=/home/ubuntu/$APPNAME/ LOGFILE=$APPDIR&#39;gunicorn.log&#39; ERRORFILE=$APPFIR&#39;gunicorn-error.log&#39; NUM_WORKERS=3 ADDRESS=127.0.0.1:8000 cd $APPDIR source ~/.bashrc workon $APPNAME exec gunicorn $APPNAME.wsgi:application \ -w $NUM_WORKERS --bind=$ADDRESS \ --log-level=debug \ --log-file=$LOGFILE 2&gt;&gt;$LOGFILE 1&gt;&gt;$ERRORFILE &amp; Now run the script to start gunicorn. $ chdmod +x start_gunicorn.sh $ ./start_gunicorn.sh Hurrah!! We are done with the deployment of our app. Go to the app URL and watch it running. Elastic load balancing: There is a possibility of getting the instance failed in any condition and there is a need to reroute the traffic into another running EC2 instance, without disrupting the overall flow of information, there comes the concept of Load balancing. The Elastic load balancer automatically spawns app servers based on the load and assures us with the app running at all times. When we use Elastic load balancing to manage the traffic to our app, it will result in the distribution of requests to Amazon EC2 instances in multiple availability zones so that the risk of overloading one single instance gets minimized. We can associate our domain name to the load balancer as the load balancer is the only computer that is exposed to the internet and also we don’t have to create and manage public domain names for the instances to the instance that is managed by load balancer. Create a Basic Load Balancer in EC2-VPC: Amazon Virtual Private Cloud (Amazon VPC) enables us to launch Amazon Web Services (AWS) resources, such as, ELB load balancers and Amazon EC2 instances, into a virtual network that we have defined. Here are the steps to deal with it: There are four main steps in dealing with the launching of a load balancer. Define Load balancer Configure Health Check Assign Security groups Add EC2 instances [Optional as you can skip this step if you have planned to add auto scaling] 1.Define Load Balancer Sign in to the AWS Management Console and open the Amazon EC2 console at https://console.aws.amazon.com/ec2/. Click on Load Balancers in the EC2 dashboard pane of Resources page. In the Define Load Balancer Page make the necessary selections like name and listener configurations. Click continue to configure Health check for our instance. 2.Configure Health Check On the Configure Health Check page of the Create a New Load Balancer wizard set the following configurations: Leave the Ping Protocol to its default value of HTTP We can set the Ping Port to its default value 80 In the Ping Path field specify a single forward slash(“/”) the path to the default home page of the webserver as the Elastic Load balancer sends the health check queries to the path we specified here. Set the Advanced Options according to the needs. Click continue to select the subnet in which we want to launch our load balancer instance. 3.Add Security Groups In the Assign Security Groups page, we can assign an existing security group or we can create a new one. If we use an existing security group we should ensure that it allows ingress to the ports that we configured the load balancer to use. Click Continue to register EC2 instances with our load balancer. 4.Add EC2 instances [Optional] Note: If you are planning to add autoscaling to Loadbalancer we can skip this step as we can specify the instance while configuring Autoscaling settings. On the Add EC2 Instances page, in the Add Instances to Load Balancer table, select the boxes in the Instance column to register instances with our load balancer. Set the Enable Cross-Zone Load Balancing and Enable Connection Draining boxes according to your need. At the end Review all the settings and create the load balancer We can verify the creation and description of the specifications of our load balancer by clicking on the Load Balancers on the left pane of the Resources page and selecting the Load balancer. Autoscaling an instance Amazon constantly monitors the app servers, and if any of them reaches a certain CPU usage, Amazon will automatically launch X new server(s) and associate them with the load balancer when they’re up and running. Same thing applies if traffic levels go down and you need to terminate an instance or two. Auto scaling enables us to automatically launch or terminate instances based on user-defined policies, health status checks and schedules. We can autoscale an instance using console and CLI(command line interface) as well. Autoscaling the instance through the console is straight forward and using CLI requires some tools and commands to get going. We can get to know how to autoscale through console in this post. Steps to follow for autoscaling an instance through console: [Optional] Create a launch configuration. Skip this step if you want to use your own launch configuration. Create an Auto Scaling group with a load balancer. Verify that our Auto Scaling group has been created with a load balancer 1. Create Launch configuration Sign in to the AWS Management Console and open the Amazon EC2 console at https://console.aws.amazon.com/ec2/. On the Amazon EC2 Resources page, in the EC2 Dashboard pane, under Auto Scaling, click Launch Configurations. Click Create launch configuration. On the Create Launch Configuration wizard, the 1. Choose AMI page displays a list of basic configurations, called Amazon Machine Images (AMIs), that serve as templates for your instance. Select an AMI for your instance. On the 2. Choose Instance Type page, you can select the hardware configuration of your instance. On the 3. Configure Details page, in the Name field, enter a name of your launch configuration (my-first-lc) and fill the other details as required In the next 2 steps you can add storage devices and configure a security group. On the 6. Review page, review the details of your launch configuration. After you are done reviewing your Launch Configuration, click Create launch configuration. In the Select an existing key pair or create a new key pair dialog box, select one of the listed options. Select the acknowledgement check box and then click Create Launch Configuration to create your Launch Configuration. The Launch configuration creation status page displays the status of your newly created launch configuration. Click Create an Auto scaling group using this launch configuration. 2. Create an Auto Scaling group with a load balancer using console: On the Configure Auto Scaling Group Details page, enter the following details: In the Group name field, enter a name for your Auto Scaling group my-test-asg-lbs. In the Group size field, enter 2 for the number of instances you want your Auto Scaling group to start with. Specify the Network field as required. Click the Availability Zone(s) dialog box, and select your Availability Zone in that. Click Advanced Details. In the Load Balancing field, select Receive traffic from Elastic Load Balancer(s). Click the empty dialog box and select the load balancer name that we have created. In the Health Check Type field, select ELB or EC2 as required. The Health Check Grace Period field is pre-populated with the default value. We can type in the field to change the default value. Click Next: Configure scaling policies and configure it as required. Click Review to verify the details of your Auto Scaling Group and Create Auto Scaling group. 3. Verify that our Auto Scaling group has been created with a load balancer: For verifying the autoscaling we can check it by clicking the Auto scaling groups and selecting the the autoscaling group that we have created. we can get to see the details tab containing our loadbalancer and in the instance tab we can see them with their status as Inservice. Updating AMI when there is a change in the code: Whenever there is a new bit of code that the app needs, i.e. any changes in the code or any necessary package updating we need to update the AMI to get the new code running on the server. So, whenever there is a change in the code we create a new AMI with the instance that we have updated and we associate it to the load balancer and from then the app server will be using the new AMI(i.e. the app with the updated code). We will be terminating the older instances and the loadbalancer updates the newer instances according to the scaling rules and brings up the new instance running." />
+<meta property="og:description" content="In this tutorial we are going to launch an EC2 instance and deploy a Django app. I am going to use nginx, gunicorn in this process. From an eagle’s eye this is going to be our walk-through in this blog post. Launch an Amazon EC2 instance Deploying Django App on Amazon EC2 Creating a load balancer Autoscaling an instance. Launching an Amazon EC2 instance: Before we launch your instance, we should be sure setting up with Amazon EC2. Here we go to set them up following the below steps: Sign Up for AWS Create an IAM User Create a Key Pair Create a Virtual Private Cloud (VPC) Create a Security Group Creating an instance from an Amazon Machine Image reduces the redundant work of specifying all the details of the instance as the AMI provides the information required to launch an instance. So lets create an AMI in this process of creating an instance. The following are the steps to create an instance through the console. Open the Amazon EC2 console. In the navigation bar at the top of the screen, the current region is displayed. Click the region’s name to select the region for the instance. From the Amazon EC2 console dashboard, click Launch Instance. The Choose an Amazon Machine Image (AMI) page displays a list of basic configurations called Amazon Machine Images (AMIs) Choose the AMI to use and click Select. Start by selecting the type of AMI to use by using these categories on the left pane. On the Choose an Instance Type page, select the hardware configuration and the size of the instance to launch. On the Configure Instance Details page, change the settings as needed, and then click Next: Add Storage. On the Add Storage page, you can specify volumes to attach to the instance, besides the volumes specified by the AMI. On the Tag Instance page, specify tags for the instance by providing key and value combinations. Click Create Tag to add more than one tag to your resource. On the Configure Security Group page, you can define firewall rules for your instance. These rules specify which incoming network traffic is delivered to your instance. On the Review Instance Launch page, check the details of your instance, and make any necessary changes by clicking the appropriate Edit link. In the Select an existing key pair or create a new key pair dialog box, you can choose an existing key pair, or create a new one. And we are done with the creation of the instance. Deploying the app: Now lets deploy our Django app on Amazon EC2. There are many ways to deploy it and I am depicting a simple method here. 1. Get the key pair that we have created in the launching process of the Amazon instance and change give execute permissions to it. Save the key-pair in your ~/.ssh directory. Once you are done with that connect to your instance using the ssh. $ ssh -i ~/.ssh/keypair.pem ubuntu@ec2-XX-XX-X-XXX.compute-X.amazonaws.com 2.Update and upgrade the repository. $ sudo apt-get update $ sudo apt-get upgrade 3.Install python and some basic packages. $ sudo apt-get install python-pip $ sudo apt-get install python-dev $ sudo apt-get install build-essential 4. Install virtualenvwrapper. $ pip install virtualenvwrapper 5.Add the below lines in ~/.bashrc export WORKON_HOME=$HOME/.virtualenvs source /usr/local/bin/virtualenvwrapper.sh 6.And source it. $ source ~/.bashrc 7.Create a Django App Lets create a sample application to test the deployment process. First, create a virtualenv and activate it. $ mkvirtualenv testapp $ workon testapp 8.Install django and create the app (testapp) pip install django (testapp) django-admin.py startproject testapp (testapp) cd testapp (testapp) python manage.py runserver 9.Working with nginx Nginx is an open source reverse proxy server, which has the capability to handle our static files and redirect all other stuff to our Django server. Installing Nginx: $ sudo apt-get install nginx We can test whether our nginx is working or not by following the below steps. $ sudo service nginx start If we go to the URL, i.e. http://ec2-XX-XX-X-XXX.compute-X.amazonaws.com and it should show us “Welcome to nginx”. Now stop the server to configure it further. $ sudo service nginx stop Lets make Nginx run as ubuntu user. $ sudo vim /etc/nginx/nginx.conf And now edit the first line containing the User name. It should look like the below way at the end. user ubuntu ubuntu; We should configure our app now, to get it done, edit this file: $ sudo vim /etc/nginx/sites-enabled/default Change the values according to our need. Some basic things would be: access_log /home/ubuntu/testapp/nginx-access.log; error_log /home/ubuntu/testapp/nginx-error.log info; Also change the location of the static file directory. 10.Working with Gunicorn Gunicorn is a Python web server gateway interface HTTP server for Unix, which natively supports WSGI and Django, helps in process management, creating multiple worker configurations and for creating various server hooks for extensibilty. (testapp)$ pip install gunicorn Let’s create a script to start gunicorn. $ cd ~/testapp $ vim start_gnicorn.sh The start_gunicorn should like this: APPNAME=testapp APPDIR=/home/ubuntu/$APPNAME/ LOGFILE=$APPDIR&#39;gunicorn.log&#39; ERRORFILE=$APPFIR&#39;gunicorn-error.log&#39; NUM_WORKERS=3 ADDRESS=127.0.0.1:8000 cd $APPDIR source ~/.bashrc workon $APPNAME exec gunicorn $APPNAME.wsgi:application \ -w $NUM_WORKERS --bind=$ADDRESS \ --log-level=debug \ --log-file=$LOGFILE 2&gt;&gt;$LOGFILE 1&gt;&gt;$ERRORFILE &amp; Now run the script to start gunicorn. $ chdmod +x start_gunicorn.sh $ ./start_gunicorn.sh Hurrah!! We are done with the deployment of our app. Go to the app URL and watch it running. Elastic load balancing: There is a possibility of getting the instance failed in any condition and there is a need to reroute the traffic into another running EC2 instance, without disrupting the overall flow of information, there comes the concept of Load balancing. The Elastic load balancer automatically spawns app servers based on the load and assures us with the app running at all times. When we use Elastic load balancing to manage the traffic to our app, it will result in the distribution of requests to Amazon EC2 instances in multiple availability zones so that the risk of overloading one single instance gets minimized. We can associate our domain name to the load balancer as the load balancer is the only computer that is exposed to the internet and also we don’t have to create and manage public domain names for the instances to the instance that is managed by load balancer. Create a Basic Load Balancer in EC2-VPC: Amazon Virtual Private Cloud (Amazon VPC) enables us to launch Amazon Web Services (AWS) resources, such as, ELB load balancers and Amazon EC2 instances, into a virtual network that we have defined. Here are the steps to deal with it: There are four main steps in dealing with the launching of a load balancer. Define Load balancer Configure Health Check Assign Security groups Add EC2 instances [Optional as you can skip this step if you have planned to add auto scaling] 1.Define Load Balancer Sign in to the AWS Management Console and open the Amazon EC2 console at https://console.aws.amazon.com/ec2/. Click on Load Balancers in the EC2 dashboard pane of Resources page. In the Define Load Balancer Page make the necessary selections like name and listener configurations. Click continue to configure Health check for our instance. 2.Configure Health Check On the Configure Health Check page of the Create a New Load Balancer wizard set the following configurations: Leave the Ping Protocol to its default value of HTTP We can set the Ping Port to its default value 80 In the Ping Path field specify a single forward slash(“/”) the path to the default home page of the webserver as the Elastic Load balancer sends the health check queries to the path we specified here. Set the Advanced Options according to the needs. Click continue to select the subnet in which we want to launch our load balancer instance. 3.Add Security Groups In the Assign Security Groups page, we can assign an existing security group or we can create a new one. If we use an existing security group we should ensure that it allows ingress to the ports that we configured the load balancer to use. Click Continue to register EC2 instances with our load balancer. 4.Add EC2 instances [Optional] Note: If you are planning to add autoscaling to Loadbalancer we can skip this step as we can specify the instance while configuring Autoscaling settings. On the Add EC2 Instances page, in the Add Instances to Load Balancer table, select the boxes in the Instance column to register instances with our load balancer. Set the Enable Cross-Zone Load Balancing and Enable Connection Draining boxes according to your need. At the end Review all the settings and create the load balancer We can verify the creation and description of the specifications of our load balancer by clicking on the Load Balancers on the left pane of the Resources page and selecting the Load balancer. Autoscaling an instance Amazon constantly monitors the app servers, and if any of them reaches a certain CPU usage, Amazon will automatically launch X new server(s) and associate them with the load balancer when they’re up and running. Same thing applies if traffic levels go down and you need to terminate an instance or two. Auto scaling enables us to automatically launch or terminate instances based on user-defined policies, health status checks and schedules. We can autoscale an instance using console and CLI(command line interface) as well. Autoscaling the instance through the console is straight forward and using CLI requires some tools and commands to get going. We can get to know how to autoscale through console in this post. Steps to follow for autoscaling an instance through console: [Optional] Create a launch configuration. Skip this step if you want to use your own launch configuration. Create an Auto Scaling group with a load balancer. Verify that our Auto Scaling group has been created with a load balancer 1. Create Launch configuration Sign in to the AWS Management Console and open the Amazon EC2 console at https://console.aws.amazon.com/ec2/. On the Amazon EC2 Resources page, in the EC2 Dashboard pane, under Auto Scaling, click Launch Configurations. Click Create launch configuration. On the Create Launch Configuration wizard, the 1. Choose AMI page displays a list of basic configurations, called Amazon Machine Images (AMIs), that serve as templates for your instance. Select an AMI for your instance. On the 2. Choose Instance Type page, you can select the hardware configuration of your instance. On the 3. Configure Details page, in the Name field, enter a name of your launch configuration (my-first-lc) and fill the other details as required In the next 2 steps you can add storage devices and configure a security group. On the 6. Review page, review the details of your launch configuration. After you are done reviewing your Launch Configuration, click Create launch configuration. In the Select an existing key pair or create a new key pair dialog box, select one of the listed options. Select the acknowledgement check box and then click Create Launch Configuration to create your Launch Configuration. The Launch configuration creation status page displays the status of your newly created launch configuration. Click Create an Auto scaling group using this launch configuration. 2. Create an Auto Scaling group with a load balancer using console: On the Configure Auto Scaling Group Details page, enter the following details: In the Group name field, enter a name for your Auto Scaling group my-test-asg-lbs. In the Group size field, enter 2 for the number of instances you want your Auto Scaling group to start with. Specify the Network field as required. Click the Availability Zone(s) dialog box, and select your Availability Zone in that. Click Advanced Details. In the Load Balancing field, select Receive traffic from Elastic Load Balancer(s). Click the empty dialog box and select the load balancer name that we have created. In the Health Check Type field, select ELB or EC2 as required. The Health Check Grace Period field is pre-populated with the default value. We can type in the field to change the default value. Click Next: Configure scaling policies and configure it as required. Click Review to verify the details of your Auto Scaling Group and Create Auto Scaling group. 3. Verify that our Auto Scaling group has been created with a load balancer: For verifying the autoscaling we can check it by clicking the Auto scaling groups and selecting the the autoscaling group that we have created. we can get to see the details tab containing our loadbalancer and in the instance tab we can see them with their status as Inservice. Updating AMI when there is a change in the code: Whenever there is a new bit of code that the app needs, i.e. any changes in the code or any necessary package updating we need to update the AMI to get the new code running on the server. So, whenever there is a change in the code we create a new AMI with the instance that we have updated and we associate it to the load balancer and from then the app server will be using the new AMI(i.e. the app with the updated code). We will be terminating the older instances and the loadbalancer updates the newer instances according to the scaling rules and brings up the new instance running." />
+<link rel="canonical" href="http://localhost:4000/django/app/deployment/2014/08/06/deploying-a-django-app-on-amazon-ec2-instance.html" />
+<meta property="og:url" content="http://localhost:4000/django/app/deployment/2014/08/06/deploying-a-django-app-on-amazon-ec2-instance.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-08-06T20:38:22+05:30" />
+<script type="application/ld+json">
+{"description":"In this tutorial we are going to launch an EC2 instance and deploy a Django app. I am going to use nginx, gunicorn in this process. From an eagle’s eye this is going to be our walk-through in this blog post. Launch an Amazon EC2 instance Deploying Django App on Amazon EC2 Creating a load balancer Autoscaling an instance. Launching an Amazon EC2 instance: Before we launch your instance, we should be sure setting up with Amazon EC2. Here we go to set them up following the below steps: Sign Up for AWS Create an IAM User Create a Key Pair Create a Virtual Private Cloud (VPC) Create a Security Group Creating an instance from an Amazon Machine Image reduces the redundant work of specifying all the details of the instance as the AMI provides the information required to launch an instance. So lets create an AMI in this process of creating an instance. The following are the steps to create an instance through the console. Open the Amazon EC2 console. In the navigation bar at the top of the screen, the current region is displayed. Click the region’s name to select the region for the instance. From the Amazon EC2 console dashboard, click Launch Instance. The Choose an Amazon Machine Image (AMI) page displays a list of basic configurations called Amazon Machine Images (AMIs) Choose the AMI to use and click Select. Start by selecting the type of AMI to use by using these categories on the left pane. On the Choose an Instance Type page, select the hardware configuration and the size of the instance to launch. On the Configure Instance Details page, change the settings as needed, and then click Next: Add Storage. On the Add Storage page, you can specify volumes to attach to the instance, besides the volumes specified by the AMI. On the Tag Instance page, specify tags for the instance by providing key and value combinations. Click Create Tag to add more than one tag to your resource. On the Configure Security Group page, you can define firewall rules for your instance. These rules specify which incoming network traffic is delivered to your instance. On the Review Instance Launch page, check the details of your instance, and make any necessary changes by clicking the appropriate Edit link. In the Select an existing key pair or create a new key pair dialog box, you can choose an existing key pair, or create a new one. And we are done with the creation of the instance. Deploying the app: Now lets deploy our Django app on Amazon EC2. There are many ways to deploy it and I am depicting a simple method here. 1. Get the key pair that we have created in the launching process of the Amazon instance and change give execute permissions to it. Save the key-pair in your ~/.ssh directory. Once you are done with that connect to your instance using the ssh. $ ssh -i ~/.ssh/keypair.pem ubuntu@ec2-XX-XX-X-XXX.compute-X.amazonaws.com 2.Update and upgrade the repository. $ sudo apt-get update $ sudo apt-get upgrade 3.Install python and some basic packages. $ sudo apt-get install python-pip $ sudo apt-get install python-dev $ sudo apt-get install build-essential 4. Install virtualenvwrapper. $ pip install virtualenvwrapper 5.Add the below lines in ~/.bashrc export WORKON_HOME=$HOME/.virtualenvs source /usr/local/bin/virtualenvwrapper.sh 6.And source it. $ source ~/.bashrc 7.Create a Django App Lets create a sample application to test the deployment process. First, create a virtualenv and activate it. $ mkvirtualenv testapp $ workon testapp 8.Install django and create the app (testapp) pip install django (testapp) django-admin.py startproject testapp (testapp) cd testapp (testapp) python manage.py runserver 9.Working with nginx Nginx is an open source reverse proxy server, which has the capability to handle our static files and redirect all other stuff to our Django server. Installing Nginx: $ sudo apt-get install nginx We can test whether our nginx is working or not by following the below steps. $ sudo service nginx start If we go to the URL, i.e. http://ec2-XX-XX-X-XXX.compute-X.amazonaws.com and it should show us “Welcome to nginx”. Now stop the server to configure it further. $ sudo service nginx stop Lets make Nginx run as ubuntu user. $ sudo vim /etc/nginx/nginx.conf And now edit the first line containing the User name. It should look like the below way at the end. user ubuntu ubuntu; We should configure our app now, to get it done, edit this file: $ sudo vim /etc/nginx/sites-enabled/default Change the values according to our need. Some basic things would be: access_log /home/ubuntu/testapp/nginx-access.log; error_log /home/ubuntu/testapp/nginx-error.log info; Also change the location of the static file directory. 10.Working with Gunicorn Gunicorn is a Python web server gateway interface HTTP server for Unix, which natively supports WSGI and Django, helps in process management, creating multiple worker configurations and for creating various server hooks for extensibilty. (testapp)$ pip install gunicorn Let’s create a script to start gunicorn. $ cd ~/testapp $ vim start_gnicorn.sh The start_gunicorn should like this: APPNAME=testapp APPDIR=/home/ubuntu/$APPNAME/ LOGFILE=$APPDIR&#39;gunicorn.log&#39; ERRORFILE=$APPFIR&#39;gunicorn-error.log&#39; NUM_WORKERS=3 ADDRESS=127.0.0.1:8000 cd $APPDIR source ~/.bashrc workon $APPNAME exec gunicorn $APPNAME.wsgi:application \\ -w $NUM_WORKERS --bind=$ADDRESS \\ --log-level=debug \\ --log-file=$LOGFILE 2&gt;&gt;$LOGFILE 1&gt;&gt;$ERRORFILE &amp; Now run the script to start gunicorn. $ chdmod +x start_gunicorn.sh $ ./start_gunicorn.sh Hurrah!! We are done with the deployment of our app. Go to the app URL and watch it running. Elastic load balancing: There is a possibility of getting the instance failed in any condition and there is a need to reroute the traffic into another running EC2 instance, without disrupting the overall flow of information, there comes the concept of Load balancing. The Elastic load balancer automatically spawns app servers based on the load and assures us with the app running at all times. When we use Elastic load balancing to manage the traffic to our app, it will result in the distribution of requests to Amazon EC2 instances in multiple availability zones so that the risk of overloading one single instance gets minimized. We can associate our domain name to the load balancer as the load balancer is the only computer that is exposed to the internet and also we don’t have to create and manage public domain names for the instances to the instance that is managed by load balancer. Create a Basic Load Balancer in EC2-VPC: Amazon Virtual Private Cloud (Amazon VPC) enables us to launch Amazon Web Services (AWS) resources, such as, ELB load balancers and Amazon EC2 instances, into a virtual network that we have defined. Here are the steps to deal with it: There are four main steps in dealing with the launching of a load balancer. Define Load balancer Configure Health Check Assign Security groups Add EC2 instances [Optional as you can skip this step if you have planned to add auto scaling] 1.Define Load Balancer Sign in to the AWS Management Console and open the Amazon EC2 console at https://console.aws.amazon.com/ec2/. Click on Load Balancers in the EC2 dashboard pane of Resources page. In the Define Load Balancer Page make the necessary selections like name and listener configurations. Click continue to configure Health check for our instance. 2.Configure Health Check On the Configure Health Check page of the Create a New Load Balancer wizard set the following configurations: Leave the Ping Protocol to its default value of HTTP We can set the Ping Port to its default value 80 In the Ping Path field specify a single forward slash(“/”) the path to the default home page of the webserver as the Elastic Load balancer sends the health check queries to the path we specified here. Set the Advanced Options according to the needs. Click continue to select the subnet in which we want to launch our load balancer instance. 3.Add Security Groups In the Assign Security Groups page, we can assign an existing security group or we can create a new one. If we use an existing security group we should ensure that it allows ingress to the ports that we configured the load balancer to use. Click Continue to register EC2 instances with our load balancer. 4.Add EC2 instances [Optional] Note: If you are planning to add autoscaling to Loadbalancer we can skip this step as we can specify the instance while configuring Autoscaling settings. On the Add EC2 Instances page, in the Add Instances to Load Balancer table, select the boxes in the Instance column to register instances with our load balancer. Set the Enable Cross-Zone Load Balancing and Enable Connection Draining boxes according to your need. At the end Review all the settings and create the load balancer We can verify the creation and description of the specifications of our load balancer by clicking on the Load Balancers on the left pane of the Resources page and selecting the Load balancer. Autoscaling an instance Amazon constantly monitors the app servers, and if any of them reaches a certain CPU usage, Amazon will automatically launch X new server(s) and associate them with the load balancer when they’re up and running. Same thing applies if traffic levels go down and you need to terminate an instance or two. Auto scaling enables us to automatically launch or terminate instances based on user-defined policies, health status checks and schedules. We can autoscale an instance using console and CLI(command line interface) as well. Autoscaling the instance through the console is straight forward and using CLI requires some tools and commands to get going. We can get to know how to autoscale through console in this post. Steps to follow for autoscaling an instance through console: [Optional] Create a launch configuration. Skip this step if you want to use your own launch configuration. Create an Auto Scaling group with a load balancer. Verify that our Auto Scaling group has been created with a load balancer 1. Create Launch configuration Sign in to the AWS Management Console and open the Amazon EC2 console at https://console.aws.amazon.com/ec2/. On the Amazon EC2 Resources page, in the EC2 Dashboard pane, under Auto Scaling, click Launch Configurations. Click Create launch configuration. On the Create Launch Configuration wizard, the 1. Choose AMI page displays a list of basic configurations, called Amazon Machine Images (AMIs), that serve as templates for your instance. Select an AMI for your instance. On the 2. Choose Instance Type page, you can select the hardware configuration of your instance. On the 3. Configure Details page, in the Name field, enter a name of your launch configuration (my-first-lc) and fill the other details as required In the next 2 steps you can add storage devices and configure a security group. On the 6. Review page, review the details of your launch configuration. After you are done reviewing your Launch Configuration, click Create launch configuration. In the Select an existing key pair or create a new key pair dialog box, select one of the listed options. Select the acknowledgement check box and then click Create Launch Configuration to create your Launch Configuration. The Launch configuration creation status page displays the status of your newly created launch configuration. Click Create an Auto scaling group using this launch configuration. 2. Create an Auto Scaling group with a load balancer using console: On the Configure Auto Scaling Group Details page, enter the following details: In the Group name field, enter a name for your Auto Scaling group my-test-asg-lbs. In the Group size field, enter 2 for the number of instances you want your Auto Scaling group to start with. Specify the Network field as required. Click the Availability Zone(s) dialog box, and select your Availability Zone in that. Click Advanced Details. In the Load Balancing field, select Receive traffic from Elastic Load Balancer(s). Click the empty dialog box and select the load balancer name that we have created. In the Health Check Type field, select ELB or EC2 as required. The Health Check Grace Period field is pre-populated with the default value. We can type in the field to change the default value. Click Next: Configure scaling policies and configure it as required. Click Review to verify the details of your Auto Scaling Group and Create Auto Scaling group. 3. Verify that our Auto Scaling group has been created with a load balancer: For verifying the autoscaling we can check it by clicking the Auto scaling groups and selecting the the autoscaling group that we have created. we can get to see the details tab containing our loadbalancer and in the instance tab we can see them with their status as Inservice. Updating AMI when there is a change in the code: Whenever there is a new bit of code that the app needs, i.e. any changes in the code or any necessary package updating we need to update the AMI to get the new code running on the server. So, whenever there is a change in the code we create a new AMI with the instance that we have updated and we associate it to the load balancer and from then the app server will be using the new AMI(i.e. the app with the updated code). We will be terminating the older instances and the loadbalancer updates the newer instances according to the scaling rules and brings up the new instance running.","author":{"@type":"Person","name":"Rakesh"},"@type":"BlogPosting","url":"http://localhost:4000/django/app/deployment/2014/08/06/deploying-a-django-app-on-amazon-ec2-instance.html","headline":"Deploying a Django app on Amazon EC2 instance.","dateModified":"2014-08-06T20:38:22+05:30","datePublished":"2014-08-06T20:38:22+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/django/app/deployment/2014/08/06/deploying-a-django-app-on-amazon-ec2-instance.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Deploying a Django app on Amazon EC2 instance.</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-08-06T20:38:22+05:30" itemprop="datePublished">Aug 6, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Rakesh</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>In this tutorial we are going to launch an EC2 instance and deploy a Django app. I am going to use nginx, gunicorn in this process.</p>
+
+<p>From an eagle’s eye this is going to be our walk-through in this blog post.</p>
+
+<ul>
+  <li>Launch an Amazon EC2 instance</li>
+  <li>Deploying Django App on Amazon EC2</li>
+  <li>Creating a load balancer</li>
+  <li>Autoscaling an instance.</li>
+</ul>
+
+<h2 id="launching-an-amazon-ec2-instance">Launching an Amazon EC2 instance:</h2>
+<p>Before we launch your instance, we should be sure setting up with Amazon EC2. Here we go to set them up following the below steps:</p>
+
+<ol>
+  <li>Sign Up for AWS</li>
+  <li>Create an IAM User</li>
+  <li>Create a Key Pair</li>
+  <li>Create a Virtual Private Cloud (VPC)</li>
+  <li>Create a Security Group</li>
+</ol>
+
+<p>Creating an instance from an Amazon Machine Image reduces the redundant work of specifying all the details of the instance as the AMI provides the information required to launch an instance. So lets create an AMI in this process of creating an instance.</p>
+
+<p>The following are the steps to create an instance through the console.</p>
+
+<ol>
+  <li>Open the Amazon EC2 console.</li>
+  <li>In the navigation bar at the top of the screen, the current region is displayed. Click the region’s name to select the region for the instance.</li>
+  <li>From the Amazon EC2 console dashboard, click Launch Instance.</li>
+  <li>The Choose an Amazon Machine Image (AMI) page displays a list of basic configurations called Amazon Machine Images (AMIs)</li>
+  <li>Choose the AMI to use and click Select. Start by selecting the type of AMI to use by using these categories on the left pane.</li>
+  <li>On the Choose an Instance Type page, select the hardware configuration and the size of the instance to launch.</li>
+  <li>On the Configure Instance Details page, change the settings as needed, and then click Next: Add Storage.</li>
+  <li>On the Add Storage page, you can specify volumes to attach to the instance, besides the volumes specified by the AMI.</li>
+  <li>On the Tag Instance page, specify tags for the instance by providing key and value combinations. Click Create Tag to add more than one tag to your resource.</li>
+  <li>On the Configure Security Group page, you can define firewall rules for your instance. These rules specify which incoming network traffic is delivered to your instance.</li>
+  <li>On the Review Instance Launch page, check the details of your instance, and make any necessary changes by clicking the appropriate Edit link.</li>
+  <li>In the Select an existing key pair or create a new key pair dialog box, you can choose an existing key pair, or create a new one.</li>
+</ol>
+
+<p>And we are done with the creation of the instance.</p>
+
+<h2 id="deploying-the-app">Deploying the app:</h2>
+
+<p>Now lets deploy our Django app on Amazon EC2. There are many ways to deploy it and I am depicting a simple method here.</p>
+
+<h5 id="1-get-the-key-pair-that-we-have-created-in-the-launching-process-of-the-amazon-instance-and-change-give-execute-permissions-to-it-save-the-key-pair-in-your-ssh-directory">1. Get the key pair that we have created in the launching process of the Amazon instance and change give execute permissions to it. Save the key-pair in your ~/.ssh directory.</h5>
+<p>Once you are done with that connect to your instance using the ssh.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    $ ssh -i ~/.ssh/keypair.pem ubuntu@ec2-XX-XX-X-XXX.compute-X.amazonaws.com
+</code></pre></div></div>
+
+<h5 id="2update-and-upgrade-the-repository">2.Update and upgrade the repository.</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    $ sudo apt-get update
+    $ sudo apt-get upgrade
+</code></pre></div></div>
+
+<h5 id="3install-python-and-some-basic-packages">3.Install python and some basic packages.</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    $ sudo apt-get install python-pip
+    $ sudo apt-get install python-dev
+    $ sudo apt-get install build-essential
+</code></pre></div></div>
+
+<h5 id="4-install-virtualenvwrapper">4. Install virtualenvwrapper.</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    $ pip install virtualenvwrapper
+</code></pre></div></div>
+
+<h5 id="5add-the-below-lines-in-bashrc">5.Add the below lines in ~/.bashrc</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export WORKON_HOME=$HOME/.virtualenvs
+source /usr/local/bin/virtualenvwrapper.sh
+</code></pre></div></div>
+
+<h5 id="6and-source-it">6.And source it.</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ source ~/.bashrc
+</code></pre></div></div>
+
+<h5 id="7create-a-django-app">7.Create a Django App</h5>
+
+<p>Lets create a sample application to test the deployment process. First, create a virtualenv and activate it.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ mkvirtualenv testapp
+$ workon testapp
+</code></pre></div></div>
+
+<h5 id="8install-django-and-create-the-app">8.Install django and create the app</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(testapp) pip install django
+(testapp) django-admin.py startproject testapp
+(testapp) cd testapp
+(testapp) python manage.py runserver
+</code></pre></div></div>
+
+<h5 id="9working-with-nginx">9.Working with nginx</h5>
+
+<p>Nginx is an open source reverse proxy server, which has the capability to handle our static files and redirect all other stuff to our Django server.
+Installing Nginx:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo apt-get install nginx
+</code></pre></div></div>
+
+<p>We can test whether our nginx is working or not by following the below steps.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo service nginx start
+</code></pre></div></div>
+
+<p>If we go to the URL, i.e.  http://ec2-XX-XX-X-XXX.compute-X.amazonaws.com and it should show us “Welcome to nginx”.
+Now stop the server to configure it further.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo service nginx stop
+</code></pre></div></div>
+
+<p>Lets make Nginx run as ubuntu user.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo vim /etc/nginx/nginx.conf
+</code></pre></div></div>
+
+<p>And now edit the first line containing the User name. It should look like the below way at the end.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user ubuntu ubuntu;
+</code></pre></div></div>
+
+<p>We should configure our app now, to get it done, edit this file:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo vim /etc/nginx/sites-enabled/default
+</code></pre></div></div>
+
+<p>Change the values according to our need. Some basic things would be:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>access_log  /home/ubuntu/testapp/nginx-access.log;
+error_log  /home/ubuntu/testapp/nginx-error.log info;
+</code></pre></div></div>
+
+<p>Also change the location of the static file directory.</p>
+
+<h5 id="10working-with-gunicorn">10.Working with Gunicorn</h5>
+
+<p>Gunicorn is a Python web server gateway interface HTTP server for Unix, which natively supports WSGI and Django, helps in process management, creating multiple worker configurations and for creating various server hooks for extensibilty.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(testapp)$ pip install gunicorn
+</code></pre></div></div>
+
+<p>Let’s create a script to start gunicorn.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ cd ~/testapp
+$ vim start_gnicorn.sh
+</code></pre></div></div>
+
+<p>The start_gunicorn should like this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>APPNAME=testapp
+APPDIR=/home/ubuntu/$APPNAME/
+
+LOGFILE=$APPDIR'gunicorn.log'
+ERRORFILE=$APPFIR'gunicorn-error.log'
+
+NUM_WORKERS=3
+
+ADDRESS=127.0.0.1:8000
+
+cd $APPDIR
+
+source ~/.bashrc
+workon $APPNAME
+
+exec gunicorn $APPNAME.wsgi:application \
+-w $NUM_WORKERS --bind=$ADDRESS \
+--log-level=debug \
+--log-file=$LOGFILE 2&gt;&gt;$LOGFILE  1&gt;&gt;$ERRORFILE &amp;
+</code></pre></div></div>
+
+<p>Now run the script to start gunicorn.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ chdmod +x start_gunicorn.sh
+$ ./start_gunicorn.sh
+</code></pre></div></div>
+
+<p>Hurrah!! We are done with the deployment of our app. Go to the app URL and watch it running.</p>
+
+<h2 id="elastic-load-balancing">Elastic load balancing:</h2>
+
+<p>There is a possibility of getting the instance failed in any condition and there is a need to reroute the traffic into another running EC2 instance, without disrupting the overall flow of information, there comes the concept of Load balancing.  The Elastic load balancer automatically spawns app servers based on the load and assures us with the app running at all times. When we use Elastic load balancing to manage the traffic to our app, it will result in the distribution of requests to Amazon EC2 instances in multiple availability zones so that the risk of overloading one single instance gets minimized. We can associate our domain name to the load balancer as the load balancer is the only computer that is exposed to the internet and also we don’t have to create and manage public domain names for the instances to the instance that is managed by load balancer.</p>
+
+<p>Create a Basic Load Balancer in EC2-VPC:</p>
+
+<p>Amazon Virtual Private Cloud (Amazon VPC) enables us to launch Amazon Web Services (AWS) resources, such as, ELB load balancers and Amazon EC2 instances, into a virtual network that we have defined. Here are the steps to deal with it:</p>
+
+<p>There are four main steps in dealing with the launching of a load balancer.</p>
+
+<ol>
+  <li>Define Load balancer</li>
+  <li>Configure Health Check</li>
+  <li>Assign Security groups</li>
+  <li>Add EC2 instances [Optional as you can skip this step if you have planned to add auto scaling]</li>
+</ol>
+
+<h4 id="1define-load-balancer">1.Define Load Balancer</h4>
+
+<ul>
+  <li>Sign in to the AWS Management Console and open the Amazon EC2 console at https://console.aws.amazon.com/ec2/.</li>
+  <li>Click on Load Balancers in the EC2 dashboard pane of Resources page.</li>
+  <li>In the Define Load Balancer Page make the necessary selections like name and listener configurations.</li>
+  <li>Click continue to configure Health check for our instance.</li>
+</ul>
+
+<h4 id="2configure-health-check">2.Configure Health Check</h4>
+
+<ul>
+  <li>On the Configure Health Check page of the Create a New Load Balancer wizard set the following configurations:
+    <ol>
+      <li>Leave the Ping Protocol to its default value of HTTP</li>
+      <li>We can set the Ping Port to its default value 80</li>
+      <li>In the Ping Path field specify a single forward slash(“/”) the path to the default home page of the webserver as the Elastic Load balancer sends the health check queries to the path we specified here.</li>
+      <li>Set the Advanced Options according to the needs.</li>
+    </ol>
+  </li>
+  <li>Click continue to select the subnet in which we want to launch our load balancer instance.</li>
+</ul>
+
+<h4 id="3add-security-groups">3.Add Security Groups</h4>
+
+<ul>
+  <li>In the Assign Security Groups page, we can assign an existing security group or we can create a new one. If we use an existing security group we should ensure that it allows ingress to the ports that we configured the load balancer to use.</li>
+  <li>Click Continue to register EC2 instances with our load balancer.</li>
+</ul>
+
+<h4 id="4add-ec2-instances-optional">4.Add EC2 instances [Optional]</h4>
+
+<p>Note: If you are planning to add autoscaling to Loadbalancer we can skip this step as we can specify the instance while configuring Autoscaling settings.</p>
+
+<ul>
+  <li>On the Add EC2 Instances page, in the Add Instances to Load Balancer table, select the boxes in the Instance column to register instances with our load balancer.</li>
+  <li>Set the Enable Cross-Zone Load Balancing and Enable Connection Draining boxes according to your need.</li>
+</ul>
+
+<p>At the end Review all the settings and create the load balancer</p>
+
+<p>We can verify the creation and description of the specifications of our load balancer by clicking on the Load Balancers on the left pane of the Resources page and selecting the Load balancer.</p>
+
+<h2 id="autoscaling-an-instance">Autoscaling an instance</h2>
+
+<p>Amazon constantly monitors the app servers, and if any of them reaches a certain CPU usage, Amazon will automatically launch X new server(s) and associate them with the load balancer when they’re up and running. Same thing applies if traffic levels go down and you need to terminate an instance or two. Auto scaling enables us to automatically launch or terminate instances based on user-defined policies, health status checks and schedules. We can autoscale an instance using console and CLI(command line interface) as well. Autoscaling the instance through the console is straight forward and using CLI requires some tools and commands to get going. We can get to know how to autoscale through console in this post.</p>
+
+<ul>
+  <li>
+    <p>Steps to follow for autoscaling an instance through console:</p>
+
+    <ol>
+      <li>[Optional] Create a launch configuration. Skip this step if you want to use your own launch configuration.</li>
+      <li>Create an Auto Scaling group with a load balancer.</li>
+      <li>Verify that our Auto Scaling group has been created with a load balancer</li>
+    </ol>
+  </li>
+</ul>
+
+<h4 id="1-create-launch-configuration">1. Create Launch configuration</h4>
+
+<ul>
+  <li>Sign in to the AWS Management Console and open the Amazon EC2 console at https://console.aws.amazon.com/ec2/.</li>
+  <li>On the Amazon EC2 Resources page, in the EC2 Dashboard pane, under Auto Scaling, click Launch Configurations.</li>
+  <li>Click Create launch configuration.</li>
+  <li>On the Create Launch Configuration wizard, the 1. Choose AMI page displays a list of basic configurations, called Amazon Machine Images (AMIs), that serve as templates for your instance. Select an AMI for your instance.</li>
+  <li>On the 2. Choose Instance Type page, you can select the hardware configuration of your instance.</li>
+  <li>On the 3. Configure Details page, in the Name field, enter a name of your launch configuration (my-first-lc) and fill the other details as required</li>
+  <li>In the next 2 steps you can add storage devices and configure a security group.</li>
+  <li>On the 6. Review page, review the details of your launch configuration.</li>
+  <li>After you are done reviewing your Launch Configuration, click Create launch configuration.</li>
+  <li>In the Select an existing key pair or create a new key pair dialog box, select one of the listed options.</li>
+  <li>Select the acknowledgement check box and then click Create Launch Configuration to create your Launch Configuration.</li>
+  <li>The Launch configuration creation status page displays the status of your newly created launch configuration. Click Create an Auto scaling group using this launch configuration.</li>
+</ul>
+
+<h4 id="2-create-an-auto-scaling-group-with-a-load-balancer-using-console">2. Create an Auto Scaling group with a load balancer using console:</h4>
+
+<ul>
+  <li>On the Configure Auto Scaling Group Details page, enter the following details:
+    <ol>
+      <li>In the Group name field, enter a name for your Auto Scaling group my-test-asg-lbs.</li>
+      <li>In the Group size field, enter 2 for the number of instances you want your Auto Scaling group to start with.</li>
+      <li>Specify the Network field as required.</li>
+      <li>Click the Availability Zone(s) dialog box, and select your Availability Zone in that.</li>
+    </ol>
+  </li>
+  <li>Click Advanced Details.</li>
+  <li>In the Load Balancing field, select Receive traffic from Elastic Load Balancer(s).</li>
+  <li>Click the empty dialog box and select the load balancer name that we have created.</li>
+  <li>In the Health Check Type field, select ELB or EC2 as required.</li>
+  <li>The Health Check Grace Period field is pre-populated with the default value. We can type in the field to change the default value.</li>
+  <li>Click Next: Configure scaling policies and configure it as required.</li>
+  <li>Click Review to verify the details of your Auto Scaling Group and Create Auto Scaling group.</li>
+</ul>
+
+<h4 id="3-verify-that-our-auto-scaling-group-has-been-created-with-a-load-balancer">3. Verify that our Auto Scaling group has been created with a load balancer:</h4>
+
+<p>For verifying the autoscaling we can check it by clicking the Auto scaling groups and selecting the the autoscaling group that we have created. we can get to see the details tab containing our loadbalancer and in the instance tab we can see them with their status as Inservice.</p>
+
+<h2 id="updating-ami-when-there-is-a-change-in-the-code">Updating AMI when there is a change in the code:</h2>
+<p>Whenever there is a new bit of code that the app needs, i.e. any changes in the code or any necessary package updating we need to update the AMI to get the new code running on the server. So, whenever there is a change in the code we create a new AMI with the instance that we have updated and we associate it to the load balancer and from then the app server will be using the new AMI(i.e. the app with the updated code). We will be terminating the older instances and the loadbalancer updates the newer instances according to the scaling rules and brings up the new instance running.</p>
+
+
+  </div><a class="u-url" href="/django/app/deployment/2014/08/06/deploying-a-django-app-on-amazon-ec2-instance.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

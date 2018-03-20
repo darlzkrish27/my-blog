@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Django timezones | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Django timezones" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This post tries to clear various concepts related to Django timezones. Settings relevant to timezone are TIME_ZONE and USE_TZ. We will see various scenarios with different values for these settings and will figure out how TIME_ZONE and USE_TZ behave. Once through this post, you will stop playing guessing games with Django timezones. I will use sqlite throughout this post. I assume that you understand the general concept of timezone. If not then see the section at bottom before you read further. Installing pytz Working with timezones is much easier if you have pytz installed. Django recommends using it too. pip install pytz Naive and aware datetimes Before you can understand Django timezones, it’s important to understand naive and aware datetimes. Naive datetime Suppose you schedule a Google hangout for 28 July, 6:30 PM with someone. You do not give any timezone information. That person has no way to know if you mean 6:30 PM in India or 6:30 PM in USA. This 6:30 PM is open to interpretation. It is a naive datetime. &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 12, 55, 20, 672052) &gt;&gt;&gt; print dt.tzinfo None #This prints None. You can check tzinfo attribute on a datetime instance to know if the datetime instance in naive or aware. If tzinfo in None, then it is a naive datetime. Also dt would be same as your computer’s time. Check it using date command on a new terminal. Though system’s datetime has a timezone info associated with current time, Python’s datetime.now() doesn’t give the timezone information by default. ~ $ date Tue Jul 29 12:55:22 IST 2014 Aware datetime If you say 3:30 AM New York time, it is an aware datetime. This 3:30 AM is not open to interpretation. &gt;&gt;&gt; import pytz &gt;&gt;&gt; tz = pytz.timezone(&#39;America/New_York&#39;) &gt;&gt;&gt; new_york_dt = datetime.now(tz) # We pass timezone instance to now() &gt;&gt;&gt; new_york_dt datetime.datetime(2014, 7, 29, 3, 43, 58, 507746, tzinfo=&lt;DstTzInfo &#39;America/New_York&#39; EDT-1 day, 20:00:00 DST&gt;) &gt;&gt;&gt; print new_york_dt.tzinfo America/New_York As you can see tzinfo attribute is set on the datetime instance if we pass a pytz.timezone instance to datetime.now(). Here new_york_dt is an aware datetime instance. You can read Python docs on datetime to know more about naive and aware datetimes. Setting up the project I will try everything inside a virtual environment. My virtualenv is named django_timezone and path is /tmp. (django_timezone)/tmp $ django-admin.py startproject tz I am using Django 1.6.5. Let’s will install pytz too. (django_timezone)/tmp/tz $ pip install pytz Django timezone behaviour depends on settings.USE_TZ and settings.TIME_ZONE. Their default values are: TIME_ZONE = &#39;UTC&#39; USE_TZ = True We need a DateTime field to go through various scenarios. Create an app which will contain a model with a DateTimeField (django_timezone)/tmp/tz $ python manage.py startapp article In article/models.py class Article(models.Model): description = models.TextField() publish_date = models.DateTimeField() Run syncdb, make sure to add ‘article’ to INSTALLED_APPS. Make sure to register Article in admin. Using datetime.now() from shell At this point, we have the following settings TIME_ZONE = &#39;UTC&#39; USE_TZ = True Start a shell. (django_timezone)/private/tmp/tz $ python manage.py shell &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 09:52:33.417034 I am in India at GMT+05:30 and right now it is 3:22 PM in India. But now() tells me it’s 09:52 AM which is 5 hours 30 minutes behind India’s time. now() is telling the UTC time. And TIME_ZONE is set as ‘UTC’. So, now() uses TIME_ZONE to tell time. But this datetime dt is naive, as you can verify by printing dt.tzinfo. Make USE_TZ = False Make sure to set settings.USE_TZ=False &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 09:55:49.481732 now() still gives the UTC time. And dt is naive as can be verified by printing dt.tzinfo. This verifies datetime.now() is independent of settings.USE_TZ. It seems it depends on TIME_ZONE. Let’s change settings.TIME_ZONE to ‘America/New_York’ and see if output of now() differs. New York is at UTC-04:00. So now() should start saying 05:55 AM. settings.TIME_ZONE = &#39;America/New_York&#39; Restart the shell and invoke now() &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 05:58:27.056390 now() tells the current time of New York. This verifies that datetime.now() is dependent on TIME_ZONE. Though this datetime is naive too; verify using dt.tzinfo. Reset TIME_ZONE to ‘UTC’ and USE_TZ to True. Using django.utils.timezone.now() Edit: The striked out lines is what I wrote earlier, but the good folks on reddit corrected me. It behaves similar to datetime.now() with one difference. Where datetime.now() always gives naive datetime object, this gives a naive or aware datetime object depending on value of USE_TZ. It always returns UTC time. It is not dependent on settings.TIME_ZONE. It gives a native or aware datetime object depending on values of settings.USE_TZ When USE_TZ is True &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 22, 24, 163837, tzinfo=&lt;UTC&gt;) &gt;&gt;&gt; print dt.tzinfo UTC This gives the UTC time because we have TIME_ZONE set to UTC. This behaviour is similar to datetime.now(). But in addition, the datetime object also has tzinfo attribute set on it and so it is an aware datetime object. We got an aware datetime object and time is represented in UTC. Verifying that timezone.now() doesn’t depend on TIME_ZONE Change settings.TIME_ZONE TIME_ZONE = &#39;Asia/Kolkata&#39; Restart the shell and use timezone.now() &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 23, 24, 163837, tzinfo=&lt;UTC&gt;) &gt;&gt;&gt; print dt.tzinfo UTC So even though we set timezone as ‘Asia/Kolkata’, now() returns UTC time. When USE_TZ is False Make sure to change settings.USE_TZ=False &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 28, 10, 353942) &gt;&gt;&gt; print dt.tzinfo None This behaviour is exactly similar to datetime.now(). You get the time in same timezone as settings.TIME_ZONE, and it is a naive datetime. Reset USE_TZ to True. Before we proceed When we say timezone support is enabled, it means USE_TZ = True. When we say timezone support is disabled, it means USE_TZ = False. How Article.publish_date behaves in form Let’s first consider the scenario where timezone is enabled. Timezone is enabled, i.e USE_TZ=True Go to article creation page http://localhost:8000/admin/article/article/add/ We are concerned with publish_date. If you click on Today, it will enter the date taken from your system time. When you click on Now, it will enter the time taken from your system time. Today and Now work using Javascript, and Javascript doesn’t have any idea of Django TIME_ZONE and USE_TZ. Javascript only has access to your system time. That’s why Today and Now will take the value from your system’s time irrespective of Django TIME_ZONE and USE_TZ values. I am in India which is at UTC+05:30, and it is 4:13 PM for me. Clicking on Now puts 4:13 PM in my text field, even though I have TIME_ZONE=’UTC’. In ‘UTC’, it is 10:43 AM (4:13 PM - 5 hours 30 minutes) right now. Even though TIME_ZONE is set to ‘UTC’, clicking on Now uses my system time, because Javascript doesn’t have a knowledge of settings.TIME_ZONE Save the article. Check the value of publish_date saved in db. &gt;&gt;&gt; article = Article.objects.get() &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 29, 16, 13, 28, tzinfo=&lt;UTC&gt;) So Django tells that publish_date is a timezone aware object with publish_date being shown as 4:13 PM, UTC. This is a bug, we will see an implication of this bug soon. When I submitted the form, I submitted with the assumption that I am submitting time in India timezone. I expect publish_date to say 4:13 PM, India time(hereafter referred as IST). Or it should say 10:43 AM, UTC. We will see how such scenario should be handled and fix this bug later on in this post. Check how is it saved in db. python manage.py dbshell sqlite&gt; select * from article_article; 1|First Article|2014-07-29 16:13:28 It only tells the time and doesn’t tell anything about timezone. So, db doesn’t save timezone information. Django puts a timezone info on datetime instance based on TIME_ZONE. That’s why we saw article.publish_date in ‘UTC’ timezone. Note: Postgres can save timezone information too. But we will not worry about it in this post. What happened when I submitted publish_date from browser Browser submitted 4:16 PM to server. Browser did not submit any timezone info. Django saves 4:16 PM in db without any timezone info When getting publish date of Article, Django gets 4:16 PM from db, without any timezone info. In addition, Django checks value of TIME_ZONE and so adds tzinfo attribute on publish_date and makes it timezone aware. Timezone is disabled, i.e USE_TZ=False Make sure to modify settings.USE_TZ=False Go to article creation page http://localhost:8000/admin/article/article/add/ You will still see Today and Now buttons picking up the system time. They are in no way dependent on TIME_ZONE and USE_TZ. Create an article from the admin. And then get it and print its publish_date. &gt;&gt;&gt; article = Article.objects.get(id=2) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 15, 37, 18) We get a naive datetime object in this scenario. Django didn’t add any tzinfo attribute on datetime instance after fetching it from db. Reset USE_TZ to True. Implication of the bug Suppose your project is used by publishers in many countries. Project’s TIME_ZONE is set to ‘UTC’. I am a publisher from India. When I use admin form, I submit date and time in IST. Consider the last article I created. I created the article with publish_date as 3:37 PM, 30th July. My intention was 3:37 PM IST. I expect that article will be shown on the site after 3:37 PM IST. But Django when getting this article from db considers the publish_date as 3:37 PM UTC, because settings.TIME_ZONE is UTC. Placeholder code for view which shows articles. from django.utils.timezone import now current_time = now() Article.objects.filter(publish_date__lte=current_time) When it is 3:38 PM IST, I expect my article to appear on site. But it won’t because when it is 3:38 PM IST, django.utils.timezone.now() will say 10:08 AM UTC. And publish_date is 3:37 PM UTC as per Django, so the filter() will not get my article. Fix for this Django has a concept of default and current timezone. Default timezone and current timezone Default timezone is the timezone defined by settings.TIME_ZONE. Django documentation says, current timezone is the timezone used for rendering. It has an additional purpose and it can fix our buggy scenario. Additional purpose We can say to Django that current timezone is IST. So, when we submit a form, date and time we pass will be considered in IST and then will be converted to default timezone(UTC) and will then be saved in the database. Supposing current timezone is set to IST. I post 3:37 PM. Current timezone is set to IST, we will see how to set current timezone soon. Django will know I mean 3:37 PM, IST. Django will convert 3:37 PM, IST to UTC(because default timezone for project is UTC) And will save converted UTC time in db. Converted UTC time would be 10:07 AM. And our filter condition will work properly. Setting current timezone This can be done using django.utils.timezone.activate Django example uses session and middleware to set timezone. We will use middleware too but instead of bothering with sessions to keep track of user’s timezone, I will hardcode the current timezone. Let’s add a file article/middleware.py with following content: import pytz from django.utils.timezone import activate class TimezoneMiddleware(object): def process_request(self, request): activate(pytz.timezone(&#39;Asia/Kolkata&#39;)) Using activate() sets the current timezone. With our middleware, current timezone is set to IST. Since we are using a middleware, current timezone will be set in every request. Add this middleware to settings.MIDDLEWARE_CLASSES: MIDDLEWARE_CLASSES = ( &#39;article.middleware.TimezoneMiddleware&#39;, &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Visit Article add page in admin. Enter ‘Date’ for Publish date as ‘2014-07-30’ and ‘Time’ as ‘15:37:08’. Click ‘Save’. Verify how is it saved in db: sqlite&gt; select * from article_article where id=3; 3|Third article|2014-07-30 10:07:18 So, time we submitted was converted to UTC from IST and then saved to db. Why? We submitted 15:37:08 as time. Middleware ran and set the current timezone as IST. Django assumed that the time we submitted was in IST because current timezone was set to IST. Django sees values of TIME_ZONE which is UTC. So it converted the time to UTC and then saved in db. Check how is it shown in admin. See &lt;a href=&quot;http://localhost:8000/admin/article/article/3/&quot; target=&quot;_blank&quot;&gt;article 3 details&lt;/a&gt; Publish Time gets shown as ‘15:37:18’. This is because middleware runs on every request. And our middleware sets the current timezone to IST. So, whatever our site gets from db, is converted to IST and then shown to us, which is perfect. Check how is it shown on shell. (django_timezone)/private/tmp/tz $ python manage.py shell &gt;&gt;&gt; article = Article.objects.get(id=3) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 10, 7, 18, tzinfo=&lt;UTC&gt;) Django gets the time from db. In db, time is saved as 10:07:18. Django reads the value of TIME_ZONE and sets the TIME_ZONE as tzinfo attribute on datetime object. Can current timezone work if timezone is not activated Set USE_TZ to False. Create a new Article from admin. Set Publish date as 2014-07-30, and publish time as 15:37:18. Save it. Check how is it saved in db. sqlite&gt; select * from article_article where id=4; 4|Fourth article|2014-07-30 15:37:18 So, even though our code tries to set current timezone through middleware, current timezone wasn’t set because we have timezone support disabled. Django didn’t convert our IST time to UTC before saving to db. How is it shown on shell &gt;&gt;&gt; article = Article.objects.get(id=4) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 15, 37, 18, tzinfo=&lt;UTC&gt;) View the Article 4 details in admin. http://localhost:8000/admin/article/article/4/ Admin shows the publish time same as what was saved in db. No conversion between timezones was done. Reset USE_TZ to True. Notes USE_TZ=True means timezone support is enabled, USE_TZ=False means timezone is not enabled. TIME_ZONE determines in what timezone datetime.now and django.utils.timezone.now return you the time. datetime.now always gives naive datetime objects. django.utils.timezone.now gives naive datetime objects if timezone support is not enabled, and gives aware objects if timezone support is enabled. Current timezone is set using django.utils.timezone.activate. Current timezone activation works only if timezone support is enabled, i.e USE_TZ should be True. When current timezone is enabled, Django converts the datetime you POST into settings.TIME_ZONE and then saves this converted datetime in database. With current timezone enabled, Django converts the datetime it fetches from db into current timezone. Datetime instances with current timezone is displayed in the user facing forms. Concept of timezone Every country is at a different position on Earth and all countries do not face the Sun at the same instant. India and United States are almost on opposite sides of each other on Earth. When India faces the Sun, USA doesn’t face it. At that instant, it is light(day) in India and dark(night) in USA. Earth rotates on its axis. So after few hours, USA would face the Sun and India wouldn’t face it. People want the clock to show between 6 AM to 6 PM during the day and between 6 PM to 6 AM during night. People in India have their clocks set such that it says between 6 AM to 6 PM when India faces the Sun. At the same instant, USA doesn’t face Sun and it is dark there; so people in US have their clocks set such that it shows a time between 6 PM to 6 AM. USA and Indian clocks show different time at the same instant. But India and USA aren’t mathematical terms. There should be a way to know what time is it exactly in USA when it is 6:30 PM, 28 July in India. So we need to know how many hours we need to add or subtract to this time to get the time in USA. This is where timezones come into picture. There is a reference place on Earth relative to which time on other places is calculated. That place is Greenwich. And its timezone is conventionally called GMT + 0:00. GMT and UTC can be used interchangeably. So Greenwich’s timezone is GMT+00:00 or UTC+00:00. India’s timezone is GMT+05:30 or UTC+05:30. When it is 8:00 AM in Greenwich, it is 1:30 PM in India. New York’s timezone is GMT-04:00 during summer. So when it is 8:00 AM in Greenwich, it is 4:00 AM in New York. Whole explanation of timezone is outside the scope of this blog. Read about in on Wikipedia to know more. Resume at top" />
+<meta property="og:description" content="This post tries to clear various concepts related to Django timezones. Settings relevant to timezone are TIME_ZONE and USE_TZ. We will see various scenarios with different values for these settings and will figure out how TIME_ZONE and USE_TZ behave. Once through this post, you will stop playing guessing games with Django timezones. I will use sqlite throughout this post. I assume that you understand the general concept of timezone. If not then see the section at bottom before you read further. Installing pytz Working with timezones is much easier if you have pytz installed. Django recommends using it too. pip install pytz Naive and aware datetimes Before you can understand Django timezones, it’s important to understand naive and aware datetimes. Naive datetime Suppose you schedule a Google hangout for 28 July, 6:30 PM with someone. You do not give any timezone information. That person has no way to know if you mean 6:30 PM in India or 6:30 PM in USA. This 6:30 PM is open to interpretation. It is a naive datetime. &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 12, 55, 20, 672052) &gt;&gt;&gt; print dt.tzinfo None #This prints None. You can check tzinfo attribute on a datetime instance to know if the datetime instance in naive or aware. If tzinfo in None, then it is a naive datetime. Also dt would be same as your computer’s time. Check it using date command on a new terminal. Though system’s datetime has a timezone info associated with current time, Python’s datetime.now() doesn’t give the timezone information by default. ~ $ date Tue Jul 29 12:55:22 IST 2014 Aware datetime If you say 3:30 AM New York time, it is an aware datetime. This 3:30 AM is not open to interpretation. &gt;&gt;&gt; import pytz &gt;&gt;&gt; tz = pytz.timezone(&#39;America/New_York&#39;) &gt;&gt;&gt; new_york_dt = datetime.now(tz) # We pass timezone instance to now() &gt;&gt;&gt; new_york_dt datetime.datetime(2014, 7, 29, 3, 43, 58, 507746, tzinfo=&lt;DstTzInfo &#39;America/New_York&#39; EDT-1 day, 20:00:00 DST&gt;) &gt;&gt;&gt; print new_york_dt.tzinfo America/New_York As you can see tzinfo attribute is set on the datetime instance if we pass a pytz.timezone instance to datetime.now(). Here new_york_dt is an aware datetime instance. You can read Python docs on datetime to know more about naive and aware datetimes. Setting up the project I will try everything inside a virtual environment. My virtualenv is named django_timezone and path is /tmp. (django_timezone)/tmp $ django-admin.py startproject tz I am using Django 1.6.5. Let’s will install pytz too. (django_timezone)/tmp/tz $ pip install pytz Django timezone behaviour depends on settings.USE_TZ and settings.TIME_ZONE. Their default values are: TIME_ZONE = &#39;UTC&#39; USE_TZ = True We need a DateTime field to go through various scenarios. Create an app which will contain a model with a DateTimeField (django_timezone)/tmp/tz $ python manage.py startapp article In article/models.py class Article(models.Model): description = models.TextField() publish_date = models.DateTimeField() Run syncdb, make sure to add ‘article’ to INSTALLED_APPS. Make sure to register Article in admin. Using datetime.now() from shell At this point, we have the following settings TIME_ZONE = &#39;UTC&#39; USE_TZ = True Start a shell. (django_timezone)/private/tmp/tz $ python manage.py shell &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 09:52:33.417034 I am in India at GMT+05:30 and right now it is 3:22 PM in India. But now() tells me it’s 09:52 AM which is 5 hours 30 minutes behind India’s time. now() is telling the UTC time. And TIME_ZONE is set as ‘UTC’. So, now() uses TIME_ZONE to tell time. But this datetime dt is naive, as you can verify by printing dt.tzinfo. Make USE_TZ = False Make sure to set settings.USE_TZ=False &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 09:55:49.481732 now() still gives the UTC time. And dt is naive as can be verified by printing dt.tzinfo. This verifies datetime.now() is independent of settings.USE_TZ. It seems it depends on TIME_ZONE. Let’s change settings.TIME_ZONE to ‘America/New_York’ and see if output of now() differs. New York is at UTC-04:00. So now() should start saying 05:55 AM. settings.TIME_ZONE = &#39;America/New_York&#39; Restart the shell and invoke now() &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 05:58:27.056390 now() tells the current time of New York. This verifies that datetime.now() is dependent on TIME_ZONE. Though this datetime is naive too; verify using dt.tzinfo. Reset TIME_ZONE to ‘UTC’ and USE_TZ to True. Using django.utils.timezone.now() Edit: The striked out lines is what I wrote earlier, but the good folks on reddit corrected me. It behaves similar to datetime.now() with one difference. Where datetime.now() always gives naive datetime object, this gives a naive or aware datetime object depending on value of USE_TZ. It always returns UTC time. It is not dependent on settings.TIME_ZONE. It gives a native or aware datetime object depending on values of settings.USE_TZ When USE_TZ is True &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 22, 24, 163837, tzinfo=&lt;UTC&gt;) &gt;&gt;&gt; print dt.tzinfo UTC This gives the UTC time because we have TIME_ZONE set to UTC. This behaviour is similar to datetime.now(). But in addition, the datetime object also has tzinfo attribute set on it and so it is an aware datetime object. We got an aware datetime object and time is represented in UTC. Verifying that timezone.now() doesn’t depend on TIME_ZONE Change settings.TIME_ZONE TIME_ZONE = &#39;Asia/Kolkata&#39; Restart the shell and use timezone.now() &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 23, 24, 163837, tzinfo=&lt;UTC&gt;) &gt;&gt;&gt; print dt.tzinfo UTC So even though we set timezone as ‘Asia/Kolkata’, now() returns UTC time. When USE_TZ is False Make sure to change settings.USE_TZ=False &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 28, 10, 353942) &gt;&gt;&gt; print dt.tzinfo None This behaviour is exactly similar to datetime.now(). You get the time in same timezone as settings.TIME_ZONE, and it is a naive datetime. Reset USE_TZ to True. Before we proceed When we say timezone support is enabled, it means USE_TZ = True. When we say timezone support is disabled, it means USE_TZ = False. How Article.publish_date behaves in form Let’s first consider the scenario where timezone is enabled. Timezone is enabled, i.e USE_TZ=True Go to article creation page http://localhost:8000/admin/article/article/add/ We are concerned with publish_date. If you click on Today, it will enter the date taken from your system time. When you click on Now, it will enter the time taken from your system time. Today and Now work using Javascript, and Javascript doesn’t have any idea of Django TIME_ZONE and USE_TZ. Javascript only has access to your system time. That’s why Today and Now will take the value from your system’s time irrespective of Django TIME_ZONE and USE_TZ values. I am in India which is at UTC+05:30, and it is 4:13 PM for me. Clicking on Now puts 4:13 PM in my text field, even though I have TIME_ZONE=’UTC’. In ‘UTC’, it is 10:43 AM (4:13 PM - 5 hours 30 minutes) right now. Even though TIME_ZONE is set to ‘UTC’, clicking on Now uses my system time, because Javascript doesn’t have a knowledge of settings.TIME_ZONE Save the article. Check the value of publish_date saved in db. &gt;&gt;&gt; article = Article.objects.get() &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 29, 16, 13, 28, tzinfo=&lt;UTC&gt;) So Django tells that publish_date is a timezone aware object with publish_date being shown as 4:13 PM, UTC. This is a bug, we will see an implication of this bug soon. When I submitted the form, I submitted with the assumption that I am submitting time in India timezone. I expect publish_date to say 4:13 PM, India time(hereafter referred as IST). Or it should say 10:43 AM, UTC. We will see how such scenario should be handled and fix this bug later on in this post. Check how is it saved in db. python manage.py dbshell sqlite&gt; select * from article_article; 1|First Article|2014-07-29 16:13:28 It only tells the time and doesn’t tell anything about timezone. So, db doesn’t save timezone information. Django puts a timezone info on datetime instance based on TIME_ZONE. That’s why we saw article.publish_date in ‘UTC’ timezone. Note: Postgres can save timezone information too. But we will not worry about it in this post. What happened when I submitted publish_date from browser Browser submitted 4:16 PM to server. Browser did not submit any timezone info. Django saves 4:16 PM in db without any timezone info When getting publish date of Article, Django gets 4:16 PM from db, without any timezone info. In addition, Django checks value of TIME_ZONE and so adds tzinfo attribute on publish_date and makes it timezone aware. Timezone is disabled, i.e USE_TZ=False Make sure to modify settings.USE_TZ=False Go to article creation page http://localhost:8000/admin/article/article/add/ You will still see Today and Now buttons picking up the system time. They are in no way dependent on TIME_ZONE and USE_TZ. Create an article from the admin. And then get it and print its publish_date. &gt;&gt;&gt; article = Article.objects.get(id=2) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 15, 37, 18) We get a naive datetime object in this scenario. Django didn’t add any tzinfo attribute on datetime instance after fetching it from db. Reset USE_TZ to True. Implication of the bug Suppose your project is used by publishers in many countries. Project’s TIME_ZONE is set to ‘UTC’. I am a publisher from India. When I use admin form, I submit date and time in IST. Consider the last article I created. I created the article with publish_date as 3:37 PM, 30th July. My intention was 3:37 PM IST. I expect that article will be shown on the site after 3:37 PM IST. But Django when getting this article from db considers the publish_date as 3:37 PM UTC, because settings.TIME_ZONE is UTC. Placeholder code for view which shows articles. from django.utils.timezone import now current_time = now() Article.objects.filter(publish_date__lte=current_time) When it is 3:38 PM IST, I expect my article to appear on site. But it won’t because when it is 3:38 PM IST, django.utils.timezone.now() will say 10:08 AM UTC. And publish_date is 3:37 PM UTC as per Django, so the filter() will not get my article. Fix for this Django has a concept of default and current timezone. Default timezone and current timezone Default timezone is the timezone defined by settings.TIME_ZONE. Django documentation says, current timezone is the timezone used for rendering. It has an additional purpose and it can fix our buggy scenario. Additional purpose We can say to Django that current timezone is IST. So, when we submit a form, date and time we pass will be considered in IST and then will be converted to default timezone(UTC) and will then be saved in the database. Supposing current timezone is set to IST. I post 3:37 PM. Current timezone is set to IST, we will see how to set current timezone soon. Django will know I mean 3:37 PM, IST. Django will convert 3:37 PM, IST to UTC(because default timezone for project is UTC) And will save converted UTC time in db. Converted UTC time would be 10:07 AM. And our filter condition will work properly. Setting current timezone This can be done using django.utils.timezone.activate Django example uses session and middleware to set timezone. We will use middleware too but instead of bothering with sessions to keep track of user’s timezone, I will hardcode the current timezone. Let’s add a file article/middleware.py with following content: import pytz from django.utils.timezone import activate class TimezoneMiddleware(object): def process_request(self, request): activate(pytz.timezone(&#39;Asia/Kolkata&#39;)) Using activate() sets the current timezone. With our middleware, current timezone is set to IST. Since we are using a middleware, current timezone will be set in every request. Add this middleware to settings.MIDDLEWARE_CLASSES: MIDDLEWARE_CLASSES = ( &#39;article.middleware.TimezoneMiddleware&#39;, &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Visit Article add page in admin. Enter ‘Date’ for Publish date as ‘2014-07-30’ and ‘Time’ as ‘15:37:08’. Click ‘Save’. Verify how is it saved in db: sqlite&gt; select * from article_article where id=3; 3|Third article|2014-07-30 10:07:18 So, time we submitted was converted to UTC from IST and then saved to db. Why? We submitted 15:37:08 as time. Middleware ran and set the current timezone as IST. Django assumed that the time we submitted was in IST because current timezone was set to IST. Django sees values of TIME_ZONE which is UTC. So it converted the time to UTC and then saved in db. Check how is it shown in admin. See &lt;a href=&quot;http://localhost:8000/admin/article/article/3/&quot; target=&quot;_blank&quot;&gt;article 3 details&lt;/a&gt; Publish Time gets shown as ‘15:37:18’. This is because middleware runs on every request. And our middleware sets the current timezone to IST. So, whatever our site gets from db, is converted to IST and then shown to us, which is perfect. Check how is it shown on shell. (django_timezone)/private/tmp/tz $ python manage.py shell &gt;&gt;&gt; article = Article.objects.get(id=3) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 10, 7, 18, tzinfo=&lt;UTC&gt;) Django gets the time from db. In db, time is saved as 10:07:18. Django reads the value of TIME_ZONE and sets the TIME_ZONE as tzinfo attribute on datetime object. Can current timezone work if timezone is not activated Set USE_TZ to False. Create a new Article from admin. Set Publish date as 2014-07-30, and publish time as 15:37:18. Save it. Check how is it saved in db. sqlite&gt; select * from article_article where id=4; 4|Fourth article|2014-07-30 15:37:18 So, even though our code tries to set current timezone through middleware, current timezone wasn’t set because we have timezone support disabled. Django didn’t convert our IST time to UTC before saving to db. How is it shown on shell &gt;&gt;&gt; article = Article.objects.get(id=4) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 15, 37, 18, tzinfo=&lt;UTC&gt;) View the Article 4 details in admin. http://localhost:8000/admin/article/article/4/ Admin shows the publish time same as what was saved in db. No conversion between timezones was done. Reset USE_TZ to True. Notes USE_TZ=True means timezone support is enabled, USE_TZ=False means timezone is not enabled. TIME_ZONE determines in what timezone datetime.now and django.utils.timezone.now return you the time. datetime.now always gives naive datetime objects. django.utils.timezone.now gives naive datetime objects if timezone support is not enabled, and gives aware objects if timezone support is enabled. Current timezone is set using django.utils.timezone.activate. Current timezone activation works only if timezone support is enabled, i.e USE_TZ should be True. When current timezone is enabled, Django converts the datetime you POST into settings.TIME_ZONE and then saves this converted datetime in database. With current timezone enabled, Django converts the datetime it fetches from db into current timezone. Datetime instances with current timezone is displayed in the user facing forms. Concept of timezone Every country is at a different position on Earth and all countries do not face the Sun at the same instant. India and United States are almost on opposite sides of each other on Earth. When India faces the Sun, USA doesn’t face it. At that instant, it is light(day) in India and dark(night) in USA. Earth rotates on its axis. So after few hours, USA would face the Sun and India wouldn’t face it. People want the clock to show between 6 AM to 6 PM during the day and between 6 PM to 6 AM during night. People in India have their clocks set such that it says between 6 AM to 6 PM when India faces the Sun. At the same instant, USA doesn’t face Sun and it is dark there; so people in US have their clocks set such that it shows a time between 6 PM to 6 AM. USA and Indian clocks show different time at the same instant. But India and USA aren’t mathematical terms. There should be a way to know what time is it exactly in USA when it is 6:30 PM, 28 July in India. So we need to know how many hours we need to add or subtract to this time to get the time in USA. This is where timezones come into picture. There is a reference place on Earth relative to which time on other places is calculated. That place is Greenwich. And its timezone is conventionally called GMT + 0:00. GMT and UTC can be used interchangeably. So Greenwich’s timezone is GMT+00:00 or UTC+00:00. India’s timezone is GMT+05:30 or UTC+05:30. When it is 8:00 AM in Greenwich, it is 1:30 PM in India. New York’s timezone is GMT-04:00 during summer. So when it is 8:00 AM in Greenwich, it is 4:00 AM in New York. Whole explanation of timezone is outside the scope of this blog. Read about in on Wikipedia to know more. Resume at top" />
+<link rel="canonical" href="http://localhost:4000/django/2014/08/20/django-timezones.html" />
+<meta property="og:url" content="http://localhost:4000/django/2014/08/20/django-timezones.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-08-20T10:30:01+05:30" />
+<script type="application/ld+json">
+{"description":"This post tries to clear various concepts related to Django timezones. Settings relevant to timezone are TIME_ZONE and USE_TZ. We will see various scenarios with different values for these settings and will figure out how TIME_ZONE and USE_TZ behave. Once through this post, you will stop playing guessing games with Django timezones. I will use sqlite throughout this post. I assume that you understand the general concept of timezone. If not then see the section at bottom before you read further. Installing pytz Working with timezones is much easier if you have pytz installed. Django recommends using it too. pip install pytz Naive and aware datetimes Before you can understand Django timezones, it’s important to understand naive and aware datetimes. Naive datetime Suppose you schedule a Google hangout for 28 July, 6:30 PM with someone. You do not give any timezone information. That person has no way to know if you mean 6:30 PM in India or 6:30 PM in USA. This 6:30 PM is open to interpretation. It is a naive datetime. &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 12, 55, 20, 672052) &gt;&gt;&gt; print dt.tzinfo None #This prints None. You can check tzinfo attribute on a datetime instance to know if the datetime instance in naive or aware. If tzinfo in None, then it is a naive datetime. Also dt would be same as your computer’s time. Check it using date command on a new terminal. Though system’s datetime has a timezone info associated with current time, Python’s datetime.now() doesn’t give the timezone information by default. ~ $ date Tue Jul 29 12:55:22 IST 2014 Aware datetime If you say 3:30 AM New York time, it is an aware datetime. This 3:30 AM is not open to interpretation. &gt;&gt;&gt; import pytz &gt;&gt;&gt; tz = pytz.timezone(&#39;America/New_York&#39;) &gt;&gt;&gt; new_york_dt = datetime.now(tz) # We pass timezone instance to now() &gt;&gt;&gt; new_york_dt datetime.datetime(2014, 7, 29, 3, 43, 58, 507746, tzinfo=&lt;DstTzInfo &#39;America/New_York&#39; EDT-1 day, 20:00:00 DST&gt;) &gt;&gt;&gt; print new_york_dt.tzinfo America/New_York As you can see tzinfo attribute is set on the datetime instance if we pass a pytz.timezone instance to datetime.now(). Here new_york_dt is an aware datetime instance. You can read Python docs on datetime to know more about naive and aware datetimes. Setting up the project I will try everything inside a virtual environment. My virtualenv is named django_timezone and path is /tmp. (django_timezone)/tmp $ django-admin.py startproject tz I am using Django 1.6.5. Let’s will install pytz too. (django_timezone)/tmp/tz $ pip install pytz Django timezone behaviour depends on settings.USE_TZ and settings.TIME_ZONE. Their default values are: TIME_ZONE = &#39;UTC&#39; USE_TZ = True We need a DateTime field to go through various scenarios. Create an app which will contain a model with a DateTimeField (django_timezone)/tmp/tz $ python manage.py startapp article In article/models.py class Article(models.Model): description = models.TextField() publish_date = models.DateTimeField() Run syncdb, make sure to add ‘article’ to INSTALLED_APPS. Make sure to register Article in admin. Using datetime.now() from shell At this point, we have the following settings TIME_ZONE = &#39;UTC&#39; USE_TZ = True Start a shell. (django_timezone)/private/tmp/tz $ python manage.py shell &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 09:52:33.417034 I am in India at GMT+05:30 and right now it is 3:22 PM in India. But now() tells me it’s 09:52 AM which is 5 hours 30 minutes behind India’s time. now() is telling the UTC time. And TIME_ZONE is set as ‘UTC’. So, now() uses TIME_ZONE to tell time. But this datetime dt is naive, as you can verify by printing dt.tzinfo. Make USE_TZ = False Make sure to set settings.USE_TZ=False &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 09:55:49.481732 now() still gives the UTC time. And dt is naive as can be verified by printing dt.tzinfo. This verifies datetime.now() is independent of settings.USE_TZ. It seems it depends on TIME_ZONE. Let’s change settings.TIME_ZONE to ‘America/New_York’ and see if output of now() differs. New York is at UTC-04:00. So now() should start saying 05:55 AM. settings.TIME_ZONE = &#39;America/New_York&#39; Restart the shell and invoke now() &gt;&gt;&gt; from datetime import datetime &gt;&gt;&gt; dt = datetime.now() &gt;&gt;&gt; print dt 2014-07-29 05:58:27.056390 now() tells the current time of New York. This verifies that datetime.now() is dependent on TIME_ZONE. Though this datetime is naive too; verify using dt.tzinfo. Reset TIME_ZONE to ‘UTC’ and USE_TZ to True. Using django.utils.timezone.now() Edit: The striked out lines is what I wrote earlier, but the good folks on reddit corrected me. It behaves similar to datetime.now() with one difference. Where datetime.now() always gives naive datetime object, this gives a naive or aware datetime object depending on value of USE_TZ. It always returns UTC time. It is not dependent on settings.TIME_ZONE. It gives a native or aware datetime object depending on values of settings.USE_TZ When USE_TZ is True &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 22, 24, 163837, tzinfo=&lt;UTC&gt;) &gt;&gt;&gt; print dt.tzinfo UTC This gives the UTC time because we have TIME_ZONE set to UTC. This behaviour is similar to datetime.now(). But in addition, the datetime object also has tzinfo attribute set on it and so it is an aware datetime object. We got an aware datetime object and time is represented in UTC. Verifying that timezone.now() doesn’t depend on TIME_ZONE Change settings.TIME_ZONE TIME_ZONE = &#39;Asia/Kolkata&#39; Restart the shell and use timezone.now() &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 23, 24, 163837, tzinfo=&lt;UTC&gt;) &gt;&gt;&gt; print dt.tzinfo UTC So even though we set timezone as ‘Asia/Kolkata’, now() returns UTC time. When USE_TZ is False Make sure to change settings.USE_TZ=False &gt;&gt;&gt; from django.utils.timezone import now &gt;&gt;&gt; dt = now() &gt;&gt;&gt; dt datetime.datetime(2014, 7, 29, 10, 28, 10, 353942) &gt;&gt;&gt; print dt.tzinfo None This behaviour is exactly similar to datetime.now(). You get the time in same timezone as settings.TIME_ZONE, and it is a naive datetime. Reset USE_TZ to True. Before we proceed When we say timezone support is enabled, it means USE_TZ = True. When we say timezone support is disabled, it means USE_TZ = False. How Article.publish_date behaves in form Let’s first consider the scenario where timezone is enabled. Timezone is enabled, i.e USE_TZ=True Go to article creation page http://localhost:8000/admin/article/article/add/ We are concerned with publish_date. If you click on Today, it will enter the date taken from your system time. When you click on Now, it will enter the time taken from your system time. Today and Now work using Javascript, and Javascript doesn’t have any idea of Django TIME_ZONE and USE_TZ. Javascript only has access to your system time. That’s why Today and Now will take the value from your system’s time irrespective of Django TIME_ZONE and USE_TZ values. I am in India which is at UTC+05:30, and it is 4:13 PM for me. Clicking on Now puts 4:13 PM in my text field, even though I have TIME_ZONE=’UTC’. In ‘UTC’, it is 10:43 AM (4:13 PM - 5 hours 30 minutes) right now. Even though TIME_ZONE is set to ‘UTC’, clicking on Now uses my system time, because Javascript doesn’t have a knowledge of settings.TIME_ZONE Save the article. Check the value of publish_date saved in db. &gt;&gt;&gt; article = Article.objects.get() &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 29, 16, 13, 28, tzinfo=&lt;UTC&gt;) So Django tells that publish_date is a timezone aware object with publish_date being shown as 4:13 PM, UTC. This is a bug, we will see an implication of this bug soon. When I submitted the form, I submitted with the assumption that I am submitting time in India timezone. I expect publish_date to say 4:13 PM, India time(hereafter referred as IST). Or it should say 10:43 AM, UTC. We will see how such scenario should be handled and fix this bug later on in this post. Check how is it saved in db. python manage.py dbshell sqlite&gt; select * from article_article; 1|First Article|2014-07-29 16:13:28 It only tells the time and doesn’t tell anything about timezone. So, db doesn’t save timezone information. Django puts a timezone info on datetime instance based on TIME_ZONE. That’s why we saw article.publish_date in ‘UTC’ timezone. Note: Postgres can save timezone information too. But we will not worry about it in this post. What happened when I submitted publish_date from browser Browser submitted 4:16 PM to server. Browser did not submit any timezone info. Django saves 4:16 PM in db without any timezone info When getting publish date of Article, Django gets 4:16 PM from db, without any timezone info. In addition, Django checks value of TIME_ZONE and so adds tzinfo attribute on publish_date and makes it timezone aware. Timezone is disabled, i.e USE_TZ=False Make sure to modify settings.USE_TZ=False Go to article creation page http://localhost:8000/admin/article/article/add/ You will still see Today and Now buttons picking up the system time. They are in no way dependent on TIME_ZONE and USE_TZ. Create an article from the admin. And then get it and print its publish_date. &gt;&gt;&gt; article = Article.objects.get(id=2) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 15, 37, 18) We get a naive datetime object in this scenario. Django didn’t add any tzinfo attribute on datetime instance after fetching it from db. Reset USE_TZ to True. Implication of the bug Suppose your project is used by publishers in many countries. Project’s TIME_ZONE is set to ‘UTC’. I am a publisher from India. When I use admin form, I submit date and time in IST. Consider the last article I created. I created the article with publish_date as 3:37 PM, 30th July. My intention was 3:37 PM IST. I expect that article will be shown on the site after 3:37 PM IST. But Django when getting this article from db considers the publish_date as 3:37 PM UTC, because settings.TIME_ZONE is UTC. Placeholder code for view which shows articles. from django.utils.timezone import now current_time = now() Article.objects.filter(publish_date__lte=current_time) When it is 3:38 PM IST, I expect my article to appear on site. But it won’t because when it is 3:38 PM IST, django.utils.timezone.now() will say 10:08 AM UTC. And publish_date is 3:37 PM UTC as per Django, so the filter() will not get my article. Fix for this Django has a concept of default and current timezone. Default timezone and current timezone Default timezone is the timezone defined by settings.TIME_ZONE. Django documentation says, current timezone is the timezone used for rendering. It has an additional purpose and it can fix our buggy scenario. Additional purpose We can say to Django that current timezone is IST. So, when we submit a form, date and time we pass will be considered in IST and then will be converted to default timezone(UTC) and will then be saved in the database. Supposing current timezone is set to IST. I post 3:37 PM. Current timezone is set to IST, we will see how to set current timezone soon. Django will know I mean 3:37 PM, IST. Django will convert 3:37 PM, IST to UTC(because default timezone for project is UTC) And will save converted UTC time in db. Converted UTC time would be 10:07 AM. And our filter condition will work properly. Setting current timezone This can be done using django.utils.timezone.activate Django example uses session and middleware to set timezone. We will use middleware too but instead of bothering with sessions to keep track of user’s timezone, I will hardcode the current timezone. Let’s add a file article/middleware.py with following content: import pytz from django.utils.timezone import activate class TimezoneMiddleware(object): def process_request(self, request): activate(pytz.timezone(&#39;Asia/Kolkata&#39;)) Using activate() sets the current timezone. With our middleware, current timezone is set to IST. Since we are using a middleware, current timezone will be set in every request. Add this middleware to settings.MIDDLEWARE_CLASSES: MIDDLEWARE_CLASSES = ( &#39;article.middleware.TimezoneMiddleware&#39;, &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Visit Article add page in admin. Enter ‘Date’ for Publish date as ‘2014-07-30’ and ‘Time’ as ‘15:37:08’. Click ‘Save’. Verify how is it saved in db: sqlite&gt; select * from article_article where id=3; 3|Third article|2014-07-30 10:07:18 So, time we submitted was converted to UTC from IST and then saved to db. Why? We submitted 15:37:08 as time. Middleware ran and set the current timezone as IST. Django assumed that the time we submitted was in IST because current timezone was set to IST. Django sees values of TIME_ZONE which is UTC. So it converted the time to UTC and then saved in db. Check how is it shown in admin. See &lt;a href=&quot;http://localhost:8000/admin/article/article/3/&quot; target=&quot;_blank&quot;&gt;article 3 details&lt;/a&gt; Publish Time gets shown as ‘15:37:18’. This is because middleware runs on every request. And our middleware sets the current timezone to IST. So, whatever our site gets from db, is converted to IST and then shown to us, which is perfect. Check how is it shown on shell. (django_timezone)/private/tmp/tz $ python manage.py shell &gt;&gt;&gt; article = Article.objects.get(id=3) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 10, 7, 18, tzinfo=&lt;UTC&gt;) Django gets the time from db. In db, time is saved as 10:07:18. Django reads the value of TIME_ZONE and sets the TIME_ZONE as tzinfo attribute on datetime object. Can current timezone work if timezone is not activated Set USE_TZ to False. Create a new Article from admin. Set Publish date as 2014-07-30, and publish time as 15:37:18. Save it. Check how is it saved in db. sqlite&gt; select * from article_article where id=4; 4|Fourth article|2014-07-30 15:37:18 So, even though our code tries to set current timezone through middleware, current timezone wasn’t set because we have timezone support disabled. Django didn’t convert our IST time to UTC before saving to db. How is it shown on shell &gt;&gt;&gt; article = Article.objects.get(id=4) &gt;&gt;&gt; article.publish_date datetime.datetime(2014, 7, 30, 15, 37, 18, tzinfo=&lt;UTC&gt;) View the Article 4 details in admin. http://localhost:8000/admin/article/article/4/ Admin shows the publish time same as what was saved in db. No conversion between timezones was done. Reset USE_TZ to True. Notes USE_TZ=True means timezone support is enabled, USE_TZ=False means timezone is not enabled. TIME_ZONE determines in what timezone datetime.now and django.utils.timezone.now return you the time. datetime.now always gives naive datetime objects. django.utils.timezone.now gives naive datetime objects if timezone support is not enabled, and gives aware objects if timezone support is enabled. Current timezone is set using django.utils.timezone.activate. Current timezone activation works only if timezone support is enabled, i.e USE_TZ should be True. When current timezone is enabled, Django converts the datetime you POST into settings.TIME_ZONE and then saves this converted datetime in database. With current timezone enabled, Django converts the datetime it fetches from db into current timezone. Datetime instances with current timezone is displayed in the user facing forms. Concept of timezone Every country is at a different position on Earth and all countries do not face the Sun at the same instant. India and United States are almost on opposite sides of each other on Earth. When India faces the Sun, USA doesn’t face it. At that instant, it is light(day) in India and dark(night) in USA. Earth rotates on its axis. So after few hours, USA would face the Sun and India wouldn’t face it. People want the clock to show between 6 AM to 6 PM during the day and between 6 PM to 6 AM during night. People in India have their clocks set such that it says between 6 AM to 6 PM when India faces the Sun. At the same instant, USA doesn’t face Sun and it is dark there; so people in US have their clocks set such that it shows a time between 6 PM to 6 AM. USA and Indian clocks show different time at the same instant. But India and USA aren’t mathematical terms. There should be a way to know what time is it exactly in USA when it is 6:30 PM, 28 July in India. So we need to know how many hours we need to add or subtract to this time to get the time in USA. This is where timezones come into picture. There is a reference place on Earth relative to which time on other places is calculated. That place is Greenwich. And its timezone is conventionally called GMT + 0:00. GMT and UTC can be used interchangeably. So Greenwich’s timezone is GMT+00:00 or UTC+00:00. India’s timezone is GMT+05:30 or UTC+05:30. When it is 8:00 AM in Greenwich, it is 1:30 PM in India. New York’s timezone is GMT-04:00 during summer. So when it is 8:00 AM in Greenwich, it is 4:00 AM in New York. Whole explanation of timezone is outside the scope of this blog. Read about in on Wikipedia to know more. Resume at top","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/django/2014/08/20/django-timezones.html","headline":"Django timezones","dateModified":"2014-08-20T10:30:01+05:30","datePublished":"2014-08-20T10:30:01+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/django/2014/08/20/django-timezones.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Django timezones</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-08-20T10:30:01+05:30" itemprop="datePublished">Aug 20, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This post tries to clear various concepts related to Django timezones. Settings relevant to timezone are TIME_ZONE and USE_TZ. We will see various scenarios with different values for these settings and will figure out how TIME_ZONE and USE_TZ behave.</p>
+
+<p>Once through this post, you will stop playing guessing games with Django timezones.</p>
+
+<p>I will use sqlite throughout this post.</p>
+
+<p>I assume that you understand the general concept of timezone. If not then see the <a href="#concept_timezone">section at bottom</a> before you read further.</p>
+
+<h3 id="installing_pytz">Installing pytz</h3>
+
+<p>Working with timezones is much easier if you have pytz installed. Django recommends using it too.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip install pytz
+</code></pre></div></div>
+
+<h3 id="naive-and-aware-datetimes">Naive and aware datetimes</h3>
+
+<p>Before you can understand Django timezones, it’s important to understand naive and aware datetimes.</p>
+
+<h4 id="naive-datetime">Naive datetime</h4>
+<p>Suppose you schedule a Google hangout for 28 July, 6:30 PM with someone. You do not give any timezone information. That person has no way to know if you mean 6:30 PM in India or 6:30 PM in USA. This 6:30 PM is open to interpretation. It is a naive datetime.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; from datetime import datetime
+&gt;&gt;&gt; dt = datetime.now()
+&gt;&gt;&gt; dt
+datetime.datetime(2014, 7, 29, 12, 55, 20, 672052)
+&gt;&gt;&gt; print dt.tzinfo
+None                  #This prints None.
+</code></pre></div></div>
+
+<p>You can check <strong>tzinfo</strong> attribute on a datetime instance to know if the datetime instance in naive or aware. If <code class="highlighter-rouge">tzinfo</code> in None, then it is a naive datetime.</p>
+
+<p>Also <strong>dt</strong> would be same as your computer’s time. Check it using <strong>date</strong> command on a new terminal. Though system’s datetime has a timezone info associated with current time, Python’s datetime.now() doesn’t give the timezone information by default.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>~ $ date
+Tue Jul 29 12:55:22 IST 2014
+</code></pre></div></div>
+
+<h4 id="aware-datetime">Aware datetime</h4>
+<p>If you say 3:30 AM New York time, it is an aware datetime. This 3:30 AM is not open to interpretation.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; import pytz
+&gt;&gt;&gt; tz = pytz.timezone('America/New_York')
+&gt;&gt;&gt; new_york_dt = datetime.now(tz) # We pass timezone instance to now()
+&gt;&gt;&gt; new_york_dt
+datetime.datetime(2014, 7, 29, 3, 43, 58, 507746, tzinfo=&lt;DstTzInfo 'America/New_York' EDT-1 day, 20:00:00 DST&gt;)
+&gt;&gt;&gt; print new_york_dt.tzinfo
+America/New_York
+</code></pre></div></div>
+
+<p>As you can see <code class="highlighter-rouge">tzinfo</code> attribute is set on the datetime instance if we pass a pytz.timezone instance to datetime.now(). Here <strong>new_york_dt</strong> is an aware datetime instance.</p>
+
+<p>You can read <a href="https://docs.python.org/2/library/datetime.html" target="_blank">Python docs on datetime</a> to know more about naive and aware datetimes.</p>
+
+<h3 id="setting-up-the-project">Setting up the project</h3>
+
+<p>I will try everything inside a virtual environment. My virtualenv is named django_timezone and path is /tmp.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(django_timezone)/tmp $ django-admin.py startproject tz
+</code></pre></div></div>
+
+<p>I am using Django 1.6.5. Let’s will install pytz too.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(django_timezone)/tmp/tz $ pip install pytz
+</code></pre></div></div>
+
+<p>Django timezone behaviour depends on settings.USE_TZ and settings.TIME_ZONE. Their default values are:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TIME_ZONE = 'UTC'
+USE_TZ = True
+</code></pre></div></div>
+
+<p>We need a DateTime field to go through various scenarios. Create an app which will contain a model with a DateTimeField</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(django_timezone)/tmp/tz $ python manage.py startapp article
+</code></pre></div></div>
+
+<p>In article/models.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Article(models.Model):
+	description = models.TextField()
+	publish_date = models.DateTimeField()
+</code></pre></div></div>
+
+<p>Run syncdb, make sure to add ‘article’ to INSTALLED_APPS. Make sure to register Article in admin.</p>
+
+<h3 id="using-datetimenow-from-shell">Using datetime.now() from shell</h3>
+
+<p>At this point, we have the following settings</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TIME_ZONE = 'UTC'
+USE_TZ = True
+</code></pre></div></div>
+
+<p>Start a shell.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(django_timezone)/private/tmp/tz $ python manage.py shell
+
+&gt;&gt;&gt; from datetime import datetime
+&gt;&gt;&gt; dt = datetime.now()
+&gt;&gt;&gt; print dt
+2014-07-29 09:52:33.417034
+</code></pre></div></div>
+
+<p>I am in India at GMT+05:30 and right now it is 3:22 PM in India. But now() tells me it’s 09:52 AM which is 5 hours 30 minutes behind India’s time. now() is telling the UTC time. And TIME_ZONE is set as ‘UTC’. So, now() uses TIME_ZONE to tell time. But this datetime <code class="highlighter-rouge">dt</code> is naive, as you can verify by printing dt.tzinfo.</p>
+
+<h4 id="make-use_tz--false">Make USE_TZ = False</h4>
+
+<p>Make sure to set settings.USE_TZ=False</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; from datetime import datetime
+&gt;&gt;&gt; dt = datetime.now()
+&gt;&gt;&gt; print dt
+2014-07-29 09:55:49.481732
+</code></pre></div></div>
+
+<p>now() still gives the UTC time. And <code class="highlighter-rouge">dt</code> is naive as can be verified by printing <code class="highlighter-rouge">dt.tzinfo</code>.</p>
+
+<p>This verifies datetime.now() is independent of settings.USE_TZ.</p>
+
+<p>It seems it depends on TIME_ZONE. Let’s change settings.TIME_ZONE to ‘America/New_York’ and see if output of now() differs. New York is at UTC-04:00. So now() should start saying 05:55 AM.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>settings.TIME_ZONE = 'America/New_York'
+</code></pre></div></div>
+
+<p>Restart the shell and invoke now()</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; from datetime import datetime
+&gt;&gt;&gt; dt = datetime.now()
+&gt;&gt;&gt; print dt
+2014-07-29 05:58:27.056390
+</code></pre></div></div>
+
+<p>now() tells the current time of New York. This verifies that datetime.now() is dependent on TIME_ZONE. Though this datetime is naive too; verify using dt.tzinfo.</p>
+
+<p>Reset TIME_ZONE to ‘UTC’ and USE_TZ to True.</p>
+
+<h3 id="using-djangoutilstimezonenow">Using django.utils.timezone.now()</h3>
+
+<p><strong>Edit</strong>: The striked out lines is what I wrote earlier, but the good folks on reddit corrected me.</p>
+
+<p><del>It behaves similar to datetime.now() with one difference. Where datetime.now() always gives naive datetime object, this gives a naive or aware datetime object depending on value of USE_TZ.</del></p>
+
+<p>It always returns UTC time. It is not dependent on settings.TIME_ZONE. It gives a native or aware datetime object depending on values of settings.USE_TZ</p>
+
+<h4 id="when-use_tz-is-true">When USE_TZ is True</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; from django.utils.timezone import now
+&gt;&gt;&gt; dt = now()
+&gt;&gt;&gt; dt
+datetime.datetime(2014, 7, 29, 10, 22, 24, 163837, tzinfo=&lt;UTC&gt;)
+&gt;&gt;&gt; print dt.tzinfo
+UTC
+</code></pre></div></div>
+
+<p><del>This gives the UTC time because we have TIME_ZONE set to UTC. This behaviour is similar to datetime.now(). But in addition, the datetime object also has tzinfo attribute set on it and so it is an aware datetime object.</del></p>
+
+<p>We got an aware datetime object and time is represented in UTC.</p>
+
+<h5 id="verifying-that-timezonenow-doesnt-depend-on-time_zone">Verifying that timezone.now() doesn’t depend on TIME_ZONE</h5>
+
+<p>Change settings.TIME_ZONE</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TIME_ZONE = 'Asia/Kolkata'
+</code></pre></div></div>
+
+<p>Restart the shell and use timezone.now()</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; from django.utils.timezone import now
+&gt;&gt;&gt; dt = now()
+&gt;&gt;&gt; dt
+datetime.datetime(2014, 7, 29, 10, 23, 24, 163837, tzinfo=&lt;UTC&gt;)
+&gt;&gt;&gt; print dt.tzinfo
+UTC
+</code></pre></div></div>
+
+<p>So even though we set timezone as ‘Asia/Kolkata’, now() returns UTC time.</p>
+
+<h4 id="when-use_tz-is-false">When USE_TZ is False</h4>
+
+<p>Make sure to change settings.USE_TZ=False</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; from django.utils.timezone import now
+&gt;&gt;&gt; dt = now()
+&gt;&gt;&gt; dt
+datetime.datetime(2014, 7, 29, 10, 28, 10, 353942)
+&gt;&gt;&gt; print dt.tzinfo
+None
+</code></pre></div></div>
+
+<p>This behaviour is exactly similar to datetime.now(). You get the time in same timezone as settings.TIME_ZONE, and it is a naive datetime.</p>
+
+<p>Reset USE_TZ to True.</p>
+
+<h3 id="before-we-proceed">Before we proceed</h3>
+
+<p>When we say timezone support is enabled, it means USE_TZ = True. When we say timezone support is disabled, it means USE_TZ = False.</p>
+
+<h3 id="how-articlepublish_date-behaves-in-form">How Article.publish_date behaves in form</h3>
+
+<p>Let’s first consider the scenario where timezone is enabled.</p>
+
+<h4 id="timezone-is-enabled-ie-use_tztrue">Timezone is enabled, i.e USE_TZ=True</h4>
+
+<p>Go to article creation page <a href="http://localhost:8000/admin/article/article/add/" target="_blank">http://localhost:8000/admin/article/article/add/</a></p>
+
+<p>We are concerned with publish_date. If you click on <strong>Today</strong>, it will enter the date taken from your system time. When you click on <strong>Now</strong>, it will enter the time taken from your system time. <code class="highlighter-rouge">Today</code> and <code class="highlighter-rouge">Now</code> work using Javascript, and Javascript doesn’t have any idea of Django TIME_ZONE and USE_TZ. Javascript only has access to your system time. That’s why <code class="highlighter-rouge">Today</code> and <code class="highlighter-rouge">Now</code> will take the value from your system’s time irrespective of Django TIME_ZONE and USE_TZ values.</p>
+
+<p>I am in <strong>India which is at UTC+05:30</strong>, and it is <strong>4:13 PM</strong> for me. Clicking on <code class="highlighter-rouge">Now</code> puts 4:13 PM in my text field, even though I have TIME_ZONE=’UTC’. In <strong>‘UTC’, it is 10:43 AM (4:13 PM - 5 hours 30 minutes) right now</strong>. Even though TIME_ZONE is set to ‘UTC’, clicking on <code class="highlighter-rouge">Now</code> uses my system time, because Javascript doesn’t have a knowledge of settings.TIME_ZONE</p>
+
+<p>Save the article. Check the value of publish_date saved in db.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; article = Article.objects.get()
+&gt;&gt;&gt; article.publish_date
+datetime.datetime(2014, 7, 29, 16, 13, 28, tzinfo=&lt;UTC&gt;)
+</code></pre></div></div>
+
+<p>So Django tells that publish_date is a timezone aware object with publish_date being shown as 4:13 PM, UTC. This is a bug, we will see an implication of this bug soon. When I submitted the form, I submitted with the assumption that I am submitting time in India timezone. I expect publish_date to say 4:13 PM, India time(hereafter referred as IST). Or it should say 10:43 AM, UTC. We will see how such scenario should be handled and fix this bug later on in this post.</p>
+
+<h5 id="check-how-is-it-saved-in-db">Check how is it saved in db.</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python manage.py dbshell
+
+sqlite&gt; select * from article_article;
+1|First Article|2014-07-29 16:13:28
+</code></pre></div></div>
+
+<p>It only tells the time and doesn’t tell anything about timezone. So, db doesn’t save timezone information. Django puts a timezone info on datetime instance based on TIME_ZONE. That’s why we saw article.publish_date in ‘UTC’ timezone.</p>
+
+<p><strong>Note:</strong> Postgres can save timezone information too. But we will not worry about it in this post.</p>
+
+<h5 id="what-happened-when-i-submitted-publish_date-from-browser">What happened when I submitted publish_date from browser</h5>
+
+<ul>
+  <li>Browser submitted 4:16 PM to server.</li>
+  <li>Browser did not submit any timezone info.</li>
+  <li>Django saves 4:16 PM in db without any timezone info</li>
+  <li>When getting publish date of Article, Django gets 4:16 PM from db, without any timezone info.</li>
+  <li>In addition, Django checks value of TIME_ZONE and so adds tzinfo attribute on publish_date and makes it timezone aware.</li>
+</ul>
+
+<h4 id="timezone-is-disabled-ie-use_tzfalse">Timezone is disabled, i.e USE_TZ=False</h4>
+
+<p>Make sure to modify settings.USE_TZ=False</p>
+
+<p>Go to article creation page <a href="http://localhost:8000/admin/article/article/add/" target="_blank">http://localhost:8000/admin/article/article/add/</a></p>
+
+<p>You will still see <code class="highlighter-rouge">Today</code> and <code class="highlighter-rouge">Now</code> buttons picking up the system time. They are in no way dependent on TIME_ZONE and USE_TZ.</p>
+
+<p>Create an article from the admin. And then get it and print its publish_date.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; article = Article.objects.get(id=2)
+&gt;&gt;&gt; article.publish_date
+datetime.datetime(2014, 7, 30, 15, 37, 18)
+</code></pre></div></div>
+
+<p>We get a naive datetime object in this scenario. Django didn’t add any tzinfo attribute on datetime instance after fetching it from db.</p>
+
+<p>Reset USE_TZ to True.</p>
+
+<h3 id="implication-of-the-bug">Implication of the bug</h3>
+
+<p>Suppose your project is used by publishers in many countries. Project’s TIME_ZONE is set to ‘UTC’. I am a publisher from India. When I use admin form, I submit date and time in IST. Consider the last article I created. I created the article with publish_date as 3:37 PM, 30th July. My intention was 3:37 PM IST. I expect that article will be shown on the site after 3:37 PM IST.</p>
+
+<p>But Django when getting this article from db considers the publish_date as 3:37 PM UTC, because settings.TIME_ZONE is UTC.</p>
+
+<p>Placeholder code for view which shows articles.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.utils.timezone import now
+current_time = now()
+Article.objects.filter(publish_date__lte=current_time)
+</code></pre></div></div>
+
+<p>When it is 3:38 PM IST, I expect my article to appear on site. But it won’t because when it is 3:38 PM IST, django.utils.timezone.now() will say 10:08 AM UTC. And publish_date is 3:37 PM UTC as per Django, so the filter() will not get my article.</p>
+
+<h3 id="fix-for-this">Fix for this</h3>
+
+<p>Django has a concept of <a href="https://docs.djangoproject.com/en/1.6/topics/i18n/timezones/#default-time-zone-and-current-time-zone">default and current timezone.</a></p>
+
+<h4 id="default-timezone-and-current-timezone">Default timezone and current timezone</h4>
+
+<p>Default timezone is the timezone defined by settings.TIME_ZONE.</p>
+
+<p>Django documentation says, current timezone is the timezone used for rendering. It has an additional purpose and it can fix our buggy scenario.</p>
+
+<h5 id="additional-purpose">Additional purpose</h5>
+
+<p>We can say to Django that current timezone is IST. So, when we submit a form, date and time we pass will be considered in IST and then will be converted to default timezone(UTC) and will then be saved in the database.</p>
+
+<p>Supposing current timezone is set to IST.</p>
+
+<ul>
+  <li>I post 3:37 PM.</li>
+  <li>Current timezone is set to IST, we will see how to set current timezone soon.</li>
+  <li>Django will know I mean 3:37 PM, IST.</li>
+  <li>Django will convert 3:37 PM, IST to UTC(because default timezone for project is UTC)</li>
+  <li>And will save converted UTC time in db. Converted UTC time would be 10:07 AM.</li>
+  <li>And our filter condition will work properly.</li>
+</ul>
+
+<h4 id="setting-current-timezone">Setting current timezone</h4>
+
+<p>This can be done using django.utils.timezone.activate</p>
+
+<p>Django <a href="https://docs.djangoproject.com/en/1.6/topics/i18n/timezones/#selecting-the-current-time-zone" target="_blank">example</a> uses session and middleware to set timezone. We will use middleware too but instead of bothering with sessions to keep track of user’s timezone, I will hardcode the current timezone.</p>
+
+<p>Let’s add a file article/middleware.py with following content:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import pytz
+
+from django.utils.timezone import activate
+
+class TimezoneMiddleware(object):
+	def process_request(self, request):
+		activate(pytz.timezone('Asia/Kolkata'))
+</code></pre></div></div>
+
+<p>Using <code class="highlighter-rouge">activate()</code> sets the current timezone. With our middleware, <strong>current timezone is set to IST</strong>. Since we are using a middleware, current timezone will be set in every request.</p>
+
+<p>Add this middleware to settings.MIDDLEWARE_CLASSES:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MIDDLEWARE_CLASSES = (
+	'article.middleware.TimezoneMiddleware',
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.middleware.common.CommonMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'django.contrib.messages.middleware.MessageMiddleware',
+	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
+</code></pre></div></div>
+
+<p>Visit Article add page in admin.</p>
+
+<p>Enter ‘Date’ for Publish date as ‘2014-07-30’ and ‘Time’ as ‘15:37:08’. Click ‘Save’.</p>
+
+<h4 id="verify-how-is-it-saved-in-db">Verify how is it saved in db:</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sqlite&gt; select * from article_article where id=3;
+3|Third article|2014-07-30 10:07:18
+</code></pre></div></div>
+
+<p>So, time we submitted was converted to UTC from IST and then saved to db.</p>
+
+<h5 id="why">Why?</h5>
+<ul>
+  <li>We submitted 15:37:08 as time.</li>
+  <li>Middleware ran and set the current timezone as IST.</li>
+  <li>Django assumed that the time we submitted was in IST because current timezone was set to IST.</li>
+  <li>Django sees values of TIME_ZONE which is UTC. So it converted the time to UTC and then saved in db.</li>
+</ul>
+
+<h4 id="check-how-is-it-shown-in-admin">Check how is it shown in admin.</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>See &lt;a href="http://localhost:8000/admin/article/article/3/" target="_blank"&gt;article 3 details&lt;/a&gt;
+</code></pre></div></div>
+
+<p>Publish Time gets shown as ‘15:37:18’. This is because middleware runs on every request. And our middleware sets the current timezone to IST. So, whatever our site gets from db, is converted to IST and then shown to us, which is perfect.</p>
+
+<h4 id="check-how-is-it-shown-on-shell">Check how is it shown on shell.</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(django_timezone)/private/tmp/tz $ python manage.py shell
+&gt;&gt;&gt; article = Article.objects.get(id=3)
+&gt;&gt;&gt; article.publish_date
+datetime.datetime(2014, 7, 30, 10, 7, 18, tzinfo=&lt;UTC&gt;)
+</code></pre></div></div>
+
+<p>Django gets the time from db. In db, time is saved as 10:07:18. Django reads the value of TIME_ZONE and sets the TIME_ZONE as tzinfo attribute on datetime object.</p>
+
+<h3 id="can-current-timezone-work-if-timezone-is-not-activated">Can current timezone work if timezone is not activated</h3>
+
+<p>Set USE_TZ to False.</p>
+
+<p>Create a new Article from admin.</p>
+
+<p>Set Publish date as 2014-07-30, and publish time as 15:37:18. Save it.</p>
+
+<h4 id="check-how-is-it-saved-in-db-1">Check how is it saved in db.</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sqlite&gt; select * from article_article where id=4;
+4|Fourth article|2014-07-30 15:37:18
+</code></pre></div></div>
+
+<p>So, even though our code tries to set current timezone through middleware, current timezone wasn’t set because we have timezone support disabled.</p>
+
+<p>Django didn’t convert our IST time to UTC before saving to db.</p>
+
+<h4 id="how-is-it-shown-on-shell">How is it shown on shell</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; article = Article.objects.get(id=4)
+&gt;&gt;&gt; article.publish_date
+datetime.datetime(2014, 7, 30, 15, 37, 18, tzinfo=&lt;UTC&gt;)
+</code></pre></div></div>
+
+<h4 id="view-the-article-4-details-in-admin">View the Article 4 details in admin.</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/admin/article/article/4/
+</code></pre></div></div>
+
+<p>Admin shows the publish time same as what was saved in db. No conversion between timezones was done.</p>
+
+<p>Reset USE_TZ to True.</p>
+
+<h3 id="notes">Notes</h3>
+
+<ul>
+  <li>USE_TZ=True means timezone support is enabled, USE_TZ=False means timezone is not enabled.</li>
+  <li>TIME_ZONE determines in what timezone datetime.now and django.utils.timezone.now return you the time.</li>
+  <li>datetime.now always gives naive datetime objects.</li>
+  <li>django.utils.timezone.now gives naive datetime objects if timezone support is not enabled, and gives aware objects if timezone support is enabled.</li>
+  <li>Current timezone is set using <code class="highlighter-rouge">django.utils.timezone.activate</code>.</li>
+  <li>Current timezone activation works only if timezone support is enabled, i.e USE_TZ should be True.</li>
+  <li>When current timezone is enabled, Django converts the datetime you POST into settings.TIME_ZONE and then saves this converted datetime in database.</li>
+  <li>With current timezone enabled, Django converts the datetime it fetches from db into current timezone. Datetime instances with current timezone is displayed in the user facing forms.</li>
+</ul>
+
+<h3 id="concept_timezone">Concept of timezone</h3>
+<p>Every country is at a different position on Earth and all countries do not face the Sun at the same instant. India and United States are almost on opposite sides of each other on Earth. When India faces the Sun, USA doesn’t face it. At that instant, it is light(day) in India and dark(night) in USA. Earth rotates on its axis. So after few hours, USA would face the Sun and India wouldn’t face it.</p>
+
+<p>People want the clock to show between 6 AM to 6 PM during the day and between 6 PM to 6 AM during night. People in India have their clocks set such that it says between 6 AM to 6 PM when India faces the Sun. At the same instant, USA doesn’t face Sun and it is dark there; so people in US have their clocks set such that it shows a time between 6 PM to 6 AM. USA and Indian clocks show different time at the same instant.</p>
+
+<p>But India and USA aren’t mathematical terms. There should be a way to know what time is it exactly in USA when it is 6:30 PM, 28 July in India. So we need to know how many hours we need to add or subtract to this time to get the time in USA. This is where timezones come into picture.</p>
+
+<p>There is a reference place on Earth relative to which time on other places is calculated. That place is Greenwich. And its timezone is conventionally called GMT + 0:00. GMT and UTC can be used interchangeably. So Greenwich’s timezone is GMT+00:00 or UTC+00:00. India’s timezone is GMT+05:30 or UTC+05:30. When it is 8:00 AM in Greenwich, it is 1:30 PM in India. New York’s timezone is GMT-04:00 during summer. So when it is 8:00 AM in Greenwich, it is 4:00 AM in New York.</p>
+
+<p>Whole explanation of timezone is outside the scope of this blog. Read <a href="http://en.wikipedia.org/wiki/Time_zone" target="_blank">about in on Wikipedia</a> to know more.</p>
+
+<p><a href="#installing_pytz">Resume at top</a></p>
+
+
+  </div><a class="u-url" href="/django/2014/08/20/django-timezones.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

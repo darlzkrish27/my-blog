@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>How to use jsTree | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="How to use jsTree" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Using jsTree ##Problem Statement: To show a TreeView (hierarchical view of information) structure in a Web page. I came across this problem when i was required to develop a web application which allows its users to store contacts and their related information(name, email, phone). The contacts would go into a folder and any folder can have any number of subfolders and any subfolder can have any number of contacts. Also, the folder structure can be nested as many levels deep as the user wants. So, how do you show the folder structure in a Web Page? You might encounter a lot of similar situation. ###For the problem stated above, What we need is a Treeview structure. Display the first level folders(say Level 1 folder). User expands a Level 1 folder, expand and show all the subfolders within it. User expands one of the subfolder(Level 2 folder), expand and show all the subfolders(Level 3 folder) within this subfolder and so on. While searching for the solution to this problem scenario, i came across jsTree. jsTree is a jquery plugin which allows displaying a tree structure in a web page. In this post we will see how to use it. ###We will be dividing our work in two parts. Illustrating basic use of jsTree. (A simple example) Solving the problem stated above (using Django) ##Basic use of jsTree: The example used here is not a practical example but as already specified its just for illustration purpose and to get a basic understanding of jsTree. ####Our example: Consider two categories to be shown on the page. These categories can be considered synonymous to top level folders. Lets say the two categories as “Search Engines” and “Networking Sites”. Under “Search Engines” we put Google, Bing and Yahoo. “Google”, “Bing” and “Yahoo” form second level folder (immediately below top level folder). Under “Networking Sites” we put Facebook and Twitter. So, “Facebook” and “Twitter” form second level folder. Now under Google, we put Gmail, YouTube and Orkut. These form the third level folders. We must also see some actions that can be performed while using jsTree. So, we will take the user to the link for these elements on being selected, provided the link exists. Lets create an html page which illustrates this example. I have put this code at github. You can get the entire code at https://github.com/akshar-raaj/Using-jsTree Let’s name the html page as try_jstree.html . Initially the page is: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Since jsTree is a jquery plugin, it requires jquery to be included in the page before we can use jsTree. So, we downloaded jquery.js and put it in the folder containing the html(try_jstree.html) file. Then we need to download jsTree(named jquery.jstree.js) and we put it in the same folder. Some folders (themes, docs etc.) comes while downloading jsTree. Put all these folders in our working folder. We have our first commit at this point. Now, include jquery.js and jquery.jstree.js in the file so that we can use them. At this point code looks like: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our second commit at this point.(commit 4c7c7233ccb4d0e2e463375af9c579374ee73624) Next we need to select the div where the tree will be displayed. We use jquery selector for it. On the selected element we call jstree() and need to pass the required values. Here, we will be using json data to populate our tree. ####So, the fields needed by jstree() in such case are: json_data - This is an object. plugins - This is a list. Hence at this point our code looks like: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { }, &quot;plugins&quot; : [] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our third commit at this point.(commit fd47c9784b7510a8cc3de9209054fbcc39fbac9b) Now, “json_data” requires an object having a field “data”. “data” is a list of the objects which we want displayed on the web page. So, “json_data” would look like &quot;json_data&quot;: { &quot;data&quot;:[] } Each entry in “data” is the actual object to be displayed and used on the webpage. So, we will put the objects in “data” so that they can be displayed on the page. So, “json_data” becomes &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot; }, { &quot;data&quot; : &quot;Networking sites&quot; } ] } Also, for using json_data we need a plugin named “json_data”. For displaying the tree as a tree like structure, we need the plugin named “themes”.And for taking the user to a new page upon selecting an entry(which we will be illustrating soon), we need a plugin named “ui”. So, “plugins” become &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] At this point our code is: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot; }, { &quot;data&quot; : &quot;Networking sites&quot; } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our fourth commit at this point(commit 3e32dfeefe1adbddf3dc88d4a68e93e834996c0e). Check your page now. You should be able to see these entries on the page. Next, we need to add subelements to the elements. This is done by adding a “children” attribute to the object with which we need to attach the subelement. “children” is an array containing all the childs. We will associate the subelements as described earlier for our example. In the same step we will add subelements(level 3 elements) to the subelements(level 2 elements). At this point, our code looks like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;}, {&quot;data&quot;:&quot;Bing&quot;}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;},{&quot;data&quot;:&quot;Gmail&quot;},{&quot;data&quot;:&quot;Orkut&quot;}]} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;}, {&quot;data&quot;:&quot;Twitter&quot;} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Check you page now. You should be seeing a Treeview structure in your page. The screenshot for what your page should look like is here. We have our fifth commit at this point(commit 5276b111ee250220a7d422fe86142f16bb45a1cc). Next we want to add some additional information(fields) about each object, so that we can operate on those fields. The additional information is stored as field “metadata”. “metadata” is again an object containing key-value pairs for the additional information. So, the structure of “metadata” would be &quot;metadata&quot;:{} Let’s name the information we want to store as “href”. Lets store the value for this key as the url(We need it for our example). For object having “data” as “Gmail”, its “metadata” becomes &quot;metadata&quot;:{&quot;href&quot;:&quot;www.gmail.com&quot;} Similarly for all the objects, and our code would look like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.yahoo.com&quot;}}, {&quot;data&quot;:&quot;Bing&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.bing.com&quot;}}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://youtube.com&quot;}},{&quot;data&quot;:&quot;Gmail&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.gmail.com&quot;}},{&quot;data&quot;:&quot;Orkut&quot;,&quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.orkut.com&quot;}}], &quot;metadata&quot; : {&quot;href&quot;:&quot;http://youtube.com&quot;}} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.fb.com&quot;}}, {&quot;data&quot;:&quot;Twitter&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://twitter.com&quot;}} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; At this point we have our sixth commit(commit 8bad3a8688c1e848fee4cda99d82f2e369d87f92). Next we need to attach handler to events(Our event would be selection of any element in the Tree structure, and our handler should take us to the “href” for that element). We accomplish this using bind(), similar to how we use in jquery script. The event we are concerned with is “select_node.jstree”. So, the bind() function would look like: bind(&quot;select_node.jstree&quot;, function(e, data){}) Whenever an element is selected, we want to get its “href” and take the user to that “href”. Also, we make sure that we take the user to new page only when “href” is defined for the element, else we show an alert telling that “href” is not defined for the element. We attach this bind() function with the div containing the Treeview structure. So, our final code looks like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.yahoo.com&quot;}}, {&quot;data&quot;:&quot;Bing&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.bing.com&quot;}}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://youtube.com&quot;}},{&quot;data&quot;:&quot;Gmail&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.gmail.com&quot;}},{&quot;data&quot;:&quot;Orkut&quot;,&quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.orkut.com&quot;}}], &quot;metadata&quot; : {&quot;href&quot;:&quot;http://youtube.com&quot;}} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.fb.com&quot;}}, {&quot;data&quot;:&quot;Twitter&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://twitter.com&quot;}} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }).bind(&quot;select_node.jstree&quot;, function(e, data) { if(jQuery.data(data.rslt.obj[0], &quot;href&quot;)) { window.location=jQuery.data(data.rslt.obj[0], &quot;href&quot;); } else { alert(&quot;No href defined for this element&quot;); } }) }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; This is the final code and the last commit(commit ff886547287eec114d7020ad66718cae83a1ee37). We will see how to use jsTree with django, and solve our problem in the next post." />
+<meta property="og:description" content="Using jsTree ##Problem Statement: To show a TreeView (hierarchical view of information) structure in a Web page. I came across this problem when i was required to develop a web application which allows its users to store contacts and their related information(name, email, phone). The contacts would go into a folder and any folder can have any number of subfolders and any subfolder can have any number of contacts. Also, the folder structure can be nested as many levels deep as the user wants. So, how do you show the folder structure in a Web Page? You might encounter a lot of similar situation. ###For the problem stated above, What we need is a Treeview structure. Display the first level folders(say Level 1 folder). User expands a Level 1 folder, expand and show all the subfolders within it. User expands one of the subfolder(Level 2 folder), expand and show all the subfolders(Level 3 folder) within this subfolder and so on. While searching for the solution to this problem scenario, i came across jsTree. jsTree is a jquery plugin which allows displaying a tree structure in a web page. In this post we will see how to use it. ###We will be dividing our work in two parts. Illustrating basic use of jsTree. (A simple example) Solving the problem stated above (using Django) ##Basic use of jsTree: The example used here is not a practical example but as already specified its just for illustration purpose and to get a basic understanding of jsTree. ####Our example: Consider two categories to be shown on the page. These categories can be considered synonymous to top level folders. Lets say the two categories as “Search Engines” and “Networking Sites”. Under “Search Engines” we put Google, Bing and Yahoo. “Google”, “Bing” and “Yahoo” form second level folder (immediately below top level folder). Under “Networking Sites” we put Facebook and Twitter. So, “Facebook” and “Twitter” form second level folder. Now under Google, we put Gmail, YouTube and Orkut. These form the third level folders. We must also see some actions that can be performed while using jsTree. So, we will take the user to the link for these elements on being selected, provided the link exists. Lets create an html page which illustrates this example. I have put this code at github. You can get the entire code at https://github.com/akshar-raaj/Using-jsTree Let’s name the html page as try_jstree.html . Initially the page is: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Since jsTree is a jquery plugin, it requires jquery to be included in the page before we can use jsTree. So, we downloaded jquery.js and put it in the folder containing the html(try_jstree.html) file. Then we need to download jsTree(named jquery.jstree.js) and we put it in the same folder. Some folders (themes, docs etc.) comes while downloading jsTree. Put all these folders in our working folder. We have our first commit at this point. Now, include jquery.js and jquery.jstree.js in the file so that we can use them. At this point code looks like: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our second commit at this point.(commit 4c7c7233ccb4d0e2e463375af9c579374ee73624) Next we need to select the div where the tree will be displayed. We use jquery selector for it. On the selected element we call jstree() and need to pass the required values. Here, we will be using json data to populate our tree. ####So, the fields needed by jstree() in such case are: json_data - This is an object. plugins - This is a list. Hence at this point our code looks like: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { }, &quot;plugins&quot; : [] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our third commit at this point.(commit fd47c9784b7510a8cc3de9209054fbcc39fbac9b) Now, “json_data” requires an object having a field “data”. “data” is a list of the objects which we want displayed on the web page. So, “json_data” would look like &quot;json_data&quot;: { &quot;data&quot;:[] } Each entry in “data” is the actual object to be displayed and used on the webpage. So, we will put the objects in “data” so that they can be displayed on the page. So, “json_data” becomes &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot; }, { &quot;data&quot; : &quot;Networking sites&quot; } ] } Also, for using json_data we need a plugin named “json_data”. For displaying the tree as a tree like structure, we need the plugin named “themes”.And for taking the user to a new page upon selecting an entry(which we will be illustrating soon), we need a plugin named “ui”. So, “plugins” become &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] At this point our code is: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot; }, { &quot;data&quot; : &quot;Networking sites&quot; } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our fourth commit at this point(commit 3e32dfeefe1adbddf3dc88d4a68e93e834996c0e). Check your page now. You should be able to see these entries on the page. Next, we need to add subelements to the elements. This is done by adding a “children” attribute to the object with which we need to attach the subelement. “children” is an array containing all the childs. We will associate the subelements as described earlier for our example. In the same step we will add subelements(level 3 elements) to the subelements(level 2 elements). At this point, our code looks like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;}, {&quot;data&quot;:&quot;Bing&quot;}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;},{&quot;data&quot;:&quot;Gmail&quot;},{&quot;data&quot;:&quot;Orkut&quot;}]} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;}, {&quot;data&quot;:&quot;Twitter&quot;} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Check you page now. You should be seeing a Treeview structure in your page. The screenshot for what your page should look like is here. We have our fifth commit at this point(commit 5276b111ee250220a7d422fe86142f16bb45a1cc). Next we want to add some additional information(fields) about each object, so that we can operate on those fields. The additional information is stored as field “metadata”. “metadata” is again an object containing key-value pairs for the additional information. So, the structure of “metadata” would be &quot;metadata&quot;:{} Let’s name the information we want to store as “href”. Lets store the value for this key as the url(We need it for our example). For object having “data” as “Gmail”, its “metadata” becomes &quot;metadata&quot;:{&quot;href&quot;:&quot;www.gmail.com&quot;} Similarly for all the objects, and our code would look like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.yahoo.com&quot;}}, {&quot;data&quot;:&quot;Bing&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.bing.com&quot;}}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://youtube.com&quot;}},{&quot;data&quot;:&quot;Gmail&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.gmail.com&quot;}},{&quot;data&quot;:&quot;Orkut&quot;,&quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.orkut.com&quot;}}], &quot;metadata&quot; : {&quot;href&quot;:&quot;http://youtube.com&quot;}} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.fb.com&quot;}}, {&quot;data&quot;:&quot;Twitter&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://twitter.com&quot;}} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; At this point we have our sixth commit(commit 8bad3a8688c1e848fee4cda99d82f2e369d87f92). Next we need to attach handler to events(Our event would be selection of any element in the Tree structure, and our handler should take us to the “href” for that element). We accomplish this using bind(), similar to how we use in jquery script. The event we are concerned with is “select_node.jstree”. So, the bind() function would look like: bind(&quot;select_node.jstree&quot;, function(e, data){}) Whenever an element is selected, we want to get its “href” and take the user to that “href”. Also, we make sure that we take the user to new page only when “href” is defined for the element, else we show an alert telling that “href” is not defined for the element. We attach this bind() function with the div containing the Treeview structure. So, our final code looks like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.yahoo.com&quot;}}, {&quot;data&quot;:&quot;Bing&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.bing.com&quot;}}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://youtube.com&quot;}},{&quot;data&quot;:&quot;Gmail&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.gmail.com&quot;}},{&quot;data&quot;:&quot;Orkut&quot;,&quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.orkut.com&quot;}}], &quot;metadata&quot; : {&quot;href&quot;:&quot;http://youtube.com&quot;}} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.fb.com&quot;}}, {&quot;data&quot;:&quot;Twitter&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://twitter.com&quot;}} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }).bind(&quot;select_node.jstree&quot;, function(e, data) { if(jQuery.data(data.rslt.obj[0], &quot;href&quot;)) { window.location=jQuery.data(data.rslt.obj[0], &quot;href&quot;); } else { alert(&quot;No href defined for this element&quot;); } }) }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; This is the final code and the last commit(commit ff886547287eec114d7020ad66718cae83a1ee37). We will see how to use jsTree with django, and solve our problem in the next post." />
+<link rel="canonical" href="http://localhost:4000/treeview/2011/10/12/how-use-jstree.html" />
+<meta property="og:url" content="http://localhost:4000/treeview/2011/10/12/how-use-jstree.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2011-10-12T16:30:00+05:30" />
+<script type="application/ld+json">
+{"description":"Using jsTree ##Problem Statement: To show a TreeView (hierarchical view of information) structure in a Web page. I came across this problem when i was required to develop a web application which allows its users to store contacts and their related information(name, email, phone). The contacts would go into a folder and any folder can have any number of subfolders and any subfolder can have any number of contacts. Also, the folder structure can be nested as many levels deep as the user wants. So, how do you show the folder structure in a Web Page? You might encounter a lot of similar situation. ###For the problem stated above, What we need is a Treeview structure. Display the first level folders(say Level 1 folder). User expands a Level 1 folder, expand and show all the subfolders within it. User expands one of the subfolder(Level 2 folder), expand and show all the subfolders(Level 3 folder) within this subfolder and so on. While searching for the solution to this problem scenario, i came across jsTree. jsTree is a jquery plugin which allows displaying a tree structure in a web page. In this post we will see how to use it. ###We will be dividing our work in two parts. Illustrating basic use of jsTree. (A simple example) Solving the problem stated above (using Django) ##Basic use of jsTree: The example used here is not a practical example but as already specified its just for illustration purpose and to get a basic understanding of jsTree. ####Our example: Consider two categories to be shown on the page. These categories can be considered synonymous to top level folders. Lets say the two categories as “Search Engines” and “Networking Sites”. Under “Search Engines” we put Google, Bing and Yahoo. “Google”, “Bing” and “Yahoo” form second level folder (immediately below top level folder). Under “Networking Sites” we put Facebook and Twitter. So, “Facebook” and “Twitter” form second level folder. Now under Google, we put Gmail, YouTube and Orkut. These form the third level folders. We must also see some actions that can be performed while using jsTree. So, we will take the user to the link for these elements on being selected, provided the link exists. Lets create an html page which illustrates this example. I have put this code at github. You can get the entire code at https://github.com/akshar-raaj/Using-jsTree Let’s name the html page as try_jstree.html . Initially the page is: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Since jsTree is a jquery plugin, it requires jquery to be included in the page before we can use jsTree. So, we downloaded jquery.js and put it in the folder containing the html(try_jstree.html) file. Then we need to download jsTree(named jquery.jstree.js) and we put it in the same folder. Some folders (themes, docs etc.) comes while downloading jsTree. Put all these folders in our working folder. We have our first commit at this point. Now, include jquery.js and jquery.jstree.js in the file so that we can use them. At this point code looks like: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our second commit at this point.(commit 4c7c7233ccb4d0e2e463375af9c579374ee73624) Next we need to select the div where the tree will be displayed. We use jquery selector for it. On the selected element we call jstree() and need to pass the required values. Here, we will be using json data to populate our tree. ####So, the fields needed by jstree() in such case are: json_data - This is an object. plugins - This is a list. Hence at this point our code looks like: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { }, &quot;plugins&quot; : [] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our third commit at this point.(commit fd47c9784b7510a8cc3de9209054fbcc39fbac9b) Now, “json_data” requires an object having a field “data”. “data” is a list of the objects which we want displayed on the web page. So, “json_data” would look like &quot;json_data&quot;: { &quot;data&quot;:[] } Each entry in “data” is the actual object to be displayed and used on the webpage. So, we will put the objects in “data” so that they can be displayed on the page. So, “json_data” becomes &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot; }, { &quot;data&quot; : &quot;Networking sites&quot; } ] } Also, for using json_data we need a plugin named “json_data”. For displaying the tree as a tree like structure, we need the plugin named “themes”.And for taking the user to a new page upon selecting an entry(which we will be illustrating soon), we need a plugin named “ui”. So, “plugins” become &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] At this point our code is: &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot; }, { &quot;data&quot; : &quot;Networking sites&quot; } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; We have our fourth commit at this point(commit 3e32dfeefe1adbddf3dc88d4a68e93e834996c0e). Check your page now. You should be able to see these entries on the page. Next, we need to add subelements to the elements. This is done by adding a “children” attribute to the object with which we need to attach the subelement. “children” is an array containing all the childs. We will associate the subelements as described earlier for our example. In the same step we will add subelements(level 3 elements) to the subelements(level 2 elements). At this point, our code looks like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;}, {&quot;data&quot;:&quot;Bing&quot;}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;},{&quot;data&quot;:&quot;Gmail&quot;},{&quot;data&quot;:&quot;Orkut&quot;}]} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;}, {&quot;data&quot;:&quot;Twitter&quot;} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Check you page now. You should be seeing a Treeview structure in your page. The screenshot for what your page should look like is here. We have our fifth commit at this point(commit 5276b111ee250220a7d422fe86142f16bb45a1cc). Next we want to add some additional information(fields) about each object, so that we can operate on those fields. The additional information is stored as field “metadata”. “metadata” is again an object containing key-value pairs for the additional information. So, the structure of “metadata” would be &quot;metadata&quot;:{} Let’s name the information we want to store as “href”. Lets store the value for this key as the url(We need it for our example). For object having “data” as “Gmail”, its “metadata” becomes &quot;metadata&quot;:{&quot;href&quot;:&quot;www.gmail.com&quot;} Similarly for all the objects, and our code would look like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.yahoo.com&quot;}}, {&quot;data&quot;:&quot;Bing&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.bing.com&quot;}}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://youtube.com&quot;}},{&quot;data&quot;:&quot;Gmail&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.gmail.com&quot;}},{&quot;data&quot;:&quot;Orkut&quot;,&quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.orkut.com&quot;}}], &quot;metadata&quot; : {&quot;href&quot;:&quot;http://youtube.com&quot;}} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.fb.com&quot;}}, {&quot;data&quot;:&quot;Twitter&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://twitter.com&quot;}} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; At this point we have our sixth commit(commit 8bad3a8688c1e848fee4cda99d82f2e369d87f92). Next we need to attach handler to events(Our event would be selection of any element in the Tree structure, and our handler should take us to the “href” for that element). We accomplish this using bind(), similar to how we use in jquery script. The event we are concerned with is “select_node.jstree”. So, the bind() function would look like: bind(&quot;select_node.jstree&quot;, function(e, data){}) Whenever an element is selected, we want to get its “href” and take the user to that “href”. Also, we make sure that we take the user to new page only when “href” is defined for the element, else we show an alert telling that “href” is not defined for the element. We attach this bind() function with the div containing the Treeview structure. So, our final code looks like &lt;html&gt; &lt;head&gt; &lt;title&gt;Use jsTree&lt;/title&gt; &lt;script src=&quot;jquery.js&quot;&gt; &lt;/script&gt; &lt;script src=&quot;jquery.jstree.js&quot;&gt; &lt;/script&gt; &lt;script&gt; $(document).ready(function(){ $(&quot;#treeViewDiv&quot;).jstree({ &quot;json_data&quot; : { &quot;data&quot;:[ { &quot;data&quot; : &quot;Search engines&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Yahoo&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.yahoo.com&quot;}}, {&quot;data&quot;:&quot;Bing&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.bing.com&quot;}}, {&quot;data&quot;:&quot;Google&quot;, &quot;children&quot;:[{&quot;data&quot;:&quot;Youtube&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://youtube.com&quot;}},{&quot;data&quot;:&quot;Gmail&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.gmail.com&quot;}},{&quot;data&quot;:&quot;Orkut&quot;,&quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.orkut.com&quot;}}], &quot;metadata&quot; : {&quot;href&quot;:&quot;http://youtube.com&quot;}} ] }, { &quot;data&quot; : &quot;Networking sites&quot;, &quot;children&quot; :[ {&quot;data&quot;:&quot;Facebook&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://www.fb.com&quot;}}, {&quot;data&quot;:&quot;Twitter&quot;, &quot;metadata&quot;:{&quot;href&quot;:&quot;http://twitter.com&quot;}} ] } ] }, &quot;plugins&quot; : [ &quot;themes&quot;, &quot;json_data&quot;, &quot;ui&quot; ] }).bind(&quot;select_node.jstree&quot;, function(e, data) { if(jQuery.data(data.rslt.obj[0], &quot;href&quot;)) { window.location=jQuery.data(data.rslt.obj[0], &quot;href&quot;); } else { alert(&quot;No href defined for this element&quot;); } }) }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div id=&quot;treeViewDiv&quot;&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; This is the final code and the last commit(commit ff886547287eec114d7020ad66718cae83a1ee37). We will see how to use jsTree with django, and solve our problem in the next post.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/treeview/2011/10/12/how-use-jstree.html","headline":"How to use jsTree","dateModified":"2011-10-12T16:30:00+05:30","datePublished":"2011-10-12T16:30:00+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/treeview/2011/10/12/how-use-jstree.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">How to use jsTree</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2011-10-12T16:30:00+05:30" itemprop="datePublished">Oct 12, 2011
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Using jsTree</p>
+
+<p>##Problem Statement:
+To show a TreeView (hierarchical view of information) structure in a Web page.</p>
+
+<p>I came across this problem when i was required to develop a web application which allows its users to store contacts and their related information(name, email, phone). The contacts would go into a folder and any folder can have any number of subfolders and any subfolder can have any number of contacts. Also, the folder structure can be nested as many levels deep as the user wants. So, how do you show the folder structure in a Web Page?</p>
+
+<p>You might encounter a lot of similar situation.</p>
+
+<p>###For the problem stated above, What we need is a Treeview structure.</p>
+<ol>
+  <li>
+    <p>Display the first level folders(say Level 1 folder).</p>
+  </li>
+  <li>
+    <p>User expands a Level 1 folder, expand and show all the subfolders within it.</p>
+  </li>
+  <li>
+    <p>User expands one of the subfolder(Level 2 folder), expand and show all the subfolders(Level 3 folder) within this subfolder and so on.</p>
+  </li>
+</ol>
+
+<p>While searching for the solution to this problem scenario, i came across jsTree.</p>
+
+<p>jsTree is a jquery plugin which allows displaying a tree structure in a web page. In this post we will see how to use it.</p>
+
+<p>###We will be dividing our work in two parts.</p>
+<ol>
+  <li>Illustrating basic use of jsTree. (A simple example)</li>
+  <li>Solving the problem stated above (using Django)</li>
+</ol>
+
+<p>##Basic use of jsTree:</p>
+
+<p>The example used here is not a practical example but as already specified its just for illustration purpose and to get a basic understanding of jsTree.</p>
+
+<p>####Our example:</p>
+<ol>
+  <li>Consider two categories to be shown on the page.</li>
+  <li>These categories can be considered synonymous to top level folders.</li>
+  <li>Lets say the two categories as “Search Engines” and “Networking Sites”.</li>
+  <li>Under “Search Engines” we put Google, Bing and Yahoo. “Google”, “Bing” and “Yahoo” form second level folder (immediately below top level folder).</li>
+  <li>Under “Networking Sites” we put Facebook and Twitter. So, “Facebook” and “Twitter” form second level folder.</li>
+  <li>Now under Google, we put Gmail, YouTube and Orkut. These form the third level folders.</li>
+  <li>We must also see some actions that can be performed while using jsTree. So, we will take the user to the link for these elements on being selected, provided the link exists.</li>
+</ol>
+
+<p>Lets create an html page which illustrates this example.</p>
+
+<p>I have put this code at github. You can get the entire code at <a href="https://github.com/akshar-raaj/Using-jsTree">https://github.com/akshar-raaj/Using-jsTree</a></p>
+
+<p>Let’s name the html page as try_jstree.html . Initially the page is:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;title&gt;</span>Use jsTree<span class="nt">&lt;/title&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"treeViewDiv"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span> 
+</code></pre></div></div>
+
+<p>Since jsTree is a jquery plugin, it requires jquery to be included in the page before we can use jsTree. So, we downloaded jquery.js and put it in the folder containing the html(try_jstree.html) file. Then we need to download jsTree(named jquery.jstree.js) and we put it in the same folder. Some folders (themes, docs etc.) comes while downloading jsTree. Put all these folders in our working folder.</p>
+
+<p>We have our first commit at this point.</p>
+
+<p>Now, include jquery.js and jquery.jstree.js in the file so that we can use them. At this point code looks like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;title&gt;</span>Use jsTree<span class="nt">&lt;/title&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.jstree.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script&gt;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+                
+            <span class="p">});</span>
+        <span class="nt">&lt;/script&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"treeViewDiv"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>We have our second commit at this point.(commit 4c7c7233ccb4d0e2e463375af9c579374ee73624)</p>
+
+<p>Next we need to select the div where the tree will be displayed. We use jquery selector for it. On the selected element we call jstree() and need to pass the required values.</p>
+
+<p>Here, we will be using json data to populate our tree.</p>
+
+<p>####So, the fields needed by jstree() in such case are:</p>
+<ol>
+  <li>json_data - This is an object.</li>
+  <li>plugins - This is a list.</li>
+</ol>
+
+<p>Hence at this point our code looks like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;title&gt;</span>Use jsTree<span class="nt">&lt;/title&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.jstree.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script&gt;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+                <span class="nx">$</span><span class="p">(</span><span class="s2">"#treeViewDiv"</span><span class="p">).</span><span class="nx">jstree</span><span class="p">({</span>
+                    <span class="s2">"json_data"</span> <span class="p">:</span> <span class="p">{</span>
+                        
+                    <span class="p">},</span>
+                    <span class="s2">"plugins"</span> <span class="p">:</span> <span class="p">[]</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+        <span class="nt">&lt;/script&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"treeViewDiv"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>We have our third commit at this point.(commit fd47c9784b7510a8cc3de9209054fbcc39fbac9b)</p>
+
+<p>Now, “json_data” requires an object having a field “data”. “data” is a list of the objects which we want displayed on the web page. So, “json_data” would look like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"json_data": {
+    "data":[]
+}
+</code></pre></div></div>
+
+<p>Each entry in “data” is the actual object to be displayed and used on the webpage. So, we will put the objects in “data” so that they can be displayed on the page.</p>
+
+<p>So, “json_data” becomes</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"json_data" : {
+                        "data":[
+                            {
+                                "data" : "Search engines"
+                            },
+                            {
+                                "data" : "Networking sites"
+                            }
+                        ]
+              }
+</code></pre></div></div>
+
+<p>Also, for using json_data we need a plugin named “json_data”. For displaying the tree as a tree like structure, we need the plugin named “themes”.And for taking the user to a new page upon selecting an entry(which we will be illustrating soon), we need a plugin named “ui”. So, “plugins” become</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"plugins" : [ "themes", "json_data", "ui" ]
+</code></pre></div></div>
+
+<p>At this point our code is:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;title&gt;</span>Use jsTree<span class="nt">&lt;/title&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.jstree.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script&gt;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+                <span class="nx">$</span><span class="p">(</span><span class="s2">"#treeViewDiv"</span><span class="p">).</span><span class="nx">jstree</span><span class="p">({</span>
+                    <span class="s2">"json_data"</span> <span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"data"</span><span class="p">:[</span>
+                            <span class="p">{</span>
+                                <span class="s2">"data"</span> <span class="p">:</span> <span class="s2">"Search engines"</span>
+                            <span class="p">},</span>
+                            <span class="p">{</span>
+                                <span class="s2">"data"</span> <span class="p">:</span> <span class="s2">"Networking sites"</span>
+                            <span class="p">}</span>
+                        <span class="p">]</span>
+                    <span class="p">},</span>
+                    <span class="s2">"plugins"</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">"themes"</span><span class="p">,</span> <span class="s2">"json_data"</span><span class="p">,</span> <span class="s2">"ui"</span> <span class="p">]</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+        <span class="nt">&lt;/script&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"treeViewDiv"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>We have our fourth commit at this point(commit 3e32dfeefe1adbddf3dc88d4a68e93e834996c0e). Check your page now. You should be able to see these entries on the page.</p>
+
+<p>Next, we need to add subelements to the elements. This is done by adding a “children” attribute to the object with which we need to attach the subelement. “children” is an array containing all the childs. We will associate the subelements as described earlier for our example. In the same step we will add subelements(level 3 elements) to the subelements(level 2 elements).</p>
+
+<p>At this point, our code looks like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;title&gt;</span>Use jsTree<span class="nt">&lt;/title&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.jstree.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script&gt;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+                <span class="nx">$</span><span class="p">(</span><span class="s2">"#treeViewDiv"</span><span class="p">).</span><span class="nx">jstree</span><span class="p">({</span>
+                    <span class="s2">"json_data"</span> <span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"data"</span><span class="p">:[</span>
+                            <span class="p">{</span>
+                                <span class="s2">"data"</span> <span class="p">:</span> <span class="s2">"Search engines"</span><span class="p">,</span>
+                                <span class="s2">"children"</span> <span class="p">:[</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Yahoo"</span><span class="p">},</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Bing"</span><span class="p">},</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Google"</span><span class="p">,</span> <span class="s2">"children"</span><span class="p">:[{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Youtube"</span><span class="p">},{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Gmail"</span><span class="p">},{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Orkut"</span><span class="p">}]}</span>
+                                            <span class="p">]</span>
+                            <span class="p">},</span>
+                            <span class="p">{</span>
+                                <span class="s2">"data"</span> <span class="p">:</span> <span class="s2">"Networking sites"</span><span class="p">,</span>
+                                <span class="s2">"children"</span> <span class="p">:[</span>
+                                    <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Facebook"</span><span class="p">},</span>
+                                    <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Twitter"</span><span class="p">}</span>
+                                <span class="p">]</span>
+                            <span class="p">}</span>
+                        <span class="p">]</span>
+                    <span class="p">},</span>
+                    <span class="s2">"plugins"</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">"themes"</span><span class="p">,</span> <span class="s2">"json_data"</span><span class="p">,</span> <span class="s2">"ui"</span> <span class="p">]</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+        <span class="nt">&lt;/script&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"treeViewDiv"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>Check you page now.</p>
+
+<p>You should be seeing a Treeview structure in your page. The screenshot for what your page should look like is <a href="http://agiliq.com/dumps/images/20121231/jstree.png">here</a>.
+We have our fifth commit at this point(commit 5276b111ee250220a7d422fe86142f16bb45a1cc).</p>
+
+<p>Next we want to add some additional information(fields) about each object, so that we can operate on those fields. The additional information is stored as field “metadata”. “metadata” is again an object containing key-value pairs for the additional information. So, the structure of “metadata” would be</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"metadata":{}
+</code></pre></div></div>
+
+<p>Let’s name the information we want to store as “href”. Lets store the value for this key as the url(We need it for our example). For object having “data” as “Gmail”, its “metadata” becomes</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"metadata":{"href":"www.gmail.com"}
+</code></pre></div></div>
+
+<p>Similarly for all the objects, and our code would look like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;title&gt;</span>Use jsTree<span class="nt">&lt;/title&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.jstree.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script&gt;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+                <span class="nx">$</span><span class="p">(</span><span class="s2">"#treeViewDiv"</span><span class="p">).</span><span class="nx">jstree</span><span class="p">({</span>
+                    <span class="s2">"json_data"</span> <span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"data"</span><span class="p">:[</span>
+                            <span class="p">{</span>
+                                <span class="s2">"data"</span> <span class="p">:</span> <span class="s2">"Search engines"</span><span class="p">,</span>
+                                <span class="s2">"children"</span> <span class="p">:[</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Yahoo"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.yahoo.com"</span><span class="p">}},</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Bing"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.bing.com"</span><span class="p">}},</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Google"</span><span class="p">,</span> <span class="s2">"children"</span><span class="p">:[{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Youtube"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://youtube.com"</span><span class="p">}},{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Gmail"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.gmail.com"</span><span class="p">}},{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Orkut"</span><span class="p">,</span><span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.orkut.com"</span><span class="p">}}],</span> <span class="s2">"metadata"</span> <span class="p">:</span> <span class="p">{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://youtube.com"</span><span class="p">}}</span>
+                                            <span class="p">]</span>
+                            <span class="p">},</span>
+                            <span class="p">{</span>
+                                <span class="s2">"data"</span> <span class="p">:</span> <span class="s2">"Networking sites"</span><span class="p">,</span>
+                                <span class="s2">"children"</span> <span class="p">:[</span>
+                                    <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Facebook"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.fb.com"</span><span class="p">}},</span>
+                                    <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Twitter"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://twitter.com"</span><span class="p">}}</span>
+                                <span class="p">]</span>
+                            <span class="p">}</span>
+                        <span class="p">]</span>
+                    <span class="p">},</span>
+                    <span class="s2">"plugins"</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">"themes"</span><span class="p">,</span> <span class="s2">"json_data"</span><span class="p">,</span> <span class="s2">"ui"</span> <span class="p">]</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+        <span class="nt">&lt;/script&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"treeViewDiv"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>At this point we have our sixth commit(commit 8bad3a8688c1e848fee4cda99d82f2e369d87f92).</p>
+
+<p>Next we need to attach handler to events(Our event would be selection of any element in the Tree structure, and our handler should take us to the “href” for that element).</p>
+
+<p>We accomplish this using bind(), similar to how we use in jquery script. The event we are concerned with is “select_node.jstree”. So, the bind() function would look like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bind("select_node.jstree", function(e, data){})
+</code></pre></div></div>
+
+<p>Whenever an element is selected, we want to get its “href” and take the user to that “href”. Also, we make sure that we take the user to new page only when “href” is defined for the element, else we show an alert telling that “href” is not defined for the element.</p>
+
+<p>We attach this bind() function with the div containing the Treeview structure. So, our final code looks like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;title&gt;</span>Use jsTree<span class="nt">&lt;/title&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"jquery.jstree.js"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script&gt;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+                <span class="nx">$</span><span class="p">(</span><span class="s2">"#treeViewDiv"</span><span class="p">).</span><span class="nx">jstree</span><span class="p">({</span>
+                    <span class="s2">"json_data"</span> <span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"data"</span><span class="p">:[</span>
+                            <span class="p">{</span>
+                                <span class="s2">"data"</span> <span class="p">:</span> <span class="s2">"Search engines"</span><span class="p">,</span>
+                                <span class="s2">"children"</span> <span class="p">:[</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Yahoo"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.yahoo.com"</span><span class="p">}},</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Bing"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.bing.com"</span><span class="p">}},</span>
+                                             <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Google"</span><span class="p">,</span> <span class="s2">"children"</span><span class="p">:[{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Youtube"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://youtube.com"</span><span class="p">}},{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Gmail"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.gmail.com"</span><span class="p">}},{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Orkut"</span><span class="p">,</span><span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.orkut.com"</span><span class="p">}}],</span> <span class="s2">"metadata"</span> <span class="p">:</span> <span class="p">{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://youtube.com"</span><span class="p">}}</span>
+                                            <span class="p">]</span>
+                            <span class="p">},</span>
+                            <span class="p">{</span>
+                                <span class="s2">"data"</span> <span class="p">:</span> <span class="s2">"Networking sites"</span><span class="p">,</span>
+                                <span class="s2">"children"</span> <span class="p">:[</span>
+                                    <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Facebook"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://www.fb.com"</span><span class="p">}},</span>
+                                    <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span><span class="s2">"Twitter"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:{</span><span class="s2">"href"</span><span class="p">:</span><span class="s2">"http://twitter.com"</span><span class="p">}}</span>
+                                <span class="p">]</span>
+                            <span class="p">}</span>
+                        <span class="p">]</span>
+                    <span class="p">},</span>
+                    <span class="s2">"plugins"</span> <span class="p">:</span> <span class="p">[</span> <span class="s2">"themes"</span><span class="p">,</span> <span class="s2">"json_data"</span><span class="p">,</span> <span class="s2">"ui"</span> <span class="p">]</span>
+                <span class="p">}).</span><span class="nx">bind</span><span class="p">(</span><span class="s2">"select_node.jstree"</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span>
+                    <span class="p">{</span>
+                        <span class="k">if</span><span class="p">(</span><span class="nx">jQuery</span><span class="p">.</span><span class="nx">data</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">rslt</span><span class="p">.</span><span class="nx">obj</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"href"</span><span class="p">))</span>
+                        <span class="p">{</span>
+                            <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="o">=</span><span class="nx">jQuery</span><span class="p">.</span><span class="nx">data</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">rslt</span><span class="p">.</span><span class="nx">obj</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"href"</span><span class="p">);</span>
+                        <span class="p">}</span>
+                        <span class="k">else</span>
+                        <span class="p">{</span>
+                            <span class="nx">alert</span><span class="p">(</span><span class="s2">"No href defined for this element"</span><span class="p">);</span>
+                        <span class="p">}</span>
+                    <span class="p">})</span>
+            <span class="p">});</span>
+        <span class="nt">&lt;/script&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"treeViewDiv"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>This is the final code and the last commit(commit ff886547287eec114d7020ad66718cae83a1ee37).</p>
+
+<p>We will see how to use jsTree with django, and solve our problem in the next post.</p>
+
+
+  </div><a class="u-url" href="/treeview/2011/10/12/how-use-jstree.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

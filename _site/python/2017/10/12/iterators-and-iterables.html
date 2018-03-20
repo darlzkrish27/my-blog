@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Iterators and Iterables | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Iterators and Iterables" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Iterable Iterables are objects that implement the iterator protocol. Iterator protocol mandates that __iter__ method be implemented on the object. class A(object): def __iter__(self): return B() An instance of A would be an iterable, because class A has __iter__() defined on it. __iter__ method mandates that an iterator be returned from it. Instance of class B must be an iterator. More on iterators to follow. iterator and iterables are different things. a = A() Here “a” is an iterable. It is not an iterator. There is a built-in method called iter(). Only iterables can be passed to built in method iter(). If we try to pass a non-iterable to iter(), a TypeError will occur. More on built-in method iter() to follow. Passing an iterable to built in iter() causes __iter__() of the iterable to be called. Iterator An iterator is an object that has next() method defined. An iterator doesn’t need to have __iter__() defined. Similarly an iterable doesn’t need to have next() defined. To reiterate, iterable must have __iter__() defined and iterator must have next() defined. Iterator class B could look like: class B(object): def next(self): return &quot;boom&quot; Class B is an iterator because it has method next(). You can do: a_instance = A() a_iter = iter(a_instance) a_instance is an iterable because it has method __iter__. Calling built-in iter() on the iterable a_instance internally called a_instance.__iter__(). a_instance.__iter__() returned an iterator which is an instance of class B. Built-in next() and built-in iter() Built in method next() mandates that an iterator be passed to it. In [33]: next(a_iter) Out[33]: &#39;boom&#39; In [34]: next(a_iter) Out[34]: &#39;boom&#39; next() works with an iterator. next() doesn’t work with iterable. Try it: In [60]: iterable = A() In [61]: next(iterable) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-61-edd1adac5cd0&gt; in &lt;module&gt;() ----&gt; 1 next(iterable) TypeError: A object is not an iterator In [65]: iterator = B() In [66]: next(iterator) Out[66]: &#39;boom&#39; In [67]: next(iterator) Out[67]: &#39;boom&#39; iter() works with iterable. iter() doesn’t work with iterators. In [73]: iter(iterable) Out[73]: &lt;__main__.B at 0x1058cef50&gt; In [74]: iter(iterator) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-74-035e65827850&gt; in &lt;module&gt;() ----&gt; 1 iter(iterator) TypeError: &#39;B&#39; object is not iterable An iterable needs an underlying iterator. In our examples, iterable A needs underlying iterator B. At the same time iterators are independent of iterables. B isn’t dependent on A. Let’s create a class which is not an iterable i.e which doesn’t have __iter__() implemented and try to use it with built in iter(). In [44]: class NotIterable(object): ...: pass ...: In [45]: iter(NotIterable()) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-45-a8708f85a52f&gt; in &lt;module&gt;() ----&gt; 1 iter(NotIterable()) TypeError: &#39;NotIterable&#39; object is not iterable Built in iter() can only work with an iterable. And calling iter(iterable) returns an iterator. StopIteration When using iterators, there is a related concept called StopIteration. Currently every time you call next() on an instance of B, “boom” is returned. Suppose you only want “boom” to be returned 3 times, then you can do. In [79]: class B(object): ...: def __init__(self): ...: self.i = 0 ...: def next(self): ...: if self.i == 3: ...: raise StopIteration() ...: self.i += 1 ...: return &quot;boom&quot; In [81]: next(b_instance) Out[81]: &#39;boom&#39; In [82]: next(b_instance) Out[82]: &#39;boom&#39; In [83]: next(b_instance) Out[83]: &#39;boom&#39; In [84]: next(b_instance) --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &lt;ipython-input-84-95c74b691bf4&gt; in &lt;module&gt;() ----&gt; 1 next(b_instance) &lt;ipython-input-79-700035006973&gt; in next(self) 4 def next(self): 5 if self.i == 3: ----&gt; 6 raise StopIteration() 7 self.i += 1 8 return &quot;boom&quot; StopIteration: How for loop works For loop expects an iterable to be passed to it. Assuming the classes look like the following: In [89]: class B(object): ...: def next(self): ...: return &quot;boom&quot; ...: In [89]: class A(object): ...: def __iter__(self): ...: return B() ...: In [89]: iterable = A() In [89]: for each in iterable: ...: print each ...: This would keep printing “boom”. What happened here: Saying for each in iterable causes iter(iterable) to be called. This returns the underlying iterator. Then next() of iterator is repeatedly called until next() of iterator raises a StopIteration. Since in this case StopIteration() is never raised from the iterator, so “boom” keeps on getting returned. In case we only want “boom” to be printed 3 times, we could do: In [89]: class B(object): ...: def __init__(self): ...: self.i = 0 # Hard coded currently, but can be made configurable ...: def next(self): ...: if self.i == 3: ...: raise StopIteration() ...: self.i += 1 ...: return &quot;boom&quot; ...: In [90]: iterable = A() In [91]: for each in iterable: ...: print each ...: boom boom boom Here StopIteration() was raised after next() of iterator ran for 3 times. So for loop only printed “boom” 3 times. How lists work with for loop Python lists are iterables. Internally lists implement the __iter__() method. And __iter__() of list returns an iterator which has a next() method. You can verify that a list object has __iter__(): In [92]: l = [1, 2, 3] In [93]: l.__iter__ Out[93]: &lt;method-wrapper &#39;__iter__&#39; of list object at 0x1058eaa28&gt; Let’s get the corresponding iterator for this iterable. In [94]: iterator_for_list = iter(l) Since we are expecting it to be an iterator, there must be a method next() on this object. In [99]: iterator_for_list.next Out[99]: &lt;method-wrapper &#39;next&#39; of listiterator object at 0x1058dd610&gt; Calling next() on this object will return different elements of list. When no more elements are left, a StopIteration() would be raised In [102]: iterator_for_list.next() Out[102]: 1 In [103]: iterator_for_list.next() Out[103]: 2 In [104]: iterator_for_list.next() Out[104]: 3 In [105]: iterator_for_list.next() --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &lt;ipython-input-105-3adc9ab4c81f&gt; in &lt;module&gt;() ----&gt; 1 iterator_for_list.next() StopIteration: Because iterator protocol is implemented on a list, that’s why we are able to iterate over a list." />
+<meta property="og:description" content="Iterable Iterables are objects that implement the iterator protocol. Iterator protocol mandates that __iter__ method be implemented on the object. class A(object): def __iter__(self): return B() An instance of A would be an iterable, because class A has __iter__() defined on it. __iter__ method mandates that an iterator be returned from it. Instance of class B must be an iterator. More on iterators to follow. iterator and iterables are different things. a = A() Here “a” is an iterable. It is not an iterator. There is a built-in method called iter(). Only iterables can be passed to built in method iter(). If we try to pass a non-iterable to iter(), a TypeError will occur. More on built-in method iter() to follow. Passing an iterable to built in iter() causes __iter__() of the iterable to be called. Iterator An iterator is an object that has next() method defined. An iterator doesn’t need to have __iter__() defined. Similarly an iterable doesn’t need to have next() defined. To reiterate, iterable must have __iter__() defined and iterator must have next() defined. Iterator class B could look like: class B(object): def next(self): return &quot;boom&quot; Class B is an iterator because it has method next(). You can do: a_instance = A() a_iter = iter(a_instance) a_instance is an iterable because it has method __iter__. Calling built-in iter() on the iterable a_instance internally called a_instance.__iter__(). a_instance.__iter__() returned an iterator which is an instance of class B. Built-in next() and built-in iter() Built in method next() mandates that an iterator be passed to it. In [33]: next(a_iter) Out[33]: &#39;boom&#39; In [34]: next(a_iter) Out[34]: &#39;boom&#39; next() works with an iterator. next() doesn’t work with iterable. Try it: In [60]: iterable = A() In [61]: next(iterable) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-61-edd1adac5cd0&gt; in &lt;module&gt;() ----&gt; 1 next(iterable) TypeError: A object is not an iterator In [65]: iterator = B() In [66]: next(iterator) Out[66]: &#39;boom&#39; In [67]: next(iterator) Out[67]: &#39;boom&#39; iter() works with iterable. iter() doesn’t work with iterators. In [73]: iter(iterable) Out[73]: &lt;__main__.B at 0x1058cef50&gt; In [74]: iter(iterator) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-74-035e65827850&gt; in &lt;module&gt;() ----&gt; 1 iter(iterator) TypeError: &#39;B&#39; object is not iterable An iterable needs an underlying iterator. In our examples, iterable A needs underlying iterator B. At the same time iterators are independent of iterables. B isn’t dependent on A. Let’s create a class which is not an iterable i.e which doesn’t have __iter__() implemented and try to use it with built in iter(). In [44]: class NotIterable(object): ...: pass ...: In [45]: iter(NotIterable()) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-45-a8708f85a52f&gt; in &lt;module&gt;() ----&gt; 1 iter(NotIterable()) TypeError: &#39;NotIterable&#39; object is not iterable Built in iter() can only work with an iterable. And calling iter(iterable) returns an iterator. StopIteration When using iterators, there is a related concept called StopIteration. Currently every time you call next() on an instance of B, “boom” is returned. Suppose you only want “boom” to be returned 3 times, then you can do. In [79]: class B(object): ...: def __init__(self): ...: self.i = 0 ...: def next(self): ...: if self.i == 3: ...: raise StopIteration() ...: self.i += 1 ...: return &quot;boom&quot; In [81]: next(b_instance) Out[81]: &#39;boom&#39; In [82]: next(b_instance) Out[82]: &#39;boom&#39; In [83]: next(b_instance) Out[83]: &#39;boom&#39; In [84]: next(b_instance) --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &lt;ipython-input-84-95c74b691bf4&gt; in &lt;module&gt;() ----&gt; 1 next(b_instance) &lt;ipython-input-79-700035006973&gt; in next(self) 4 def next(self): 5 if self.i == 3: ----&gt; 6 raise StopIteration() 7 self.i += 1 8 return &quot;boom&quot; StopIteration: How for loop works For loop expects an iterable to be passed to it. Assuming the classes look like the following: In [89]: class B(object): ...: def next(self): ...: return &quot;boom&quot; ...: In [89]: class A(object): ...: def __iter__(self): ...: return B() ...: In [89]: iterable = A() In [89]: for each in iterable: ...: print each ...: This would keep printing “boom”. What happened here: Saying for each in iterable causes iter(iterable) to be called. This returns the underlying iterator. Then next() of iterator is repeatedly called until next() of iterator raises a StopIteration. Since in this case StopIteration() is never raised from the iterator, so “boom” keeps on getting returned. In case we only want “boom” to be printed 3 times, we could do: In [89]: class B(object): ...: def __init__(self): ...: self.i = 0 # Hard coded currently, but can be made configurable ...: def next(self): ...: if self.i == 3: ...: raise StopIteration() ...: self.i += 1 ...: return &quot;boom&quot; ...: In [90]: iterable = A() In [91]: for each in iterable: ...: print each ...: boom boom boom Here StopIteration() was raised after next() of iterator ran for 3 times. So for loop only printed “boom” 3 times. How lists work with for loop Python lists are iterables. Internally lists implement the __iter__() method. And __iter__() of list returns an iterator which has a next() method. You can verify that a list object has __iter__(): In [92]: l = [1, 2, 3] In [93]: l.__iter__ Out[93]: &lt;method-wrapper &#39;__iter__&#39; of list object at 0x1058eaa28&gt; Let’s get the corresponding iterator for this iterable. In [94]: iterator_for_list = iter(l) Since we are expecting it to be an iterator, there must be a method next() on this object. In [99]: iterator_for_list.next Out[99]: &lt;method-wrapper &#39;next&#39; of listiterator object at 0x1058dd610&gt; Calling next() on this object will return different elements of list. When no more elements are left, a StopIteration() would be raised In [102]: iterator_for_list.next() Out[102]: 1 In [103]: iterator_for_list.next() Out[103]: 2 In [104]: iterator_for_list.next() Out[104]: 3 In [105]: iterator_for_list.next() --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &lt;ipython-input-105-3adc9ab4c81f&gt; in &lt;module&gt;() ----&gt; 1 iterator_for_list.next() StopIteration: Because iterator protocol is implemented on a list, that’s why we are able to iterate over a list." />
+<link rel="canonical" href="http://localhost:4000/python/2017/10/12/iterators-and-iterables.html" />
+<meta property="og:url" content="http://localhost:4000/python/2017/10/12/iterators-and-iterables.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-10-12T11:36:19+05:30" />
+<script type="application/ld+json">
+{"description":"Iterable Iterables are objects that implement the iterator protocol. Iterator protocol mandates that __iter__ method be implemented on the object. class A(object): def __iter__(self): return B() An instance of A would be an iterable, because class A has __iter__() defined on it. __iter__ method mandates that an iterator be returned from it. Instance of class B must be an iterator. More on iterators to follow. iterator and iterables are different things. a = A() Here “a” is an iterable. It is not an iterator. There is a built-in method called iter(). Only iterables can be passed to built in method iter(). If we try to pass a non-iterable to iter(), a TypeError will occur. More on built-in method iter() to follow. Passing an iterable to built in iter() causes __iter__() of the iterable to be called. Iterator An iterator is an object that has next() method defined. An iterator doesn’t need to have __iter__() defined. Similarly an iterable doesn’t need to have next() defined. To reiterate, iterable must have __iter__() defined and iterator must have next() defined. Iterator class B could look like: class B(object): def next(self): return &quot;boom&quot; Class B is an iterator because it has method next(). You can do: a_instance = A() a_iter = iter(a_instance) a_instance is an iterable because it has method __iter__. Calling built-in iter() on the iterable a_instance internally called a_instance.__iter__(). a_instance.__iter__() returned an iterator which is an instance of class B. Built-in next() and built-in iter() Built in method next() mandates that an iterator be passed to it. In [33]: next(a_iter) Out[33]: &#39;boom&#39; In [34]: next(a_iter) Out[34]: &#39;boom&#39; next() works with an iterator. next() doesn’t work with iterable. Try it: In [60]: iterable = A() In [61]: next(iterable) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-61-edd1adac5cd0&gt; in &lt;module&gt;() ----&gt; 1 next(iterable) TypeError: A object is not an iterator In [65]: iterator = B() In [66]: next(iterator) Out[66]: &#39;boom&#39; In [67]: next(iterator) Out[67]: &#39;boom&#39; iter() works with iterable. iter() doesn’t work with iterators. In [73]: iter(iterable) Out[73]: &lt;__main__.B at 0x1058cef50&gt; In [74]: iter(iterator) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-74-035e65827850&gt; in &lt;module&gt;() ----&gt; 1 iter(iterator) TypeError: &#39;B&#39; object is not iterable An iterable needs an underlying iterator. In our examples, iterable A needs underlying iterator B. At the same time iterators are independent of iterables. B isn’t dependent on A. Let’s create a class which is not an iterable i.e which doesn’t have __iter__() implemented and try to use it with built in iter(). In [44]: class NotIterable(object): ...: pass ...: In [45]: iter(NotIterable()) --------------------------------------------------------------------------- TypeError Traceback (most recent call last) &lt;ipython-input-45-a8708f85a52f&gt; in &lt;module&gt;() ----&gt; 1 iter(NotIterable()) TypeError: &#39;NotIterable&#39; object is not iterable Built in iter() can only work with an iterable. And calling iter(iterable) returns an iterator. StopIteration When using iterators, there is a related concept called StopIteration. Currently every time you call next() on an instance of B, “boom” is returned. Suppose you only want “boom” to be returned 3 times, then you can do. In [79]: class B(object): ...: def __init__(self): ...: self.i = 0 ...: def next(self): ...: if self.i == 3: ...: raise StopIteration() ...: self.i += 1 ...: return &quot;boom&quot; In [81]: next(b_instance) Out[81]: &#39;boom&#39; In [82]: next(b_instance) Out[82]: &#39;boom&#39; In [83]: next(b_instance) Out[83]: &#39;boom&#39; In [84]: next(b_instance) --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &lt;ipython-input-84-95c74b691bf4&gt; in &lt;module&gt;() ----&gt; 1 next(b_instance) &lt;ipython-input-79-700035006973&gt; in next(self) 4 def next(self): 5 if self.i == 3: ----&gt; 6 raise StopIteration() 7 self.i += 1 8 return &quot;boom&quot; StopIteration: How for loop works For loop expects an iterable to be passed to it. Assuming the classes look like the following: In [89]: class B(object): ...: def next(self): ...: return &quot;boom&quot; ...: In [89]: class A(object): ...: def __iter__(self): ...: return B() ...: In [89]: iterable = A() In [89]: for each in iterable: ...: print each ...: This would keep printing “boom”. What happened here: Saying for each in iterable causes iter(iterable) to be called. This returns the underlying iterator. Then next() of iterator is repeatedly called until next() of iterator raises a StopIteration. Since in this case StopIteration() is never raised from the iterator, so “boom” keeps on getting returned. In case we only want “boom” to be printed 3 times, we could do: In [89]: class B(object): ...: def __init__(self): ...: self.i = 0 # Hard coded currently, but can be made configurable ...: def next(self): ...: if self.i == 3: ...: raise StopIteration() ...: self.i += 1 ...: return &quot;boom&quot; ...: In [90]: iterable = A() In [91]: for each in iterable: ...: print each ...: boom boom boom Here StopIteration() was raised after next() of iterator ran for 3 times. So for loop only printed “boom” 3 times. How lists work with for loop Python lists are iterables. Internally lists implement the __iter__() method. And __iter__() of list returns an iterator which has a next() method. You can verify that a list object has __iter__(): In [92]: l = [1, 2, 3] In [93]: l.__iter__ Out[93]: &lt;method-wrapper &#39;__iter__&#39; of list object at 0x1058eaa28&gt; Let’s get the corresponding iterator for this iterable. In [94]: iterator_for_list = iter(l) Since we are expecting it to be an iterator, there must be a method next() on this object. In [99]: iterator_for_list.next Out[99]: &lt;method-wrapper &#39;next&#39; of listiterator object at 0x1058dd610&gt; Calling next() on this object will return different elements of list. When no more elements are left, a StopIteration() would be raised In [102]: iterator_for_list.next() Out[102]: 1 In [103]: iterator_for_list.next() Out[103]: 2 In [104]: iterator_for_list.next() Out[104]: 3 In [105]: iterator_for_list.next() --------------------------------------------------------------------------- StopIteration Traceback (most recent call last) &lt;ipython-input-105-3adc9ab4c81f&gt; in &lt;module&gt;() ----&gt; 1 iterator_for_list.next() StopIteration: Because iterator protocol is implemented on a list, that’s why we are able to iterate over a list.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/python/2017/10/12/iterators-and-iterables.html","headline":"Iterators and Iterables","dateModified":"2017-10-12T11:36:19+05:30","datePublished":"2017-10-12T11:36:19+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/python/2017/10/12/iterators-and-iterables.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Iterators and Iterables</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2017-10-12T11:36:19+05:30" itemprop="datePublished">Oct 12, 2017
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h4 id="iterable">Iterable</h4>
+
+<p>Iterables are objects that implement the iterator protocol.</p>
+
+<p>Iterator protocol mandates that __iter__ method be implemented on the object.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class A(object):
+	def __iter__(self):
+		return B()
+</code></pre></div></div>
+
+<p>An instance of A would be an iterable, because class A has __iter__() defined on it.</p>
+
+<p>__iter__ method mandates that an <code class="highlighter-rouge">iterator</code> be returned from it. Instance of class B must be an iterator. More on iterators to follow. <code class="highlighter-rouge">iterator</code> and <code class="highlighter-rouge">iterables</code> are different things.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>a = A()
+</code></pre></div></div>
+
+<p>Here “a” is an <code class="highlighter-rouge">iterable</code>. It is not an <code class="highlighter-rouge">iterator</code>.</p>
+
+<p>There is a built-in method called <code class="highlighter-rouge">iter()</code>. Only iterables can be passed to built in method <code class="highlighter-rouge">iter()</code>. If we try to pass a non-iterable to iter(), a TypeError will occur. More on built-in method iter() to follow.</p>
+
+<p>Passing an iterable to built in <code class="highlighter-rouge">iter()</code> causes __iter__() of the iterable to be called.</p>
+
+<h4 id="iterator">Iterator</h4>
+
+<p>An iterator is an object that has next() method defined.</p>
+
+<p>An iterator doesn’t need to have __iter__() defined. Similarly an iterable doesn’t need to have next() defined.</p>
+
+<p>To reiterate, iterable must have __iter__() defined and iterator must have next() defined.</p>
+
+<p>Iterator class B could look like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class B(object):
+	def next(self):
+		return "boom"
+</code></pre></div></div>
+
+<p>Class B is an iterator because it has method next().</p>
+
+<p>You can do:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>a_instance = A()	
+a_iter = iter(a_instance)
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">a_instance</code> is an iterable because it has method __iter__. Calling built-in iter() on the iterable <code class="highlighter-rouge">a_instance</code> internally called a_instance.__iter__(). a_instance.__iter__() returned an iterator which is an instance of class B.</p>
+
+<h4 id="built-in-next-and-built-in-iter">Built-in next() and built-in iter()</h4>
+
+<p>Built in method <code class="highlighter-rouge">next()</code> mandates that an iterator be passed to it.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [33]: next(a_iter)
+Out[33]: 'boom'
+
+In [34]: next(a_iter)
+Out[34]: 'boom'
+</code></pre></div></div>
+
+<p>next() works with an iterator. next() doesn’t work with iterable. Try it:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [60]: iterable = A()
+
+In [61]: next(iterable)
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+&lt;ipython-input-61-edd1adac5cd0&gt; in &lt;module&gt;()
+----&gt; 1 next(iterable)
+
+TypeError: A object is not an iterator
+
+In [65]: iterator = B()
+
+In [66]: next(iterator)
+Out[66]: 'boom'
+
+In [67]: next(iterator)
+Out[67]: 'boom'
+</code></pre></div></div>
+
+<p>iter() works with iterable. iter() doesn’t work with iterators.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [73]: iter(iterable)
+Out[73]: &lt;__main__.B at 0x1058cef50&gt;
+
+In [74]: iter(iterator)
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+&lt;ipython-input-74-035e65827850&gt; in &lt;module&gt;()
+----&gt; 1 iter(iterator)
+
+TypeError: 'B' object is not iterable
+</code></pre></div></div>
+
+<p>An iterable needs an underlying iterator. In our examples, iterable A needs underlying iterator B.</p>
+
+<p>At the same time iterators are independent of iterables. B isn’t dependent on A.</p>
+
+<p>Let’s create a class which is not an iterable i.e which doesn’t have __iter__() implemented and try to use it with built in iter().</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [44]: class NotIterable(object):
+	...:     pass
+	...:
+
+In [45]: iter(NotIterable())
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+&lt;ipython-input-45-a8708f85a52f&gt; in &lt;module&gt;()
+----&gt; 1 iter(NotIterable())
+
+TypeError: 'NotIterable' object is not iterable
+</code></pre></div></div>
+
+<p>Built in iter() can only work with an iterable. And calling iter(iterable) returns an iterator.</p>
+
+<h4 id="stopiteration">StopIteration</h4>
+
+<p>When using iterators, there is a related concept called StopIteration.</p>
+
+<p>Currently every time you call next() on an instance of B, “boom” is returned. Suppose you only want “boom” to be returned 3 times, then you can do.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [79]: class B(object):
+	...:     def __init__(self):
+	...:         self.i = 0
+	...:     def next(self):
+	...:         if self.i == 3:
+	...:             raise StopIteration()
+	...:         self.i += 1
+	...:         return "boom"
+
+In [81]: next(b_instance)
+Out[81]: 'boom'
+
+In [82]: next(b_instance)
+Out[82]: 'boom'
+
+In [83]: next(b_instance)
+Out[83]: 'boom'
+
+In [84]: next(b_instance)
+---------------------------------------------------------------------------
+StopIteration                             Traceback (most recent call last)
+&lt;ipython-input-84-95c74b691bf4&gt; in &lt;module&gt;()
+----&gt; 1 next(b_instance)
+
+&lt;ipython-input-79-700035006973&gt; in next(self)
+	  4     def next(self):
+	  5         if self.i == 3:
+----&gt; 6             raise StopIteration()
+	  7         self.i += 1
+	  8         return "boom"
+
+StopIteration:
+</code></pre></div></div>
+
+<h4 id="how-for-loop-works">How for loop works</h4>
+
+<p>For loop expects an iterable to be passed to it. Assuming the classes look like the following:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [89]: class B(object):
+	...:     def next(self):
+	...:         return "boom"
+	...:
+
+In [89]: class A(object):
+	...:     def __iter__(self):
+	...:         return B()
+	...:
+
+In [89]: iterable = A()
+
+In [89]: for each in iterable:
+	...:     print each
+	...:
+</code></pre></div></div>
+
+<p>This would keep printing “boom”. What happened here:</p>
+
+<ul>
+  <li>Saying <code class="highlighter-rouge">for each in iterable</code> causes iter(iterable) to be called. This returns the underlying iterator.</li>
+  <li>Then next() of iterator is repeatedly called until next() of iterator raises a StopIteration.</li>
+  <li>Since in this case StopIteration() is never raised from the iterator, so “boom” keeps on getting returned.</li>
+</ul>
+
+<p>In case we only want “boom” to be printed 3 times, we could do:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [89]: class B(object):
+	...:     def __init__(self):
+	...:         self.i = 0 # Hard coded currently, but can be made configurable
+	...:     def next(self):
+	...:         if self.i == 3:
+	...:             raise StopIteration()
+	...:         self.i += 1
+	...:         return "boom"
+	...:
+
+In [90]: iterable = A()
+
+In [91]: for each in iterable:
+	...:     print each
+	...:
+boom
+boom
+boom
+</code></pre></div></div>
+
+<p>Here StopIteration() was raised after next() of iterator ran for 3 times. So <code class="highlighter-rouge">for</code> loop only printed “boom” 3 times.</p>
+
+<h5 id="how-lists-work-with-for-loop">How lists work with for loop</h5>
+
+<p>Python lists are iterables. Internally lists implement the __iter__() method. And __iter__() of list returns an iterator which has a next() method.</p>
+
+<p>You can verify that a list object has __iter__():</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [92]: l = [1, 2, 3]
+
+In [93]: l.__iter__
+Out[93]: &lt;method-wrapper '__iter__' of list object at 0x1058eaa28&gt;
+</code></pre></div></div>
+
+<p>Let’s get the corresponding iterator for this iterable.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [94]: iterator_for_list = iter(l)
+</code></pre></div></div>
+
+<p>Since we are expecting it to be an iterator, there must be a method next() on this object.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [99]: iterator_for_list.next
+Out[99]: &lt;method-wrapper 'next' of listiterator object at 0x1058dd610&gt;
+</code></pre></div></div>
+
+<p>Calling next() on this object will return different elements of list. When no more elements are left, a StopIteration() would be raised</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [102]: iterator_for_list.next()
+Out[102]: 1
+
+In [103]: iterator_for_list.next()
+Out[103]: 2
+
+In [104]: iterator_for_list.next()
+Out[104]: 3
+
+In [105]: iterator_for_list.next()
+---------------------------------------------------------------------------
+StopIteration                             Traceback (most recent call last)
+&lt;ipython-input-105-3adc9ab4c81f&gt; in &lt;module&gt;()
+----&gt; 1 iterator_for_list.next()
+
+StopIteration:
+</code></pre></div></div>
+
+<p>Because iterator protocol is implemented on a list, that’s why we are able to iterate over a list.</p>
+
+
+  </div><a class="u-url" href="/python/2017/10/12/iterators-and-iterables.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

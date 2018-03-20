@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Disqus and Disqus SSO | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Disqus and Disqus SSO" />
+<meta name="author" content="Rakesh" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Outsourcing the comments and discussions part to a third party widget always helps us to save a lot of effort. When you feel that if it is okay to share your thoughts and discussions with someone out there who serves the capabilities of social integration and spam detection won’t it be a cake walk? Disqus is such a kind of blog comment hosting service which is platform-agnostic and URL-agnostic. It is built with javascript and backend technology, Python using Django. Let us get to know how to add this to our Django app. Adding Disqus widget to a site is pretty straight forward and effortless. Here are the steps to follow: Create an account on Disqus and fill the details at https://disqus.com/admin/create/ Once you finish registration, access the universal code In the next following page, get the script and use it wherever we want to display comments Update the settings file with DISQUS_SHORTNAME The first step includes signing up in to Disqus and getting an account. Once we are done with it, we will be heading to a home page where we can find “Add disqus to your site” on top left. If we click it, we will be redirected to site profile page where we should fill the details like the site name and unique Disqus URL which we call it as “disqus_shortname”. Once the registration is completed it will show up the general settings page where we can select the platform i.e univeral code, wordpress, blogger, Tumblr, square space and so on. As we are planning to add Disqus to Django app we should select Universal code. The Universal code is a script which looks like this: &lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt; &lt;script type=&quot;text/javascript&quot;&gt; /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */ var disqus_shortname = &#39;try1&#39;; // required: replace example with your forum shortname /* * * DON&#39;T EDIT BELOW THIS LINE * * */ (function() { var dsq = document.createElement(&#39;script&#39;); dsq.type = &#39;text/javascript&#39;; dsq.async = true; dsq.src = &#39;//&#39; + disqus_shortname + &#39;.disqus.com/embed.js&#39;; (document.getElementsByTagName(&#39;head&#39;)[0] || document.getElementsByTagName(&#39;body&#39;)[0]).appendChild(dsq); })(); &lt;/script&gt; &lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;http://disqus.com/?ref_noscript&quot;&gt;comments powered by Disqus.&lt;/a&gt;&lt;/noscript&gt; The script can be used in the template wherever we want our comments section to show up. That delivers us the comments section in our app with one step remaining. Access the “disqus_shortname” i.e. the unique Disqus URL that we specified in the process of registration and add it in the settings file of the Django app. eg. DISQUS_WEBSITE_SHORTNAME = “mydjangoapp” Disqus SSO Commenting on a thread requires a person to log in with their social accounts. It would be an extra step for the people to log in again for commenting after logging in to the app. To abate this fatigue of logging in again we can use the “single sign on”. As of now SSO is available to Disqus as a free add on. To add to our app we should request the support team of Disqus through a contact form. Once we send a request to support team it takes like 24 hours to get the access to SSO console. Steps to register Disqus application Register the application at https://disqus.com/api/applications/register/ Once the registration is completed the secret keys and the public keys can be accessed at https://disqus.com/api/applications/ Add the keys to settings file as DISQUS_PUBLIC_KEY and DISQUS_SECRET_KEY To avail console, SSO and stuff we can go to https://disqus.com/api/applications/ Pass existing user data The first part to start using it is creating a Remote Domain which can be used as a reference between Disqus and the user accounts. We can do it right away at https://disqus.com/api/sso/. Add the public key and secret key of the application in the settings. We can access the keys at https://disqus.com/api/applications/ under the app name. Use HMAC-SHA1 to pass the user details to the Disqus to authenticate. The message that we pass should contain id, username and email. We can generate the HMAC-SHA1 the following way: HMAC-&gt;SHA1(secret_key, message + &#39; &#39; + timestamp) Once the message is generated the following script need to be used in the page where we want the Disqus to show up. var disqus_config = function () { // The generated payload which authenticates users with Disqus this.page.remote_auth_s3 = &#39;&lt;message&gt; &lt;hmac&gt; &lt;timestamp&gt;&#39;; this.page.api_key = &#39;public_api_key&#39;; } In Django we can accomplish this by registering a simple tag with function to generate the HMAC-SHA1 and using that tag in the template where we are displaying the Disqus comments. The flow moves on the following way: Firstly, we should access the value of the DISQUS_SECRET key from the settings. In the next step we should create a json packet of the data attributes, i.e ‘id’, ‘username’, ‘email’. Then we should encode the json packet to base64 and we should generate a time stamp for signing the message. To pass the secret key and the user details we should generate the HMAC signature. Thus acquired HMAC signature should be returned as a script tag to insert the SSO message. At the end the function appears as in the following code. Check out the Disqus SSO Example The template tag should be used in the place where we want the Disqus comments to appear. And that ends up the process of adding SSO to Disqus." />
+<meta property="og:description" content="Outsourcing the comments and discussions part to a third party widget always helps us to save a lot of effort. When you feel that if it is okay to share your thoughts and discussions with someone out there who serves the capabilities of social integration and spam detection won’t it be a cake walk? Disqus is such a kind of blog comment hosting service which is platform-agnostic and URL-agnostic. It is built with javascript and backend technology, Python using Django. Let us get to know how to add this to our Django app. Adding Disqus widget to a site is pretty straight forward and effortless. Here are the steps to follow: Create an account on Disqus and fill the details at https://disqus.com/admin/create/ Once you finish registration, access the universal code In the next following page, get the script and use it wherever we want to display comments Update the settings file with DISQUS_SHORTNAME The first step includes signing up in to Disqus and getting an account. Once we are done with it, we will be heading to a home page where we can find “Add disqus to your site” on top left. If we click it, we will be redirected to site profile page where we should fill the details like the site name and unique Disqus URL which we call it as “disqus_shortname”. Once the registration is completed it will show up the general settings page where we can select the platform i.e univeral code, wordpress, blogger, Tumblr, square space and so on. As we are planning to add Disqus to Django app we should select Universal code. The Universal code is a script which looks like this: &lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt; &lt;script type=&quot;text/javascript&quot;&gt; /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */ var disqus_shortname = &#39;try1&#39;; // required: replace example with your forum shortname /* * * DON&#39;T EDIT BELOW THIS LINE * * */ (function() { var dsq = document.createElement(&#39;script&#39;); dsq.type = &#39;text/javascript&#39;; dsq.async = true; dsq.src = &#39;//&#39; + disqus_shortname + &#39;.disqus.com/embed.js&#39;; (document.getElementsByTagName(&#39;head&#39;)[0] || document.getElementsByTagName(&#39;body&#39;)[0]).appendChild(dsq); })(); &lt;/script&gt; &lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;http://disqus.com/?ref_noscript&quot;&gt;comments powered by Disqus.&lt;/a&gt;&lt;/noscript&gt; The script can be used in the template wherever we want our comments section to show up. That delivers us the comments section in our app with one step remaining. Access the “disqus_shortname” i.e. the unique Disqus URL that we specified in the process of registration and add it in the settings file of the Django app. eg. DISQUS_WEBSITE_SHORTNAME = “mydjangoapp” Disqus SSO Commenting on a thread requires a person to log in with their social accounts. It would be an extra step for the people to log in again for commenting after logging in to the app. To abate this fatigue of logging in again we can use the “single sign on”. As of now SSO is available to Disqus as a free add on. To add to our app we should request the support team of Disqus through a contact form. Once we send a request to support team it takes like 24 hours to get the access to SSO console. Steps to register Disqus application Register the application at https://disqus.com/api/applications/register/ Once the registration is completed the secret keys and the public keys can be accessed at https://disqus.com/api/applications/ Add the keys to settings file as DISQUS_PUBLIC_KEY and DISQUS_SECRET_KEY To avail console, SSO and stuff we can go to https://disqus.com/api/applications/ Pass existing user data The first part to start using it is creating a Remote Domain which can be used as a reference between Disqus and the user accounts. We can do it right away at https://disqus.com/api/sso/. Add the public key and secret key of the application in the settings. We can access the keys at https://disqus.com/api/applications/ under the app name. Use HMAC-SHA1 to pass the user details to the Disqus to authenticate. The message that we pass should contain id, username and email. We can generate the HMAC-SHA1 the following way: HMAC-&gt;SHA1(secret_key, message + &#39; &#39; + timestamp) Once the message is generated the following script need to be used in the page where we want the Disqus to show up. var disqus_config = function () { // The generated payload which authenticates users with Disqus this.page.remote_auth_s3 = &#39;&lt;message&gt; &lt;hmac&gt; &lt;timestamp&gt;&#39;; this.page.api_key = &#39;public_api_key&#39;; } In Django we can accomplish this by registering a simple tag with function to generate the HMAC-SHA1 and using that tag in the template where we are displaying the Disqus comments. The flow moves on the following way: Firstly, we should access the value of the DISQUS_SECRET key from the settings. In the next step we should create a json packet of the data attributes, i.e ‘id’, ‘username’, ‘email’. Then we should encode the json packet to base64 and we should generate a time stamp for signing the message. To pass the secret key and the user details we should generate the HMAC signature. Thus acquired HMAC signature should be returned as a script tag to insert the SSO message. At the end the function appears as in the following code. Check out the Disqus SSO Example The template tag should be used in the place where we want the Disqus comments to appear. And that ends up the process of adding SSO to Disqus." />
+<link rel="canonical" href="http://localhost:4000/disqus/2014/11/17/disqus-and-disqus-sso.html" />
+<meta property="og:url" content="http://localhost:4000/disqus/2014/11/17/disqus-and-disqus-sso.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-11-17T20:00:29+05:30" />
+<script type="application/ld+json">
+{"description":"Outsourcing the comments and discussions part to a third party widget always helps us to save a lot of effort. When you feel that if it is okay to share your thoughts and discussions with someone out there who serves the capabilities of social integration and spam detection won’t it be a cake walk? Disqus is such a kind of blog comment hosting service which is platform-agnostic and URL-agnostic. It is built with javascript and backend technology, Python using Django. Let us get to know how to add this to our Django app. Adding Disqus widget to a site is pretty straight forward and effortless. Here are the steps to follow: Create an account on Disqus and fill the details at https://disqus.com/admin/create/ Once you finish registration, access the universal code In the next following page, get the script and use it wherever we want to display comments Update the settings file with DISQUS_SHORTNAME The first step includes signing up in to Disqus and getting an account. Once we are done with it, we will be heading to a home page where we can find “Add disqus to your site” on top left. If we click it, we will be redirected to site profile page where we should fill the details like the site name and unique Disqus URL which we call it as “disqus_shortname”. Once the registration is completed it will show up the general settings page where we can select the platform i.e univeral code, wordpress, blogger, Tumblr, square space and so on. As we are planning to add Disqus to Django app we should select Universal code. The Universal code is a script which looks like this: &lt;div id=&quot;disqus_thread&quot;&gt;&lt;/div&gt; &lt;script type=&quot;text/javascript&quot;&gt; /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */ var disqus_shortname = &#39;try1&#39;; // required: replace example with your forum shortname /* * * DON&#39;T EDIT BELOW THIS LINE * * */ (function() { var dsq = document.createElement(&#39;script&#39;); dsq.type = &#39;text/javascript&#39;; dsq.async = true; dsq.src = &#39;//&#39; + disqus_shortname + &#39;.disqus.com/embed.js&#39;; (document.getElementsByTagName(&#39;head&#39;)[0] || document.getElementsByTagName(&#39;body&#39;)[0]).appendChild(dsq); })(); &lt;/script&gt; &lt;noscript&gt;Please enable JavaScript to view the &lt;a href=&quot;http://disqus.com/?ref_noscript&quot;&gt;comments powered by Disqus.&lt;/a&gt;&lt;/noscript&gt; The script can be used in the template wherever we want our comments section to show up. That delivers us the comments section in our app with one step remaining. Access the “disqus_shortname” i.e. the unique Disqus URL that we specified in the process of registration and add it in the settings file of the Django app. eg. DISQUS_WEBSITE_SHORTNAME = “mydjangoapp” Disqus SSO Commenting on a thread requires a person to log in with their social accounts. It would be an extra step for the people to log in again for commenting after logging in to the app. To abate this fatigue of logging in again we can use the “single sign on”. As of now SSO is available to Disqus as a free add on. To add to our app we should request the support team of Disqus through a contact form. Once we send a request to support team it takes like 24 hours to get the access to SSO console. Steps to register Disqus application Register the application at https://disqus.com/api/applications/register/ Once the registration is completed the secret keys and the public keys can be accessed at https://disqus.com/api/applications/ Add the keys to settings file as DISQUS_PUBLIC_KEY and DISQUS_SECRET_KEY To avail console, SSO and stuff we can go to https://disqus.com/api/applications/ Pass existing user data The first part to start using it is creating a Remote Domain which can be used as a reference between Disqus and the user accounts. We can do it right away at https://disqus.com/api/sso/. Add the public key and secret key of the application in the settings. We can access the keys at https://disqus.com/api/applications/ under the app name. Use HMAC-SHA1 to pass the user details to the Disqus to authenticate. The message that we pass should contain id, username and email. We can generate the HMAC-SHA1 the following way: HMAC-&gt;SHA1(secret_key, message + &#39; &#39; + timestamp) Once the message is generated the following script need to be used in the page where we want the Disqus to show up. var disqus_config = function () { // The generated payload which authenticates users with Disqus this.page.remote_auth_s3 = &#39;&lt;message&gt; &lt;hmac&gt; &lt;timestamp&gt;&#39;; this.page.api_key = &#39;public_api_key&#39;; } In Django we can accomplish this by registering a simple tag with function to generate the HMAC-SHA1 and using that tag in the template where we are displaying the Disqus comments. The flow moves on the following way: Firstly, we should access the value of the DISQUS_SECRET key from the settings. In the next step we should create a json packet of the data attributes, i.e ‘id’, ‘username’, ‘email’. Then we should encode the json packet to base64 and we should generate a time stamp for signing the message. To pass the secret key and the user details we should generate the HMAC signature. Thus acquired HMAC signature should be returned as a script tag to insert the SSO message. At the end the function appears as in the following code. Check out the Disqus SSO Example The template tag should be used in the place where we want the Disqus comments to appear. And that ends up the process of adding SSO to Disqus.","author":{"@type":"Person","name":"Rakesh"},"@type":"BlogPosting","url":"http://localhost:4000/disqus/2014/11/17/disqus-and-disqus-sso.html","headline":"Disqus and Disqus SSO","dateModified":"2014-11-17T20:00:29+05:30","datePublished":"2014-11-17T20:00:29+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/disqus/2014/11/17/disqus-and-disqus-sso.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Disqus and Disqus SSO</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-11-17T20:00:29+05:30" itemprop="datePublished">Nov 17, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Rakesh</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Outsourcing the comments and discussions part to a third party widget always helps us to save a lot of effort. When you feel that if it is okay to share your thoughts and discussions with someone out there who serves the capabilities of social integration and spam detection won’t it be a cake walk?</p>
+
+<p>Disqus is such a kind of blog comment hosting service which is platform-agnostic and URL-agnostic. It is built with javascript and backend technology, Python using Django. Let us get to know how to add this to our Django app.</p>
+
+<p>Adding Disqus widget to a site is pretty straight forward and effortless. Here are the steps to follow:</p>
+
+<ol>
+  <li>Create an account on Disqus and fill the details at https://disqus.com/admin/create/</li>
+  <li>Once you finish registration, access the universal code</li>
+  <li>In the next following page, get the script and use it wherever we want to display comments</li>
+  <li>Update the settings file with DISQUS_SHORTNAME</li>
+</ol>
+
+<p>The first step includes signing up in to Disqus and getting an account. Once we are done with it, we will be heading to a home page where we can find “Add disqus to your site” on top left. If we click it, we will be redirected to site profile page where we should fill the details like the site name and unique Disqus URL which we call it as “disqus_shortname”. Once the registration is completed it will show up the general settings page where we can select the platform i.e univeral code, wordpress, blogger, Tumblr, square space and so on. As we are planning to add Disqus to Django app we should select Universal code. The Universal code is a script which looks like this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;div id="disqus_thread"&gt;&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'try1'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+&lt;/script&gt;
+&lt;noscript&gt;Please enable JavaScript to view the &lt;a href="http://disqus.com/?ref_noscript"&gt;comments powered by Disqus.&lt;/a&gt;&lt;/noscript&gt;
+</code></pre></div></div>
+
+<p>The script can be used in the template wherever we want our comments section to show up. That delivers us the comments section in our app with one step remaining. Access the “disqus_shortname” i.e. the unique Disqus URL that we specified in the process of registration and add it in the settings file of the Django app.</p>
+
+<p>eg.
+    DISQUS_WEBSITE_SHORTNAME = “mydjangoapp”</p>
+
+<h2 id="disqus-sso">Disqus SSO</h2>
+
+<p>Commenting on a thread requires a person to log in with their social accounts. It would be an extra step for the people to log in again for commenting after logging in to the app. To abate this fatigue of logging in again we can use the “single sign on”.</p>
+
+<p>As of now SSO is available to Disqus as a free add on. To add to our app we should request the support team of Disqus through a contact form. Once we send a request to support team it takes like 24 hours to get the access to SSO console.</p>
+
+<p>Steps to register Disqus application</p>
+
+<ol>
+  <li>Register the application at https://disqus.com/api/applications/register/</li>
+  <li>Once the registration is completed the secret keys and the public keys can be accessed at https://disqus.com/api/applications/</li>
+  <li>Add the keys to settings file as DISQUS_PUBLIC_KEY and DISQUS_SECRET_KEY</li>
+  <li>To avail console, SSO and stuff we can go to https://disqus.com/api/applications/</li>
+  <li>Pass existing user data</li>
+</ol>
+
+<p>The first part to start using it is creating a Remote Domain which can be used as a reference between Disqus and the user accounts. We can do it right away at https://disqus.com/api/sso/. Add the public key and secret key of the application in the settings. We can access the keys at https://disqus.com/api/applications/ under the app name. Use HMAC-SHA1 to pass the user details to the Disqus to authenticate. The message that we pass should contain id, username and email. We can generate the HMAC-SHA1 the following way:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HMAC-&gt;SHA1(secret_key, message + ' ' + timestamp)
+</code></pre></div></div>
+
+<p>Once the message is generated the following script need to be used in the page where we want the Disqus to show up.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var disqus_config = function () 
+{
+    // The generated payload which authenticates users with Disqus
+    this.page.remote_auth_s3 = '&lt;message&gt; &lt;hmac&gt; &lt;timestamp&gt;';
+    this.page.api_key = 'public_api_key';
+}
+</code></pre></div></div>
+
+<p>In Django we can accomplish this by registering a simple tag with function to generate the HMAC-SHA1 and using that tag in the template where we are displaying the Disqus comments. The flow moves on the following way:</p>
+
+<p>Firstly, we should access the value of the DISQUS_SECRET key from the settings. In the next step we should create a json packet of the data attributes, i.e ‘id’, ‘username’, ‘email’. Then we should encode the json packet to base64 and we should generate a time stamp for signing the message. To pass the secret key and the user details we should generate the HMAC signature. Thus acquired HMAC signature should be returned as a script tag to insert the SSO message. At the end the function appears as in the following code. Check out the <a href="https://gist.github.com/krvc/9afc17db9eb8d01b7655">Disqus SSO Example</a></p>
+
+<p>The template tag should be used in the place where we want the Disqus comments to appear.</p>
+
+<p>And that ends up the process of adding SSO to Disqus.</p>
+
+
+  </div><a class="u-url" href="/disqus/2014/11/17/disqus-and-disqus-sso.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

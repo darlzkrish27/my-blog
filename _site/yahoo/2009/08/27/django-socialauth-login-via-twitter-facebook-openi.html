@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Django-SocialAuth - Login via twitter, facebook, openid, yahoo, google using a single app. | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Django-SocialAuth - Login via twitter, facebook, openid, yahoo, google using a single app." />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="TL;DR version: Here is an app to allow logging in via twitter, facebook, openid, yahoo, google, which should work transparently with Django authentication system. (@login_required, User and other infrastructure work as expected.) Demo and Code.Longer version follow: We are releasing our new app. Django-Socialauth. This app makes it awfully easy, to allow users to login your site using Yahoo/Google/Twitter/Facebook/Openid. A demo is available here. This is released under an Attribution Assurance License. A copy of the same is provided included with the code. After installing this app, you can use @login_required on any view and users identified via any means can access protected content. We provide services to integrate and implement this, for a low price of USD 1600. Please contact us at licenses@uswaretech.com to discuss your exact needs. The README is copied here for convenience. What it does. Allow logging in via various providers. Logging In This is a application to enable authentication via various third party sites. In particular it allows logging in via Twitter Gmail Facebook Yahoo(Essentially openid) OpenId Libs you need to install python-openid (easy_install) python-yadis (easy_install) python-oauth(easy_install) The API Keys are available from http://www.facebook.com/developers/createapp.php https://developer.yahoo.com/dashboard/createKey.html https://www.google.com/accounts/ManageDomains http://twitter.com/oauth_clients How it works. Openid: Users need to provide their openid providers. Talk to the providers and login. Yahoo: Yahoo is an openid provider. Talk to Yahoo endpoints. (Endpoint: http://yahoo.com) Google: Google is a provider. Talk to them. (Endpoint: https://www.google.com/accounts/o8/id) Facebook: Facebook connect provides authentication framework. Twitter: We use Twitter Oauth for authentication. In theory, Oauth shouldn’t be used for authentication. (It is an autorisation framework, not an authentication one), In practice it works pretty well. Once you have an access_token, and a name, essentially authenticated. References Demo of app Code for app http://openid.net/developers/ http://developer.yahoo.com/openid/ http://code.google.com/apis/accounts/docs/OpenID.html http://apiwiki.twitter.com/OAuth-FAQ http://developers.facebook.com/connect.php Below the hoods For all providers(except Facebook) there are two urls and views. (start and done) Start sets up the required tokens, and redirects and hands off to the correct provider. Provider handles authentication on their ends, and hands off to Us, providing authorization tokens. In done, we check if the user with these details already exists, if yes, we log them in. Otherwise we create a new user, and log them in. For all of these, we use standard django authenication system, with custom auth_backends, hence all existing views, and decorators as login_required will work as expected. Urls /login/ Login page. Has all the login options /openid_login/ AND /openid_login/done/ /yahoo_login/ AND /yahoo_login/done/ /gmail_login/ AND /gmail_login/done/ /twitter_login/ AND /twitter_login/done/ /facebook_login/done/ We dont have a start url here, as the starting tokens are set in a popup, as per FB Connect recommendations. Implementation Install required libraries. Get tokens and populate in localsettings.py Set the token callback urls correctly at Twitter and Facebook. Add the OpenId middleware. Set the Authentication backends. (Set in localsettings.example.py)" />
+<meta property="og:description" content="TL;DR version: Here is an app to allow logging in via twitter, facebook, openid, yahoo, google, which should work transparently with Django authentication system. (@login_required, User and other infrastructure work as expected.) Demo and Code.Longer version follow: We are releasing our new app. Django-Socialauth. This app makes it awfully easy, to allow users to login your site using Yahoo/Google/Twitter/Facebook/Openid. A demo is available here. This is released under an Attribution Assurance License. A copy of the same is provided included with the code. After installing this app, you can use @login_required on any view and users identified via any means can access protected content. We provide services to integrate and implement this, for a low price of USD 1600. Please contact us at licenses@uswaretech.com to discuss your exact needs. The README is copied here for convenience. What it does. Allow logging in via various providers. Logging In This is a application to enable authentication via various third party sites. In particular it allows logging in via Twitter Gmail Facebook Yahoo(Essentially openid) OpenId Libs you need to install python-openid (easy_install) python-yadis (easy_install) python-oauth(easy_install) The API Keys are available from http://www.facebook.com/developers/createapp.php https://developer.yahoo.com/dashboard/createKey.html https://www.google.com/accounts/ManageDomains http://twitter.com/oauth_clients How it works. Openid: Users need to provide their openid providers. Talk to the providers and login. Yahoo: Yahoo is an openid provider. Talk to Yahoo endpoints. (Endpoint: http://yahoo.com) Google: Google is a provider. Talk to them. (Endpoint: https://www.google.com/accounts/o8/id) Facebook: Facebook connect provides authentication framework. Twitter: We use Twitter Oauth for authentication. In theory, Oauth shouldn’t be used for authentication. (It is an autorisation framework, not an authentication one), In practice it works pretty well. Once you have an access_token, and a name, essentially authenticated. References Demo of app Code for app http://openid.net/developers/ http://developer.yahoo.com/openid/ http://code.google.com/apis/accounts/docs/OpenID.html http://apiwiki.twitter.com/OAuth-FAQ http://developers.facebook.com/connect.php Below the hoods For all providers(except Facebook) there are two urls and views. (start and done) Start sets up the required tokens, and redirects and hands off to the correct provider. Provider handles authentication on their ends, and hands off to Us, providing authorization tokens. In done, we check if the user with these details already exists, if yes, we log them in. Otherwise we create a new user, and log them in. For all of these, we use standard django authenication system, with custom auth_backends, hence all existing views, and decorators as login_required will work as expected. Urls /login/ Login page. Has all the login options /openid_login/ AND /openid_login/done/ /yahoo_login/ AND /yahoo_login/done/ /gmail_login/ AND /gmail_login/done/ /twitter_login/ AND /twitter_login/done/ /facebook_login/done/ We dont have a start url here, as the starting tokens are set in a popup, as per FB Connect recommendations. Implementation Install required libraries. Get tokens and populate in localsettings.py Set the token callback urls correctly at Twitter and Facebook. Add the OpenId middleware. Set the Authentication backends. (Set in localsettings.example.py)" />
+<link rel="canonical" href="http://localhost:4000/yahoo/2009/08/27/django-socialauth-login-via-twitter-facebook-openi.html" />
+<meta property="og:url" content="http://localhost:4000/yahoo/2009/08/27/django-socialauth-login-via-twitter-facebook-openi.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-08-27T14:50:33+05:30" />
+<script type="application/ld+json">
+{"description":"TL;DR version: Here is an app to allow logging in via twitter, facebook, openid, yahoo, google, which should work transparently with Django authentication system. (@login_required, User and other infrastructure work as expected.) Demo and Code.Longer version follow: We are releasing our new app. Django-Socialauth. This app makes it awfully easy, to allow users to login your site using Yahoo/Google/Twitter/Facebook/Openid. A demo is available here. This is released under an Attribution Assurance License. A copy of the same is provided included with the code. After installing this app, you can use @login_required on any view and users identified via any means can access protected content. We provide services to integrate and implement this, for a low price of USD 1600. Please contact us at licenses@uswaretech.com to discuss your exact needs. The README is copied here for convenience. What it does. Allow logging in via various providers. Logging In This is a application to enable authentication via various third party sites. In particular it allows logging in via Twitter Gmail Facebook Yahoo(Essentially openid) OpenId Libs you need to install python-openid (easy_install) python-yadis (easy_install) python-oauth(easy_install) The API Keys are available from http://www.facebook.com/developers/createapp.php https://developer.yahoo.com/dashboard/createKey.html https://www.google.com/accounts/ManageDomains http://twitter.com/oauth_clients How it works. Openid: Users need to provide their openid providers. Talk to the providers and login. Yahoo: Yahoo is an openid provider. Talk to Yahoo endpoints. (Endpoint: http://yahoo.com) Google: Google is a provider. Talk to them. (Endpoint: https://www.google.com/accounts/o8/id) Facebook: Facebook connect provides authentication framework. Twitter: We use Twitter Oauth for authentication. In theory, Oauth shouldn’t be used for authentication. (It is an autorisation framework, not an authentication one), In practice it works pretty well. Once you have an access_token, and a name, essentially authenticated. References Demo of app Code for app http://openid.net/developers/ http://developer.yahoo.com/openid/ http://code.google.com/apis/accounts/docs/OpenID.html http://apiwiki.twitter.com/OAuth-FAQ http://developers.facebook.com/connect.php Below the hoods For all providers(except Facebook) there are two urls and views. (start and done) Start sets up the required tokens, and redirects and hands off to the correct provider. Provider handles authentication on their ends, and hands off to Us, providing authorization tokens. In done, we check if the user with these details already exists, if yes, we log them in. Otherwise we create a new user, and log them in. For all of these, we use standard django authenication system, with custom auth_backends, hence all existing views, and decorators as login_required will work as expected. Urls /login/ Login page. Has all the login options /openid_login/ AND /openid_login/done/ /yahoo_login/ AND /yahoo_login/done/ /gmail_login/ AND /gmail_login/done/ /twitter_login/ AND /twitter_login/done/ /facebook_login/done/ We dont have a start url here, as the starting tokens are set in a popup, as per FB Connect recommendations. Implementation Install required libraries. Get tokens and populate in localsettings.py Set the token callback urls correctly at Twitter and Facebook. Add the OpenId middleware. Set the Authentication backends. (Set in localsettings.example.py)","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/yahoo/2009/08/27/django-socialauth-login-via-twitter-facebook-openi.html","headline":"Django-SocialAuth - Login via twitter, facebook, openid, yahoo, google using a single app.","dateModified":"2009-08-27T14:50:33+05:30","datePublished":"2009-08-27T14:50:33+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/yahoo/2009/08/27/django-socialauth-login-via-twitter-facebook-openi.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Django-SocialAuth - Login via twitter, facebook, openid, yahoo, google using a single app.</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-08-27T14:50:33+05:30" itemprop="datePublished">Aug 27, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>TL;DR version: Here is an app to allow logging in via twitter, facebook, openid, yahoo, google, which should work transparently with Django authentication system. (@login_required, User and other infrastructure work as expected.) <a href="http://socialauth.uswaretech.net/">Demo</a> and <a href="http://github.com/uswaretech/Django-Socialauth/tree/master">Code</a>.Longer version follow:</p>
+
+<hr />
+<p>We are releasing our new app. <a href="http://github.com/uswaretech/Django-Socialauth/tree/master"><strong>Django-Socialauth</strong></a>. This app makes it awfully easy,
+to allow users to login your site using Yahoo/Google/Twitter/Facebook/Openid. A demo is available <a href="http://socialauth.uswaretech.net/">here</a>.</p>
+
+<p>This is released under an <a href="http://www.opensource.org/licenses/attribution.php">Attribution Assurance License</a>. A copy of the same is
+provided included with the code.</p>
+
+<p>After installing this app, you can use @login_required on any view and users identified
+via any means can access protected content.</p>
+
+<hr />
+<p>We provide services to integrate and implement this, for a low price of USD 1600.
+Please contact us at <a href="mailto:licenses@uswaretech.com">licenses@uswaretech.com</a> to discuss your exact needs.</p>
+
+<hr />
+
+<p>The README is copied here for convenience.</p>
+
+<h3 id="what-it-does">What it does.</h3>
+
+<p>Allow logging in via various providers.</p>
+
+<h4 id="logging-in">Logging In</h4>
+
+<p>This is a application to enable authentication via various third party sites.
+In particular it allows logging in via</p>
+
+<ol>
+  <li>Twitter</li>
+  <li>Gmail</li>
+  <li>Facebook</li>
+  <li>Yahoo(Essentially openid)</li>
+  <li>OpenId</li>
+</ol>
+
+<p>Libs you need to install</p>
+
+<ol>
+  <li><a href="http://pypi.python.org/pypi/python-openid/">python-openid</a> (<code class="highlighter-rouge">easy_install</code>)</li>
+  <li>python-yadis (<code class="highlighter-rouge">easy_install</code>)</li>
+  <li><a href="http://oauth.googlecode.com/svn/code/python/oauth/">python-oauth</a>(<code class="highlighter-rouge">easy_install</code>)</li>
+</ol>
+
+<p>The API Keys are available from</p>
+
+<ul>
+  <li><a href="http://www.facebook.com/developers/createapp.php">http://www.facebook.com/developers/createapp.php</a></li>
+  <li><a href="https://developer.yahoo.com/dashboard/createKey.html">https://developer.yahoo.com/dashboard/createKey.html</a></li>
+  <li><a href="https://www.google.com/accounts/ManageDomains">https://www.google.com/accounts/ManageDomains</a></li>
+  <li><a href="http://twitter.com/oauth_clients">http://twitter.com/oauth_clients</a></li>
+</ul>
+
+<h4 id="how-it-works">How it works.</h4>
+
+<p>Openid: Users need to provide their openid providers. Talk to the providers and
+login.<br />
+Yahoo: Yahoo is an openid provider. Talk to Yahoo endpoints. (Endpoint: http://yahoo.com)<br />
+Google: Google is a provider. Talk to them. (Endpoint: https://www.google.com/accounts/o8/id)<br />
+Facebook: Facebook connect provides authentication framework.<br />
+Twitter: We use Twitter Oauth for authentication. In theory, Oauth shouldn’t be
+used for authentication. (It is an autorisation framework, not an authentication one),
+In practice it works pretty well. Once you have an access_token, and a name, essentially
+authenticated.</p>
+
+<p>References</p>
+
+<ol>
+  <li><a href="http://socialauth.uswaretech.net/">Demo of app</a></li>
+  <li><a href="http://github.com/uswaretech/Django-Socialauth/tree/master">Code for app</a></li>
+  <li><a href="http://openid.net/developers/">http://openid.net/developers/</a></li>
+  <li><a href="http://developer.yahoo.com/openid/">http://developer.yahoo.com/openid/</a></li>
+  <li><a href="http://code.google.com/apis/accounts/docs/OpenID.html">http://code.google.com/apis/accounts/docs/OpenID.html</a></li>
+  <li><a href="http://apiwiki.twitter.com/OAuth-FAQ">http://apiwiki.twitter.com/OAuth-FAQ</a></li>
+  <li><a href="http://developers.facebook.com/connect.php">http://developers.facebook.com/connect.php</a></li>
+</ol>
+
+<h2 id="below-the-hoods">Below the hoods</h2>
+
+<ol>
+  <li>For all providers(except Facebook) there are two urls and views. (start and done)</li>
+  <li>Start sets up the required tokens, and redirects and hands off to the correct
+provider.</li>
+  <li>Provider handles authentication on their ends, and hands off to Us, providing
+authorization tokens.</li>
+  <li>In done, we check if the user with these details already exists, if yes, we
+log them in. Otherwise we create a new user, and log them in.</li>
+</ol>
+
+<p>For all of these, we use standard django authenication system, with custom
+<code class="highlighter-rouge">auth_backends</code>, hence all existing views, and decorators as <code class="highlighter-rouge">login_required</code>
+will work as expected.</p>
+
+<h2 id="urls">Urls</h2>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/login/ Login page. Has all the login options  
+/openid_login/ AND /openid_login/done/  
+/yahoo_login/ AND /yahoo_login/done/  
+/gmail_login/ AND /gmail_login/done/  
+/twitter_login/ AND /twitter_login/done/  
+/facebook_login/done/ We dont have a start url here, as the starting tokens are  
+set in a popup, as per FB Connect recommendations.
+</code></pre></div></div>
+
+<h2 id="implementation">Implementation</h2>
+
+<ol>
+  <li>Install required libraries.</li>
+  <li>Get tokens and populate in localsettings.py</li>
+  <li>Set the token callback urls correctly at Twitter and Facebook.</li>
+  <li>Add the OpenId middleware. Set the Authentication backends. (Set in localsettings.example.py)</li>
+</ol>
+
+
+  </div><a class="u-url" href="/yahoo/2009/08/27/django-socialauth-login-via-twitter-facebook-openi.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Getting trending Github projects via YQL | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Getting trending Github projects via YQL" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Github.com/explore allows you to see the trending Github topics. They use repopular.com for this, which use twitter retweets to find out the popular Github repos. Since neither Repopular, nor Github have a RSS of these trending repos, I wanted to get a list of these. Here is how easy it is with YQL. How we do it Go to YQL console. Give the SQL query to get the data from the webpage. where url=&quot;repopular.com&quot; and css=&quot;div.pad a&quot; is the magic which select the webpage, and also what DOM elemenst we are interested in. We get this data in JSON format which is munged to get the list of links. This list of links is passed via is_github_project which gets me just the Github projects. And we are done. PS. YQL is amazing." />
+<meta property="og:description" content="Github.com/explore allows you to see the trending Github topics. They use repopular.com for this, which use twitter retweets to find out the popular Github repos. Since neither Repopular, nor Github have a RSS of these trending repos, I wanted to get a list of these. Here is how easy it is with YQL. How we do it Go to YQL console. Give the SQL query to get the data from the webpage. where url=&quot;repopular.com&quot; and css=&quot;div.pad a&quot; is the magic which select the webpage, and also what DOM elemenst we are interested in. We get this data in JSON format which is munged to get the list of links. This list of links is passed via is_github_project which gets me just the Github projects. And we are done. PS. YQL is amazing." />
+<link rel="canonical" href="http://localhost:4000/api/2010/10/25/getting-trending-github-projects-via.html" />
+<meta property="og:url" content="http://localhost:4000/api/2010/10/25/getting-trending-github-projects-via.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2010-10-25T01:57:33+05:30" />
+<script type="application/ld+json">
+{"description":"Github.com/explore allows you to see the trending Github topics. They use repopular.com for this, which use twitter retweets to find out the popular Github repos. Since neither Repopular, nor Github have a RSS of these trending repos, I wanted to get a list of these. Here is how easy it is with YQL. How we do it Go to YQL console. Give the SQL query to get the data from the webpage. where url=&quot;repopular.com&quot; and css=&quot;div.pad a&quot; is the magic which select the webpage, and also what DOM elemenst we are interested in. We get this data in JSON format which is munged to get the list of links. This list of links is passed via is_github_project which gets me just the Github projects. And we are done. PS. YQL is amazing.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/api/2010/10/25/getting-trending-github-projects-via.html","headline":"Getting trending Github projects via YQL","dateModified":"2010-10-25T01:57:33+05:30","datePublished":"2010-10-25T01:57:33+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/api/2010/10/25/getting-trending-github-projects-via.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Getting trending Github projects via YQL</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2010-10-25T01:57:33+05:30" itemprop="datePublished">Oct 25, 2010
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><a href="http://github.com/explore">Github.com/explore</a> allows you to see the trending Github topics. They use <a href="http://repopular.com/">repopular.com</a> for this,
+which use twitter retweets to find out the popular Github repos.</p>
+
+<p>Since neither Repopular, nor Github have a RSS of these trending repos, I wanted to get a list of these. Here is how easy it is with 
+<a href="http://developer.yahoo.com/yql/">YQL</a>.</p>
+
+<script src="http://gist.github.com/643959.js?file=repopular_projects.py"></script>
+
+<h2 id="how-we-do-it">How we do it</h2>
+
+<ul>
+  <li>
+    <p>Go to <a href="http://developer.yahoo.com/yql/console/?q=use%20'http://yqlblog.net/samples/data.html.cssselect.xml'%20as%20data.html.cssselect;%20select%20*%20from%20data.html.cssselect%20where%20url%3D%22www.yahoo.com%22%20and%20css%3D%22%23news%20a%22#h=use%20%27http%3A//yqlblog.net/samples/data.html.cssselect.xml%27%20as%20data.html.cssselect%3B%20select%20*%20from%20data.html.cssselect%20where%20url%3D%22repopular.com%22%20and%20css%3D%22div.bd%20a%22">YQL console</a>. Give the SQL query to get the data from the webpage.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">where url="repopular.com" and css="div.pad a"</code> is the magic which select the webpage, and also what DOM elemenst we are interested in.</p>
+  </li>
+  <li>
+    <p>We get this data in JSON format which is munged to get the list of links.</p>
+  </li>
+  <li>
+    <p>This list of links is passed via <code class="highlighter-rouge">is_github_project</code> which gets me just the Github projects.</p>
+  </li>
+  <li>
+    <p>And we are done.</p>
+  </li>
+</ul>
+
+<script src="http://gist.github.com/643970.js?file=gistfile1.txt"></script>
+
+<p>PS. <a href="http://developer.yahoo.com/yql/">YQL</a> is amazing.</p>
+
+<p>.</p>
+
+
+  </div><a class="u-url" href="/api/2010/10/25/getting-trending-github-projects-via.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

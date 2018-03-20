@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Getting started with redis-py | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Getting started with redis-py" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This post explains how to interface with Redis from Python and how to use different Redis commands from Python using redis-py. What this post is not about Comparing relational and non-relational database Comparing MySQL and Redis Introduction to Redis I assume you know the following Basics of Redis Basic redis commands for working with Strings, Lists and Maps as described at Redis docs. I did not find enough examples of using redis-py provided methods and so wrote this blog post. Getting started Assuming you have Redis installed and your redis server is running. We will follow the same sequence as followed in Redis data-types-intro at Redis docs Install redis-py pip install redis Start redis-cli on some shell, so we can relate our Python redis commands and plain redis command. Redis strings For setting a string value, we use the following from redis-cli 127.0.0.1:6379&gt; set mykey myvalue And you can get it using 127.0.0.1:6379&gt; get mykey &quot;myvalue&quot; Now we want to do the same from Python. Do the following from Python shell. &gt;&gt;&gt; import redis &gt;&gt;&gt; r = redis.StrictRedis() We created an instance of StrictRedis. This is required for communication with redis-server. Try getting “mykey”, which was set using redis-cli, from Python &gt;&gt;&gt; r.get(&quot;mykey&quot;) &#39;myvalue&#39; #output So we are able to communicate properly with redis-server. Things which were inserted into redis using redis-cli can be read using Python. Try setting a value into Redis from Python shell. &gt;&gt;&gt; r.set(&quot;anotherkey&quot;, &quot;anothervalue&quot;) True #output Check from redis-cli if this key was set properly. 127.0.0.1:6379&gt; get anotherkey &quot;anothervalue&quot; So it seems Python is able to insert values into Redis properly. You can read the same value using Python again. &gt;&gt;&gt; r.get(&quot;anotherkey&quot;) &#39;anothervalue&#39; INCR and INCRBY Redis provides incr and incrby on integer values. So let’s set an integer value first which we will try to increment. &gt;&gt;&gt; r.set(&quot;num&quot;, 10) True &gt;&gt;&gt; r.get(&quot;num&quot;) &#39;10&#39; redis-py’s equivalent of Redis’ incr is &gt;&gt;&gt; r.incr(&quot;num&quot;) 11 Get it to verify that num has been incremented &gt;&gt;&gt; r.get(&quot;num&quot;) &#39;11&#39; You should verify it using redis-cli too. 127.0.0.1:6379&gt; get num &quot;11&quot; Python’s equivalent of incrby is &gt;&gt;&gt; r.incrby(&quot;num&quot;, 10) 21 Verify again using redis-cli 127.0.0.1:6379&gt; get num &quot;21&quot; MSET and MGET redis-cli’s mset equivalent in Python &gt;&gt;&gt; r.mset(first_num=1, second_num=2, third_num=3) True Verify these keys are set from redis-cli 127.0.0.1:6379&gt; get first_num &quot;1&quot; 127.0.0.1:6379&gt; get second_num &quot;2&quot; reidis’ mget equivalent &gt;&gt;&gt; r.mget([&quot;first_num&quot;, &quot;second_num&quot;]) [&#39;1&#39;, &#39;2&#39;] EXISTS &gt;&gt;&gt; r.exists(&quot;first_num&quot;) True &gt;&gt;&gt; r.exists(&quot;fourth_num&quot;) False DEL &gt;&gt;&gt; r.delete(&quot;first_num&quot;) 1 As this key is deleted now, you will get “nil” and “None” if you try to retrieve it. From redis-cli 127.0.0.1:6379&gt; get first_num (nil) From Python shell &gt;&gt;&gt; r.get(&quot;first_num&quot;) EXPIRE Mark key second_num to expire after 10 seconds &gt;&gt;&gt; r.expire(&quot;second_num&quot;, 10) True Check this immediately &gt;&gt;&gt; r.get(&quot;second_num&quot;) &#39;2&#39; #output Check after 10 seconds &gt;&gt;&gt; r.get(&quot;second_num&quot;) It returns None after 10 seconds meaning this key doesn&#39;t exist in redis anymore Redis Lists reidis’ lpush equivalent in Python &gt;&gt;&gt; r.lpush(&quot;mylist&quot;, 1) 1L Verify from redis-cli that a list is created in redis 127.0.0.1:6379&gt; lrange mylist 0 -1 1) &quot;1&quot; Pushing multiple values to list &gt;&gt;&gt; r.lpush(&quot;mylist&quot;, 2, 3) Check the new list from redis-cli 127.0.0.1:6379&gt; lrange mylist 0 -1 1) &quot;3&quot; 2) &quot;2&quot; 3) &quot;1&quot; redis-cli’s lrange equivalent in Python &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, -1) [&#39;3&#39;, &#39;2&#39;, &#39;1&#39;] &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, 1) [&#39;3&#39;, &#39;2&#39;] rpush &gt;&gt;&gt; r.rpush(&quot;mylist&quot;, 4) Check that element is pushed on right &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, -1) [&#39;3&#39;, &#39;2&#39;, &#39;1&#39;, &#39;4&#39;] Redis hashes hmset allows saving of dictionary as values. You should already be knowing this from redis docs. 127.0.0.1:6379&gt; hmset user name ned age 31 OK 127.0.0.1:6379&gt; hgetall user 1) &quot;name&quot; 2) &quot;ned&quot; 3) &quot;age&quot; 4) &quot;31&quot; redis-py way of achieving the same would be &gt;&gt;&gt; r.hmset(&quot;another_user&quot;, {&#39;name&#39;: &#39;robert&#39;, &#39;age&#39;: 32}) True Try reading this using redis-cli 127.0.0.1:6379&gt; hgetall another_user 1) &quot;age&quot; 2) &quot;32&quot; 3) &quot;name&quot; 4) &quot;robert&quot; Try reading this using redis-py &gt;&gt;&gt; r.hgetall(&quot;another_user&quot;) {&#39;age&#39;: &#39;32&#39;, &#39;name&#39;: &#39;robert&#39;} &gt;&gt;&gt; r.hget(&quot;another_user&quot;, &quot;name&quot;) &#39;robert&#39; &gt;&gt;&gt; r.hget(&quot;another_user&quot;, &quot;age&quot;) &#39;32&#39; &gt;&gt;&gt; r.hgetall(&quot;user&quot;) {&#39;age&#39;: &#39;31&#39;, &#39;name&#39;: &#39;ned&#39;} There are several other methods provided by redis-py too and now you should be in a good position to related redis’ commands with redis-py methods." />
+<meta property="og:description" content="This post explains how to interface with Redis from Python and how to use different Redis commands from Python using redis-py. What this post is not about Comparing relational and non-relational database Comparing MySQL and Redis Introduction to Redis I assume you know the following Basics of Redis Basic redis commands for working with Strings, Lists and Maps as described at Redis docs. I did not find enough examples of using redis-py provided methods and so wrote this blog post. Getting started Assuming you have Redis installed and your redis server is running. We will follow the same sequence as followed in Redis data-types-intro at Redis docs Install redis-py pip install redis Start redis-cli on some shell, so we can relate our Python redis commands and plain redis command. Redis strings For setting a string value, we use the following from redis-cli 127.0.0.1:6379&gt; set mykey myvalue And you can get it using 127.0.0.1:6379&gt; get mykey &quot;myvalue&quot; Now we want to do the same from Python. Do the following from Python shell. &gt;&gt;&gt; import redis &gt;&gt;&gt; r = redis.StrictRedis() We created an instance of StrictRedis. This is required for communication with redis-server. Try getting “mykey”, which was set using redis-cli, from Python &gt;&gt;&gt; r.get(&quot;mykey&quot;) &#39;myvalue&#39; #output So we are able to communicate properly with redis-server. Things which were inserted into redis using redis-cli can be read using Python. Try setting a value into Redis from Python shell. &gt;&gt;&gt; r.set(&quot;anotherkey&quot;, &quot;anothervalue&quot;) True #output Check from redis-cli if this key was set properly. 127.0.0.1:6379&gt; get anotherkey &quot;anothervalue&quot; So it seems Python is able to insert values into Redis properly. You can read the same value using Python again. &gt;&gt;&gt; r.get(&quot;anotherkey&quot;) &#39;anothervalue&#39; INCR and INCRBY Redis provides incr and incrby on integer values. So let’s set an integer value first which we will try to increment. &gt;&gt;&gt; r.set(&quot;num&quot;, 10) True &gt;&gt;&gt; r.get(&quot;num&quot;) &#39;10&#39; redis-py’s equivalent of Redis’ incr is &gt;&gt;&gt; r.incr(&quot;num&quot;) 11 Get it to verify that num has been incremented &gt;&gt;&gt; r.get(&quot;num&quot;) &#39;11&#39; You should verify it using redis-cli too. 127.0.0.1:6379&gt; get num &quot;11&quot; Python’s equivalent of incrby is &gt;&gt;&gt; r.incrby(&quot;num&quot;, 10) 21 Verify again using redis-cli 127.0.0.1:6379&gt; get num &quot;21&quot; MSET and MGET redis-cli’s mset equivalent in Python &gt;&gt;&gt; r.mset(first_num=1, second_num=2, third_num=3) True Verify these keys are set from redis-cli 127.0.0.1:6379&gt; get first_num &quot;1&quot; 127.0.0.1:6379&gt; get second_num &quot;2&quot; reidis’ mget equivalent &gt;&gt;&gt; r.mget([&quot;first_num&quot;, &quot;second_num&quot;]) [&#39;1&#39;, &#39;2&#39;] EXISTS &gt;&gt;&gt; r.exists(&quot;first_num&quot;) True &gt;&gt;&gt; r.exists(&quot;fourth_num&quot;) False DEL &gt;&gt;&gt; r.delete(&quot;first_num&quot;) 1 As this key is deleted now, you will get “nil” and “None” if you try to retrieve it. From redis-cli 127.0.0.1:6379&gt; get first_num (nil) From Python shell &gt;&gt;&gt; r.get(&quot;first_num&quot;) EXPIRE Mark key second_num to expire after 10 seconds &gt;&gt;&gt; r.expire(&quot;second_num&quot;, 10) True Check this immediately &gt;&gt;&gt; r.get(&quot;second_num&quot;) &#39;2&#39; #output Check after 10 seconds &gt;&gt;&gt; r.get(&quot;second_num&quot;) It returns None after 10 seconds meaning this key doesn&#39;t exist in redis anymore Redis Lists reidis’ lpush equivalent in Python &gt;&gt;&gt; r.lpush(&quot;mylist&quot;, 1) 1L Verify from redis-cli that a list is created in redis 127.0.0.1:6379&gt; lrange mylist 0 -1 1) &quot;1&quot; Pushing multiple values to list &gt;&gt;&gt; r.lpush(&quot;mylist&quot;, 2, 3) Check the new list from redis-cli 127.0.0.1:6379&gt; lrange mylist 0 -1 1) &quot;3&quot; 2) &quot;2&quot; 3) &quot;1&quot; redis-cli’s lrange equivalent in Python &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, -1) [&#39;3&#39;, &#39;2&#39;, &#39;1&#39;] &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, 1) [&#39;3&#39;, &#39;2&#39;] rpush &gt;&gt;&gt; r.rpush(&quot;mylist&quot;, 4) Check that element is pushed on right &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, -1) [&#39;3&#39;, &#39;2&#39;, &#39;1&#39;, &#39;4&#39;] Redis hashes hmset allows saving of dictionary as values. You should already be knowing this from redis docs. 127.0.0.1:6379&gt; hmset user name ned age 31 OK 127.0.0.1:6379&gt; hgetall user 1) &quot;name&quot; 2) &quot;ned&quot; 3) &quot;age&quot; 4) &quot;31&quot; redis-py way of achieving the same would be &gt;&gt;&gt; r.hmset(&quot;another_user&quot;, {&#39;name&#39;: &#39;robert&#39;, &#39;age&#39;: 32}) True Try reading this using redis-cli 127.0.0.1:6379&gt; hgetall another_user 1) &quot;age&quot; 2) &quot;32&quot; 3) &quot;name&quot; 4) &quot;robert&quot; Try reading this using redis-py &gt;&gt;&gt; r.hgetall(&quot;another_user&quot;) {&#39;age&#39;: &#39;32&#39;, &#39;name&#39;: &#39;robert&#39;} &gt;&gt;&gt; r.hget(&quot;another_user&quot;, &quot;name&quot;) &#39;robert&#39; &gt;&gt;&gt; r.hget(&quot;another_user&quot;, &quot;age&quot;) &#39;32&#39; &gt;&gt;&gt; r.hgetall(&quot;user&quot;) {&#39;age&#39;: &#39;31&#39;, &#39;name&#39;: &#39;ned&#39;} There are several other methods provided by redis-py too and now you should be in a good position to related redis’ commands with redis-py methods." />
+<link rel="canonical" href="http://localhost:4000/redis/2015/03/26/getting-started-with-redis-py.html" />
+<meta property="og:url" content="http://localhost:4000/redis/2015/03/26/getting-started-with-redis-py.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2015-03-26T17:43:25+05:30" />
+<script type="application/ld+json">
+{"description":"This post explains how to interface with Redis from Python and how to use different Redis commands from Python using redis-py. What this post is not about Comparing relational and non-relational database Comparing MySQL and Redis Introduction to Redis I assume you know the following Basics of Redis Basic redis commands for working with Strings, Lists and Maps as described at Redis docs. I did not find enough examples of using redis-py provided methods and so wrote this blog post. Getting started Assuming you have Redis installed and your redis server is running. We will follow the same sequence as followed in Redis data-types-intro at Redis docs Install redis-py pip install redis Start redis-cli on some shell, so we can relate our Python redis commands and plain redis command. Redis strings For setting a string value, we use the following from redis-cli 127.0.0.1:6379&gt; set mykey myvalue And you can get it using 127.0.0.1:6379&gt; get mykey &quot;myvalue&quot; Now we want to do the same from Python. Do the following from Python shell. &gt;&gt;&gt; import redis &gt;&gt;&gt; r = redis.StrictRedis() We created an instance of StrictRedis. This is required for communication with redis-server. Try getting “mykey”, which was set using redis-cli, from Python &gt;&gt;&gt; r.get(&quot;mykey&quot;) &#39;myvalue&#39; #output So we are able to communicate properly with redis-server. Things which were inserted into redis using redis-cli can be read using Python. Try setting a value into Redis from Python shell. &gt;&gt;&gt; r.set(&quot;anotherkey&quot;, &quot;anothervalue&quot;) True #output Check from redis-cli if this key was set properly. 127.0.0.1:6379&gt; get anotherkey &quot;anothervalue&quot; So it seems Python is able to insert values into Redis properly. You can read the same value using Python again. &gt;&gt;&gt; r.get(&quot;anotherkey&quot;) &#39;anothervalue&#39; INCR and INCRBY Redis provides incr and incrby on integer values. So let’s set an integer value first which we will try to increment. &gt;&gt;&gt; r.set(&quot;num&quot;, 10) True &gt;&gt;&gt; r.get(&quot;num&quot;) &#39;10&#39; redis-py’s equivalent of Redis’ incr is &gt;&gt;&gt; r.incr(&quot;num&quot;) 11 Get it to verify that num has been incremented &gt;&gt;&gt; r.get(&quot;num&quot;) &#39;11&#39; You should verify it using redis-cli too. 127.0.0.1:6379&gt; get num &quot;11&quot; Python’s equivalent of incrby is &gt;&gt;&gt; r.incrby(&quot;num&quot;, 10) 21 Verify again using redis-cli 127.0.0.1:6379&gt; get num &quot;21&quot; MSET and MGET redis-cli’s mset equivalent in Python &gt;&gt;&gt; r.mset(first_num=1, second_num=2, third_num=3) True Verify these keys are set from redis-cli 127.0.0.1:6379&gt; get first_num &quot;1&quot; 127.0.0.1:6379&gt; get second_num &quot;2&quot; reidis’ mget equivalent &gt;&gt;&gt; r.mget([&quot;first_num&quot;, &quot;second_num&quot;]) [&#39;1&#39;, &#39;2&#39;] EXISTS &gt;&gt;&gt; r.exists(&quot;first_num&quot;) True &gt;&gt;&gt; r.exists(&quot;fourth_num&quot;) False DEL &gt;&gt;&gt; r.delete(&quot;first_num&quot;) 1 As this key is deleted now, you will get “nil” and “None” if you try to retrieve it. From redis-cli 127.0.0.1:6379&gt; get first_num (nil) From Python shell &gt;&gt;&gt; r.get(&quot;first_num&quot;) EXPIRE Mark key second_num to expire after 10 seconds &gt;&gt;&gt; r.expire(&quot;second_num&quot;, 10) True Check this immediately &gt;&gt;&gt; r.get(&quot;second_num&quot;) &#39;2&#39; #output Check after 10 seconds &gt;&gt;&gt; r.get(&quot;second_num&quot;) It returns None after 10 seconds meaning this key doesn&#39;t exist in redis anymore Redis Lists reidis’ lpush equivalent in Python &gt;&gt;&gt; r.lpush(&quot;mylist&quot;, 1) 1L Verify from redis-cli that a list is created in redis 127.0.0.1:6379&gt; lrange mylist 0 -1 1) &quot;1&quot; Pushing multiple values to list &gt;&gt;&gt; r.lpush(&quot;mylist&quot;, 2, 3) Check the new list from redis-cli 127.0.0.1:6379&gt; lrange mylist 0 -1 1) &quot;3&quot; 2) &quot;2&quot; 3) &quot;1&quot; redis-cli’s lrange equivalent in Python &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, -1) [&#39;3&#39;, &#39;2&#39;, &#39;1&#39;] &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, 1) [&#39;3&#39;, &#39;2&#39;] rpush &gt;&gt;&gt; r.rpush(&quot;mylist&quot;, 4) Check that element is pushed on right &gt;&gt;&gt; r.lrange(&quot;mylist&quot;, 0, -1) [&#39;3&#39;, &#39;2&#39;, &#39;1&#39;, &#39;4&#39;] Redis hashes hmset allows saving of dictionary as values. You should already be knowing this from redis docs. 127.0.0.1:6379&gt; hmset user name ned age 31 OK 127.0.0.1:6379&gt; hgetall user 1) &quot;name&quot; 2) &quot;ned&quot; 3) &quot;age&quot; 4) &quot;31&quot; redis-py way of achieving the same would be &gt;&gt;&gt; r.hmset(&quot;another_user&quot;, {&#39;name&#39;: &#39;robert&#39;, &#39;age&#39;: 32}) True Try reading this using redis-cli 127.0.0.1:6379&gt; hgetall another_user 1) &quot;age&quot; 2) &quot;32&quot; 3) &quot;name&quot; 4) &quot;robert&quot; Try reading this using redis-py &gt;&gt;&gt; r.hgetall(&quot;another_user&quot;) {&#39;age&#39;: &#39;32&#39;, &#39;name&#39;: &#39;robert&#39;} &gt;&gt;&gt; r.hget(&quot;another_user&quot;, &quot;name&quot;) &#39;robert&#39; &gt;&gt;&gt; r.hget(&quot;another_user&quot;, &quot;age&quot;) &#39;32&#39; &gt;&gt;&gt; r.hgetall(&quot;user&quot;) {&#39;age&#39;: &#39;31&#39;, &#39;name&#39;: &#39;ned&#39;} There are several other methods provided by redis-py too and now you should be in a good position to related redis’ commands with redis-py methods.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/redis/2015/03/26/getting-started-with-redis-py.html","headline":"Getting started with redis-py","dateModified":"2015-03-26T17:43:25+05:30","datePublished":"2015-03-26T17:43:25+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/redis/2015/03/26/getting-started-with-redis-py.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Getting started with redis-py</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2015-03-26T17:43:25+05:30" itemprop="datePublished">Mar 26, 2015
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This post explains how to interface with Redis from Python and how to use different Redis commands from Python using redis-py.</p>
+
+<p>What this post is not about</p>
+
+<ul>
+  <li>Comparing relational and non-relational database</li>
+  <li>Comparing MySQL and Redis</li>
+  <li>Introduction to Redis</li>
+</ul>
+
+<p>I assume you know the following</p>
+
+<ul>
+  <li>Basics of Redis</li>
+  <li>Basic redis commands for working with Strings, Lists and Maps as described at <a href="http://redis.io/topics/data-types-intro" target="_blank">Redis docs</a>.</li>
+</ul>
+
+<p>I did not find enough examples of using redis-py provided methods and so wrote this blog post.</p>
+
+<h3 id="getting-started">Getting started</h3>
+
+<p>Assuming you have Redis installed and your redis server is running.</p>
+
+<p>We will follow the same sequence as followed in Redis data-types-intro at <a href="http://redis.io/topics/data-types-intro" target="_blank">Redis docs</a></p>
+
+<p>Install redis-py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip install redis
+</code></pre></div></div>
+
+<p>Start redis-cli on some shell, so we can relate our Python redis commands and plain redis command.</p>
+
+<h4 id="redis-strings">Redis strings</h4>
+
+<p>For setting a string value, we use the following from redis-cli</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; set mykey myvalue
+</code></pre></div></div>
+
+<p>And you can get it using</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; get mykey
+"myvalue"
+</code></pre></div></div>
+
+<p>Now we want to do the same from Python. Do the following from Python shell.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; import redis
+&gt;&gt;&gt; r = redis.StrictRedis()
+</code></pre></div></div>
+
+<p>We created an instance of <strong>StrictRedis</strong>. This is required for communication with redis-server.</p>
+
+<p>Try getting “mykey”, which was set using redis-cli, from Python</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.get("mykey")
+'myvalue'   #output
+</code></pre></div></div>
+
+<p>So we are able to communicate properly with redis-server. Things which were inserted into redis using redis-cli can be read using Python.</p>
+
+<p>Try setting a value into Redis from Python shell.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.set("anotherkey", "anothervalue")
+True       #output
+</code></pre></div></div>
+
+<p>Check from redis-cli if this key was set properly.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; get anotherkey
+"anothervalue"
+</code></pre></div></div>
+
+<p>So it seems Python is able to insert values into Redis properly.</p>
+
+<p>You can read the same value using Python again.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.get("anotherkey")
+'anothervalue'
+</code></pre></div></div>
+
+<h4 id="incr-and-incrby">INCR and INCRBY</h4>
+
+<p>Redis provides <strong>incr</strong> and <strong>incrby</strong> on integer values.</p>
+
+<p>So let’s set an integer value first which we will try to increment.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.set("num", 10)
+True
+
+&gt;&gt;&gt; r.get("num")
+'10'
+</code></pre></div></div>
+
+<p>redis-py’s equivalent of Redis’ <strong>incr</strong> is</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.incr("num")
+11
+</code></pre></div></div>
+
+<p>Get it to verify that num has been incremented</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.get("num")
+'11'
+</code></pre></div></div>
+
+<p>You should verify it using redis-cli too.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; get num
+"11"
+</code></pre></div></div>
+
+<p>Python’s equivalent of <strong>incrby</strong> is</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.incrby("num", 10)
+21
+</code></pre></div></div>
+
+<p>Verify again using redis-cli</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; get num
+"21"
+</code></pre></div></div>
+
+<h4 id="mset-and-mget">MSET and MGET</h4>
+
+<p>redis-cli’s mset equivalent in Python</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.mset(first_num=1, second_num=2, third_num=3)
+True
+</code></pre></div></div>
+
+<p>Verify these keys are set from redis-cli</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; get first_num
+"1"
+127.0.0.1:6379&gt; get second_num
+"2"
+</code></pre></div></div>
+
+<p>reidis’ mget equivalent</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.mget(["first_num", "second_num"])
+['1', '2']
+</code></pre></div></div>
+
+<h4 id="exists">EXISTS</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.exists("first_num")
+True
+&gt;&gt;&gt; r.exists("fourth_num")
+False
+</code></pre></div></div>
+
+<h4 id="del">DEL</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.delete("first_num")
+1
+</code></pre></div></div>
+
+<p>As this key is deleted now, you will get “nil” and “None” if you try to retrieve it.</p>
+
+<p>From redis-cli</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; get first_num
+(nil)
+</code></pre></div></div>
+
+<p>From Python shell</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.get("first_num")
+</code></pre></div></div>
+
+<h4 id="expire">EXPIRE</h4>
+
+<p>Mark key <strong>second_num</strong> to expire after 10 seconds</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.expire("second_num", 10)
+True
+</code></pre></div></div>
+
+<p>Check this immediately</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.get("second_num")
+'2'     #output
+</code></pre></div></div>
+
+<p>Check after 10 seconds</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.get("second_num")
+It returns None after 10 seconds meaning this key doesn't exist in redis anymore
+</code></pre></div></div>
+
+<h4 id="redis-lists">Redis Lists</h4>
+
+<p>reidis’ lpush equivalent in Python</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.lpush("mylist", 1)
+1L
+</code></pre></div></div>
+
+<p>Verify from redis-cli that a list is created in redis</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; lrange mylist 0 -1
+1) "1"
+</code></pre></div></div>
+
+<p>Pushing multiple values to list</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.lpush("mylist", 2, 3)
+</code></pre></div></div>
+
+<p>Check the new list from redis-cli</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; lrange mylist 0 -1
+1) "3"
+2) "2"
+3) "1"
+</code></pre></div></div>
+
+<p>redis-cli’s lrange equivalent in Python</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.lrange("mylist", 0, -1)
+['3', '2', '1']
+
+&gt;&gt;&gt; r.lrange("mylist", 0, 1)
+['3', '2']
+</code></pre></div></div>
+
+<p>rpush</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.rpush("mylist", 4)
+</code></pre></div></div>
+
+<p>Check that element is pushed on right</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.lrange("mylist", 0, -1)
+['3', '2', '1', '4']
+</code></pre></div></div>
+
+<h4 id="redis-hashes">Redis hashes</h4>
+
+<p>hmset allows saving of dictionary as values. You should already be knowing this from redis docs.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; hmset user name ned age 31
+OK
+
+127.0.0.1:6379&gt; hgetall user
+1) "name"
+2) "ned"
+3) "age"
+4) "31"
+</code></pre></div></div>
+
+<p>redis-py way of achieving the same would be</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.hmset("another_user", {'name': 'robert', 'age': 32})
+True
+</code></pre></div></div>
+
+<p>Try reading this using redis-cli</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1:6379&gt; hgetall another_user
+1) "age"
+2) "32"
+3) "name"
+4) "robert"
+</code></pre></div></div>
+
+<p>Try reading this using redis-py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; r.hgetall("another_user")
+{'age': '32', 'name': 'robert'}
+
+&gt;&gt;&gt; r.hget("another_user", "name")
+'robert'
+
+&gt;&gt;&gt; r.hget("another_user", "age")
+'32'
+
+&gt;&gt;&gt; r.hgetall("user")
+{'age': '31', 'name': 'ned'}
+</code></pre></div></div>
+
+<p>There are several other methods provided by redis-py too and now you should be in a good position to related redis’ commands with redis-py methods.</p>
+
+
+  </div><a class="u-url" href="/redis/2015/03/26/getting-started-with-redis-py.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

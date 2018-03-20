@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Popularizing Django – Or Reusable apps considered harmful. | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Popularizing Django – Or Reusable apps considered harmful." />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="For all its technical merits, Django is still a very niche technology. It is my belief that the thing which is holding Django back the most, is due to one of its strengths." />
+<meta property="og:description" content="For all its technical merits, Django is still a very niche technology. It is my belief that the thing which is holding Django back the most, is due to one of its strengths." />
+<link rel="canonical" href="http://localhost:4000/marketing/2008/05/06/popularizing-django-or-reusable-apps-considered-ha.html" />
+<meta property="og:url" content="http://localhost:4000/marketing/2008/05/06/popularizing-django-or-reusable-apps-considered-ha.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2008-05-06T10:44:54+05:30" />
+<script type="application/ld+json">
+{"description":"For all its technical merits, Django is still a very niche technology. It is my belief that the thing which is holding Django back the most, is due to one of its strengths.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/marketing/2008/05/06/popularizing-django-or-reusable-apps-considered-ha.html","headline":"Popularizing Django – Or Reusable apps considered harmful.","dateModified":"2008-05-06T10:44:54+05:30","datePublished":"2008-05-06T10:44:54+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/marketing/2008/05/06/popularizing-django-or-reusable-apps-considered-ha.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Popularizing Django -- Or Reusable apps considered harmful.</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2008-05-06T10:44:54+05:30" itemprop="datePublished">May 6, 2008
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>For all its technical merits, Django is still a very <a href="http://google.com/trends?q=php%2C+django%2C+">niche technology</a>. It is my belief that the thing which is holding Django back the most, is due to one of its strengths.</p>
+
+<p>Making reusable apps is easy and simple in Django. In Django this is the <a href="http://www.b-list.org/weblog/2007/mar/27/reusable-django-apps/">correct</a> way to do things. You take a few apps, mix them together in your project, and deploy to start your site.</p>
+
+<p>Compare the installation steps of Wordpress and an imaginary blog software better than Wordpress called Djangopress.</p>
+
+<h4 id="wordpress">Wordpress</h4>
+<ol>
+  <li>FTP wordpress to webserver.</li>
+  <li>Point browser to site.com/blog</li>
+  <li>Next-Next-Next done.</li>
+</ol>
+
+<h4 id="djangopress">Djangopress</h4>
+<ol>
+  <li>Svn checkout Djangopress</li>
+  <li>Svn checkout <a href="http://code.google.com/p/django-registration/">django-registration</a></li>
+  <li>Svn checkout other Django apps Djangopress depends on. Maybe <a href="http://code.google.com/p/django-mptt/">django-mptt</a>, <a href="http://code.google.com/p/django-threadedcomments/">django-threadedcomments</a> or a few others.</li>
+  <li>Edit your settings.py to add all these apps to <code class="highlighter-rouge">INSTALLED_APPS</code>.</li>
+  <li>Add database settings, and other changes if needed.</li>
+  <li>Telnet to your server and do <code class="highlighter-rouge">syncdb</code></li>
+  <li>Create templates. Done.</li>
+</ol>
+
+<p>This does not take into account the extra hoops Apache makes  you jump through, compared to using a PHP app.</p>
+
+<h3 id="how-i-got-started-with-web-programming">How I got started with web programming.</h3>
+
+<p>I wanted to run a forum. <a href="http://www.phpbb.com/">PhpBB</a> was free, and seemed most widely used. Installed it, and wanted to tinker with it, so learnt Php. If there was a different forum software, which was technically superior, but which asked me to write templates for it before I could start a forum, guess which one I would have chosen?</p>
+
+<h3 id="so-how-to-popularize-django">So how to popularize Django.</h3>
+
+<p>In my <a href="http://42topics.com/blog/2008/04/interview-with-james-bennett-django-release-manager/">interview of James Bennett</a>, I asked what is Django’s killer app. And he said there need not be a Killer app for Django, reusable apps will do. I guess I will have to disagree. Even internet needed a <a href="http://en.wikipedia.org/wiki/Webmail">killer app</a> to get breakthrough popularity. Let’s see what a Killer app gives you.</p>
+
+<ol>
+  <li>It fills a big niche, so people are forced to learn your language/framework.</li>
+  <li>It forces the Hosting company to support your language/framework.</li>
+  <li>If a large number of places use it, it gives your framework name recognition.</li>
+</ol>
+
+<p>So to popularize Django, I propose setting up DjangoPackagedApps.com to distribute packaged Django apps, to complement reusable Django apps. A packaged Django app, must have these properties.</p>
+<ol>
+  <li>All dependencies must be included.</li>
+  <li>Beautiful templates must be included out of the box.</li>
+  <li>Users must not need to modify anything in settings.py apart from the database settings.</li>
+</ol>
+
+<p>And installing the PackagedApp must be no more than the number of steps needed in Wordpress.</p>
+
+<ol>
+  <li>Svn checkout/FTP DjangoPackagedApp</li>
+  <li>Only thing to edit in settings.py is database settings.</li>
+  <li>Do syncdb. done.</li>
+</ol>
+
+<hr />
+
+<p>Do yo use <a href="http://42topics.com/Django/">Django</a>? Do you <a href="http://42topics.com/programming/">program</a>? Find things which YOU will love reading at <a href="http://42topics.com/register/">42topics.com</a>.</p>
+
+
+  </div><a class="u-url" href="/marketing/2008/05/06/popularizing-django-or-reusable-apps-considered-ha.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

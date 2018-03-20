@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Producer-consumer problem in Python | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Producer-consumer problem in Python" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="We will solve Producer Consumer problem in Python using Python threads. This problem is nowhere as hard as they make it sound in colleges. This blog will make more sense if you have some idea about Producer Consumer problem. Why care about Producer Consumer problem: Will help you understand more about concurrency and different concepts of concurrency. The concept of Producer Consumer problem is used to some extent in implementing a message queue. And you will surely need message queue at some point of time. While we use threads, you will learn about the following thread topics: Condition in threads. wait() method available on Condition instances. notify() method available on Condition instances. I will assume you are comfortable with basics of Threads, race condition and how to prevent race condition i.e using locks. If not, my last post on basics of Threads should be able to help. Quoting Wikipedia: The producer&#39;s job is to generate a piece of data, put it into the buffer and start again. At the same time, the consumer is consuming the data (i.e., removing it from the buffer) one piece at a time The catch here is “At the same time”. So, producer and consumer need to run concurrently. Hence we need separate threads for Producer and Consumer. from threading import Thread class ProducerThread(Thread): def run(self): pass class ConsumerThread(Thread): def run(self): pass Quoting Wikipedia again: The problem describes two processes, the producer and the consumer, who share a common, fixed-size buffer used as a queue. So we keep one variable which will be global and will be modified by both Producer and Consumer threads. Producer produces data and adds it to the queue. Consumer consumes data from the queue i.e removes it from the queue. queue = [] In first iteration, we will not put fixed-size constraint on queue. We will make it fixed-size once our basic program works. ###Initial buggy program: from threading import Thread, Lock import time import random queue = [] lock = Lock() class ProducerThread(Thread): def run(self): nums = range(5) #Will create the list [0, 1, 2, 3, 4] global queue while True: num = random.choice(nums) #Selects a random number from list [0, 1, 2, 3, 4] lock.acquire() queue.append(num) print &quot;Produced&quot;, num lock.release() time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: lock.acquire() if not queue: print &quot;Nothing in queue, but consumer will try to consume&quot; num = queue.pop(0) print &quot;Consumed&quot;, num lock.release() time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Run it few times and notice the result. Your program might not end after raising IndexError. Use Ctrl+Z to terminate. Sample output: Produced 3 Consumed 3 Produced 4 Consumed 4 Produced 1 Consumed 1 Nothing in queue, but consumer will try to consume Exception in thread Thread-2: Traceback (most recent call last): File &quot;/usr/lib/python2.7/threading.py&quot;, line 551, in __bootstrap_inner self.run() File &quot;producer_consumer.py&quot;, line 31, in run num = queue.pop(0) IndexError: pop from empty list ####Explanation: We started one producer thread(hereafter referred as producer) and one consumer thread(hereafter referred as consumer). Producer keeps on adding to the queue and consumer keeps on removing from the queue. Since queue is a shared variable, we keep it inside lock to avoid race condition. At some point, consumer has consumed everything and producer is still sleeping. Consumer tries to consume more but since queue is empty, an IndexError is raised. But on every execution, before IndexError is raised you will see the print statement telling “Nothing in queue, but consumer will try to consume”, which explains why you are getting the error. We found this implementaion as the wrong behaviour. ####What is the correct behaviour? When there was nothing in the queue, consumer should have stopped running and waited instead of trying to consume from the queue. And once producer adds something to the queue, there should be a way for it to notify the consumer telling it has added something to queue. So, consumer can again consume from the queue. And thus IndexError will never be raised. About Condition Condition object allows one or more threads to wait until notified by another thread. Taken from here. And this is exactly what we want. We want consumer to wait when the queue is empty and resume only when it gets notified by the producer. Producer should notify only after it adds something to the queue. So after notification from producer, we can be sure that queue is not empty and hence no error can crop if consumer consumes. Condition is always associated with a lock. A condition has acquire() and release() methods that call the corresponding methods of the associated lock. Condition provides acquire() and release() which calls lock’s acquire() and release() internally, and so we can replace lock instances with condition instances and our lock behaviour will keep working properly. Consumer needs to wait using a condition instance and producer needs to notify the consumer using the condition instance too. So, they must use the same condition instance for the wait and notify functionality to work properly. Let’s rewrite our Consumer and Producer code: from threading import Condition condition = Condition() class ConsumerThread(Thread): def run(self): global queue while True: condition.acquire() if not queue: print &quot;Nothing in queue, consumer is waiting&quot; condition.wait() print &quot;Producer added something to queue and notified the consumer&quot; num = queue.pop(0) print &quot;Consumed&quot;, num condition.release() time.sleep(random.random()) Let’s rewrite Producer code: class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: condition.acquire() num = random.choice(nums) queue.append(num) print &quot;Produced&quot;, num condition.notify() condition.release() time.sleep(random.random()) Sample output: Produced 3 Consumed 3 Produced 1 Consumed 1 Produced 4 Consumed 4 Produced 3 Consumed 3 Nothing in queue, consumer is waiting Produced 2 Producer added something to queue and notified the consumer Consumed 2 Nothing in queue, consumer is waiting Produced 2 Producer added something to queue and notified the consumer Consumed 2 Nothing in queue, consumer is waiting Produced 3 Producer added something to queue and notified the consumer Consumed 3 Produced 4 Consumed 4 Produced 1 Consumed 1 ####Explanation: For consumer, we check if the queue is empty before consuming. If yes then call wait() on condition instance. wait() blocks the consumer and also releases the lock associated with the condition. This lock was held by consumer, so basically consumer loses hold of the lock. Now unless consumer is notified, it will not run. Producer can acquire the lock because lock was released by consumer. Producer puts data in queue and calls notify() on the condition instance. Once notify() call is made on condition, consumer wakes up. But waking up doesn’t mean it starts executing. notify() does not release the lock. Even after notify(), lock is still held by producer. Producer explicitly releases the lock by using condition.release(). And consumer starts running again. Now it will find data in queue and no IndexError will be raised. ###Adding a max size on the queue Producer should not put data in the queue if the queue is full. It can be accomplished in the following way: Before putting data in queue, producer should check if the queue is full. If not, producer can continue as usual. If the queue is full, producer must wait. So call wait() on condition instance to accomplish this. This gives a chance to consumer to run. Consumer will consume data from queue which will create space in queue. And then consumer should notify the producer. Once consumer releases the lock, producer can acquire the lock and can add data to queue. Final program looks like: from threading import Thread, Condition import time import random queue = [] MAX_NUM = 10 condition = Condition() class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: condition.acquire() if len(queue) == MAX_NUM: print &quot;Queue full, producer is waiting&quot; condition.wait() print &quot;Space in queue, Consumer notified the producer&quot; num = random.choice(nums) queue.append(num) print &quot;Produced&quot;, num condition.notify() condition.release() time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: condition.acquire() if not queue: print &quot;Nothing in queue, consumer is waiting&quot; condition.wait() print &quot;Producer added something to queue and notified the consumer&quot; num = queue.pop(0) print &quot;Consumed&quot;, num condition.notify() condition.release() time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Sample output: Produced 0 Consumed 0 Produced 0 Produced 4 Consumed 0 Consumed 4 Nothing in queue, consumer is waiting Produced 4 Producer added something to queue and notified the consumer Consumed 4 Produced 3 Produced 2 Consumed 3 Update: Many people on the internet suggested that I use Queue.Queue instead of using a list with conditions and lock. I agree, but I wanted to show how Conditions, wait() and notify() work so I took this approach. Let’s update our code to use Queue. Queue encapsulates the behaviour of Condition, wait(), notify(), acquire() etc. Now is a good time to read the documentation for Queue and the source code for it. Updated program: from threading import Thread import time import random from Queue import Queue queue = Queue(10) class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: num = random.choice(nums) queue.put(num) print &quot;Produced&quot;, num time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: num = queue.get() queue.task_done() print &quot;Consumed&quot;, num time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Explanation In place of list, we are using a Queue instance(hereafter queue). queue has a Condition and that condition has its lock. You don’t need to bother about Condition and Lock if you use Queue. Producer uses put available on queue to insert data in the queue. put() has the logic to acquire the lock before inserting data in queue. Also put() checks whether the queue is full. If yes, then it calls wait() internally and so producer starts waiting. Consumer uses get. get() acquires the lock before removing data from queue. get() checks if the queue is empty. If yes, it puts consumer in waiting state. get() and put() has proper logic for notify() too. Why don’t you check the source code for Queue now?" />
+<meta property="og:description" content="We will solve Producer Consumer problem in Python using Python threads. This problem is nowhere as hard as they make it sound in colleges. This blog will make more sense if you have some idea about Producer Consumer problem. Why care about Producer Consumer problem: Will help you understand more about concurrency and different concepts of concurrency. The concept of Producer Consumer problem is used to some extent in implementing a message queue. And you will surely need message queue at some point of time. While we use threads, you will learn about the following thread topics: Condition in threads. wait() method available on Condition instances. notify() method available on Condition instances. I will assume you are comfortable with basics of Threads, race condition and how to prevent race condition i.e using locks. If not, my last post on basics of Threads should be able to help. Quoting Wikipedia: The producer&#39;s job is to generate a piece of data, put it into the buffer and start again. At the same time, the consumer is consuming the data (i.e., removing it from the buffer) one piece at a time The catch here is “At the same time”. So, producer and consumer need to run concurrently. Hence we need separate threads for Producer and Consumer. from threading import Thread class ProducerThread(Thread): def run(self): pass class ConsumerThread(Thread): def run(self): pass Quoting Wikipedia again: The problem describes two processes, the producer and the consumer, who share a common, fixed-size buffer used as a queue. So we keep one variable which will be global and will be modified by both Producer and Consumer threads. Producer produces data and adds it to the queue. Consumer consumes data from the queue i.e removes it from the queue. queue = [] In first iteration, we will not put fixed-size constraint on queue. We will make it fixed-size once our basic program works. ###Initial buggy program: from threading import Thread, Lock import time import random queue = [] lock = Lock() class ProducerThread(Thread): def run(self): nums = range(5) #Will create the list [0, 1, 2, 3, 4] global queue while True: num = random.choice(nums) #Selects a random number from list [0, 1, 2, 3, 4] lock.acquire() queue.append(num) print &quot;Produced&quot;, num lock.release() time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: lock.acquire() if not queue: print &quot;Nothing in queue, but consumer will try to consume&quot; num = queue.pop(0) print &quot;Consumed&quot;, num lock.release() time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Run it few times and notice the result. Your program might not end after raising IndexError. Use Ctrl+Z to terminate. Sample output: Produced 3 Consumed 3 Produced 4 Consumed 4 Produced 1 Consumed 1 Nothing in queue, but consumer will try to consume Exception in thread Thread-2: Traceback (most recent call last): File &quot;/usr/lib/python2.7/threading.py&quot;, line 551, in __bootstrap_inner self.run() File &quot;producer_consumer.py&quot;, line 31, in run num = queue.pop(0) IndexError: pop from empty list ####Explanation: We started one producer thread(hereafter referred as producer) and one consumer thread(hereafter referred as consumer). Producer keeps on adding to the queue and consumer keeps on removing from the queue. Since queue is a shared variable, we keep it inside lock to avoid race condition. At some point, consumer has consumed everything and producer is still sleeping. Consumer tries to consume more but since queue is empty, an IndexError is raised. But on every execution, before IndexError is raised you will see the print statement telling “Nothing in queue, but consumer will try to consume”, which explains why you are getting the error. We found this implementaion as the wrong behaviour. ####What is the correct behaviour? When there was nothing in the queue, consumer should have stopped running and waited instead of trying to consume from the queue. And once producer adds something to the queue, there should be a way for it to notify the consumer telling it has added something to queue. So, consumer can again consume from the queue. And thus IndexError will never be raised. About Condition Condition object allows one or more threads to wait until notified by another thread. Taken from here. And this is exactly what we want. We want consumer to wait when the queue is empty and resume only when it gets notified by the producer. Producer should notify only after it adds something to the queue. So after notification from producer, we can be sure that queue is not empty and hence no error can crop if consumer consumes. Condition is always associated with a lock. A condition has acquire() and release() methods that call the corresponding methods of the associated lock. Condition provides acquire() and release() which calls lock’s acquire() and release() internally, and so we can replace lock instances with condition instances and our lock behaviour will keep working properly. Consumer needs to wait using a condition instance and producer needs to notify the consumer using the condition instance too. So, they must use the same condition instance for the wait and notify functionality to work properly. Let’s rewrite our Consumer and Producer code: from threading import Condition condition = Condition() class ConsumerThread(Thread): def run(self): global queue while True: condition.acquire() if not queue: print &quot;Nothing in queue, consumer is waiting&quot; condition.wait() print &quot;Producer added something to queue and notified the consumer&quot; num = queue.pop(0) print &quot;Consumed&quot;, num condition.release() time.sleep(random.random()) Let’s rewrite Producer code: class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: condition.acquire() num = random.choice(nums) queue.append(num) print &quot;Produced&quot;, num condition.notify() condition.release() time.sleep(random.random()) Sample output: Produced 3 Consumed 3 Produced 1 Consumed 1 Produced 4 Consumed 4 Produced 3 Consumed 3 Nothing in queue, consumer is waiting Produced 2 Producer added something to queue and notified the consumer Consumed 2 Nothing in queue, consumer is waiting Produced 2 Producer added something to queue and notified the consumer Consumed 2 Nothing in queue, consumer is waiting Produced 3 Producer added something to queue and notified the consumer Consumed 3 Produced 4 Consumed 4 Produced 1 Consumed 1 ####Explanation: For consumer, we check if the queue is empty before consuming. If yes then call wait() on condition instance. wait() blocks the consumer and also releases the lock associated with the condition. This lock was held by consumer, so basically consumer loses hold of the lock. Now unless consumer is notified, it will not run. Producer can acquire the lock because lock was released by consumer. Producer puts data in queue and calls notify() on the condition instance. Once notify() call is made on condition, consumer wakes up. But waking up doesn’t mean it starts executing. notify() does not release the lock. Even after notify(), lock is still held by producer. Producer explicitly releases the lock by using condition.release(). And consumer starts running again. Now it will find data in queue and no IndexError will be raised. ###Adding a max size on the queue Producer should not put data in the queue if the queue is full. It can be accomplished in the following way: Before putting data in queue, producer should check if the queue is full. If not, producer can continue as usual. If the queue is full, producer must wait. So call wait() on condition instance to accomplish this. This gives a chance to consumer to run. Consumer will consume data from queue which will create space in queue. And then consumer should notify the producer. Once consumer releases the lock, producer can acquire the lock and can add data to queue. Final program looks like: from threading import Thread, Condition import time import random queue = [] MAX_NUM = 10 condition = Condition() class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: condition.acquire() if len(queue) == MAX_NUM: print &quot;Queue full, producer is waiting&quot; condition.wait() print &quot;Space in queue, Consumer notified the producer&quot; num = random.choice(nums) queue.append(num) print &quot;Produced&quot;, num condition.notify() condition.release() time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: condition.acquire() if not queue: print &quot;Nothing in queue, consumer is waiting&quot; condition.wait() print &quot;Producer added something to queue and notified the consumer&quot; num = queue.pop(0) print &quot;Consumed&quot;, num condition.notify() condition.release() time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Sample output: Produced 0 Consumed 0 Produced 0 Produced 4 Consumed 0 Consumed 4 Nothing in queue, consumer is waiting Produced 4 Producer added something to queue and notified the consumer Consumed 4 Produced 3 Produced 2 Consumed 3 Update: Many people on the internet suggested that I use Queue.Queue instead of using a list with conditions and lock. I agree, but I wanted to show how Conditions, wait() and notify() work so I took this approach. Let’s update our code to use Queue. Queue encapsulates the behaviour of Condition, wait(), notify(), acquire() etc. Now is a good time to read the documentation for Queue and the source code for it. Updated program: from threading import Thread import time import random from Queue import Queue queue = Queue(10) class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: num = random.choice(nums) queue.put(num) print &quot;Produced&quot;, num time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: num = queue.get() queue.task_done() print &quot;Consumed&quot;, num time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Explanation In place of list, we are using a Queue instance(hereafter queue). queue has a Condition and that condition has its lock. You don’t need to bother about Condition and Lock if you use Queue. Producer uses put available on queue to insert data in the queue. put() has the logic to acquire the lock before inserting data in queue. Also put() checks whether the queue is full. If yes, then it calls wait() internally and so producer starts waiting. Consumer uses get. get() acquires the lock before removing data from queue. get() checks if the queue is empty. If yes, it puts consumer in waiting state. get() and put() has proper logic for notify() too. Why don’t you check the source code for Queue now?" />
+<link rel="canonical" href="http://localhost:4000/threads/2013/10/17/producer-consumer-problem-in-python.html" />
+<meta property="og:url" content="http://localhost:4000/threads/2013/10/17/producer-consumer-problem-in-python.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2013-10-17T10:46:37+05:30" />
+<script type="application/ld+json">
+{"description":"We will solve Producer Consumer problem in Python using Python threads. This problem is nowhere as hard as they make it sound in colleges. This blog will make more sense if you have some idea about Producer Consumer problem. Why care about Producer Consumer problem: Will help you understand more about concurrency and different concepts of concurrency. The concept of Producer Consumer problem is used to some extent in implementing a message queue. And you will surely need message queue at some point of time. While we use threads, you will learn about the following thread topics: Condition in threads. wait() method available on Condition instances. notify() method available on Condition instances. I will assume you are comfortable with basics of Threads, race condition and how to prevent race condition i.e using locks. If not, my last post on basics of Threads should be able to help. Quoting Wikipedia: The producer&#39;s job is to generate a piece of data, put it into the buffer and start again. At the same time, the consumer is consuming the data (i.e., removing it from the buffer) one piece at a time The catch here is “At the same time”. So, producer and consumer need to run concurrently. Hence we need separate threads for Producer and Consumer. from threading import Thread class ProducerThread(Thread): def run(self): pass class ConsumerThread(Thread): def run(self): pass Quoting Wikipedia again: The problem describes two processes, the producer and the consumer, who share a common, fixed-size buffer used as a queue. So we keep one variable which will be global and will be modified by both Producer and Consumer threads. Producer produces data and adds it to the queue. Consumer consumes data from the queue i.e removes it from the queue. queue = [] In first iteration, we will not put fixed-size constraint on queue. We will make it fixed-size once our basic program works. ###Initial buggy program: from threading import Thread, Lock import time import random queue = [] lock = Lock() class ProducerThread(Thread): def run(self): nums = range(5) #Will create the list [0, 1, 2, 3, 4] global queue while True: num = random.choice(nums) #Selects a random number from list [0, 1, 2, 3, 4] lock.acquire() queue.append(num) print &quot;Produced&quot;, num lock.release() time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: lock.acquire() if not queue: print &quot;Nothing in queue, but consumer will try to consume&quot; num = queue.pop(0) print &quot;Consumed&quot;, num lock.release() time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Run it few times and notice the result. Your program might not end after raising IndexError. Use Ctrl+Z to terminate. Sample output: Produced 3 Consumed 3 Produced 4 Consumed 4 Produced 1 Consumed 1 Nothing in queue, but consumer will try to consume Exception in thread Thread-2: Traceback (most recent call last): File &quot;/usr/lib/python2.7/threading.py&quot;, line 551, in __bootstrap_inner self.run() File &quot;producer_consumer.py&quot;, line 31, in run num = queue.pop(0) IndexError: pop from empty list ####Explanation: We started one producer thread(hereafter referred as producer) and one consumer thread(hereafter referred as consumer). Producer keeps on adding to the queue and consumer keeps on removing from the queue. Since queue is a shared variable, we keep it inside lock to avoid race condition. At some point, consumer has consumed everything and producer is still sleeping. Consumer tries to consume more but since queue is empty, an IndexError is raised. But on every execution, before IndexError is raised you will see the print statement telling “Nothing in queue, but consumer will try to consume”, which explains why you are getting the error. We found this implementaion as the wrong behaviour. ####What is the correct behaviour? When there was nothing in the queue, consumer should have stopped running and waited instead of trying to consume from the queue. And once producer adds something to the queue, there should be a way for it to notify the consumer telling it has added something to queue. So, consumer can again consume from the queue. And thus IndexError will never be raised. About Condition Condition object allows one or more threads to wait until notified by another thread. Taken from here. And this is exactly what we want. We want consumer to wait when the queue is empty and resume only when it gets notified by the producer. Producer should notify only after it adds something to the queue. So after notification from producer, we can be sure that queue is not empty and hence no error can crop if consumer consumes. Condition is always associated with a lock. A condition has acquire() and release() methods that call the corresponding methods of the associated lock. Condition provides acquire() and release() which calls lock’s acquire() and release() internally, and so we can replace lock instances with condition instances and our lock behaviour will keep working properly. Consumer needs to wait using a condition instance and producer needs to notify the consumer using the condition instance too. So, they must use the same condition instance for the wait and notify functionality to work properly. Let’s rewrite our Consumer and Producer code: from threading import Condition condition = Condition() class ConsumerThread(Thread): def run(self): global queue while True: condition.acquire() if not queue: print &quot;Nothing in queue, consumer is waiting&quot; condition.wait() print &quot;Producer added something to queue and notified the consumer&quot; num = queue.pop(0) print &quot;Consumed&quot;, num condition.release() time.sleep(random.random()) Let’s rewrite Producer code: class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: condition.acquire() num = random.choice(nums) queue.append(num) print &quot;Produced&quot;, num condition.notify() condition.release() time.sleep(random.random()) Sample output: Produced 3 Consumed 3 Produced 1 Consumed 1 Produced 4 Consumed 4 Produced 3 Consumed 3 Nothing in queue, consumer is waiting Produced 2 Producer added something to queue and notified the consumer Consumed 2 Nothing in queue, consumer is waiting Produced 2 Producer added something to queue and notified the consumer Consumed 2 Nothing in queue, consumer is waiting Produced 3 Producer added something to queue and notified the consumer Consumed 3 Produced 4 Consumed 4 Produced 1 Consumed 1 ####Explanation: For consumer, we check if the queue is empty before consuming. If yes then call wait() on condition instance. wait() blocks the consumer and also releases the lock associated with the condition. This lock was held by consumer, so basically consumer loses hold of the lock. Now unless consumer is notified, it will not run. Producer can acquire the lock because lock was released by consumer. Producer puts data in queue and calls notify() on the condition instance. Once notify() call is made on condition, consumer wakes up. But waking up doesn’t mean it starts executing. notify() does not release the lock. Even after notify(), lock is still held by producer. Producer explicitly releases the lock by using condition.release(). And consumer starts running again. Now it will find data in queue and no IndexError will be raised. ###Adding a max size on the queue Producer should not put data in the queue if the queue is full. It can be accomplished in the following way: Before putting data in queue, producer should check if the queue is full. If not, producer can continue as usual. If the queue is full, producer must wait. So call wait() on condition instance to accomplish this. This gives a chance to consumer to run. Consumer will consume data from queue which will create space in queue. And then consumer should notify the producer. Once consumer releases the lock, producer can acquire the lock and can add data to queue. Final program looks like: from threading import Thread, Condition import time import random queue = [] MAX_NUM = 10 condition = Condition() class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: condition.acquire() if len(queue) == MAX_NUM: print &quot;Queue full, producer is waiting&quot; condition.wait() print &quot;Space in queue, Consumer notified the producer&quot; num = random.choice(nums) queue.append(num) print &quot;Produced&quot;, num condition.notify() condition.release() time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: condition.acquire() if not queue: print &quot;Nothing in queue, consumer is waiting&quot; condition.wait() print &quot;Producer added something to queue and notified the consumer&quot; num = queue.pop(0) print &quot;Consumed&quot;, num condition.notify() condition.release() time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Sample output: Produced 0 Consumed 0 Produced 0 Produced 4 Consumed 0 Consumed 4 Nothing in queue, consumer is waiting Produced 4 Producer added something to queue and notified the consumer Consumed 4 Produced 3 Produced 2 Consumed 3 Update: Many people on the internet suggested that I use Queue.Queue instead of using a list with conditions and lock. I agree, but I wanted to show how Conditions, wait() and notify() work so I took this approach. Let’s update our code to use Queue. Queue encapsulates the behaviour of Condition, wait(), notify(), acquire() etc. Now is a good time to read the documentation for Queue and the source code for it. Updated program: from threading import Thread import time import random from Queue import Queue queue = Queue(10) class ProducerThread(Thread): def run(self): nums = range(5) global queue while True: num = random.choice(nums) queue.put(num) print &quot;Produced&quot;, num time.sleep(random.random()) class ConsumerThread(Thread): def run(self): global queue while True: num = queue.get() queue.task_done() print &quot;Consumed&quot;, num time.sleep(random.random()) ProducerThread().start() ConsumerThread().start() Explanation In place of list, we are using a Queue instance(hereafter queue). queue has a Condition and that condition has its lock. You don’t need to bother about Condition and Lock if you use Queue. Producer uses put available on queue to insert data in the queue. put() has the logic to acquire the lock before inserting data in queue. Also put() checks whether the queue is full. If yes, then it calls wait() internally and so producer starts waiting. Consumer uses get. get() acquires the lock before removing data from queue. get() checks if the queue is empty. If yes, it puts consumer in waiting state. get() and put() has proper logic for notify() too. Why don’t you check the source code for Queue now?","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/threads/2013/10/17/producer-consumer-problem-in-python.html","headline":"Producer-consumer problem in Python","dateModified":"2013-10-17T10:46:37+05:30","datePublished":"2013-10-17T10:46:37+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/threads/2013/10/17/producer-consumer-problem-in-python.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Producer-consumer problem in Python</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2013-10-17T10:46:37+05:30" itemprop="datePublished">Oct 17, 2013
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>We will solve Producer Consumer problem in Python using Python threads. This problem is nowhere as hard as they make it sound in colleges.</p>
+
+<p>This blog will make more sense if you have some idea about <a href="http://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem">Producer Consumer problem</a>.</p>
+
+<p>Why care about Producer Consumer problem:</p>
+
+<ul>
+  <li>Will help you understand more about concurrency and different concepts of concurrency.</li>
+  <li>The concept of Producer Consumer problem is used to some extent in implementing a message queue. And you will surely need message queue at some point of time.</li>
+</ul>
+
+<p>While we use threads, you will learn about the following thread topics:</p>
+
+<ul>
+  <li><strong>Condition</strong> in threads.</li>
+  <li><strong>wait()</strong> method available on Condition instances.</li>
+  <li><strong>notify()</strong> method available on Condition instances.</li>
+</ul>
+
+<p>I will assume you are comfortable with basics of Threads, race condition and how to prevent race condition i.e using locks. If not, my last post on <a href="http://agiliq.com/blog/2013/09/understanding-threads-in-python/">basics of Threads</a> should be able to help.</p>
+
+<p>Quoting Wikipedia:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The producer's job is to generate a piece of data, put it into the buffer and start again.
+At the same time, the consumer is consuming the data (i.e., removing it from the buffer) one piece at a time
+</code></pre></div></div>
+
+<p>The catch here is “At the same time”. So, producer and consumer need to run concurrently. Hence we need separate threads for Producer and Consumer.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from threading import Thread
+
+class ProducerThread(Thread):
+    def run(self):
+        pass
+
+class ConsumerThread(Thread):
+    def run(self):
+        pass
+</code></pre></div></div>
+
+<p>Quoting Wikipedia again:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The problem describes two processes, the producer and the consumer, who share a common,
+fixed-size buffer used as a queue.
+</code></pre></div></div>
+
+<p>So we keep one variable which will be global and will be modified by both Producer and Consumer threads. Producer produces data and adds it to the queue. Consumer consumes data from the queue i.e removes it from the queue.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>queue = []
+</code></pre></div></div>
+
+<p>In first iteration, we will not put fixed-size constraint on queue. We will make it fixed-size once our basic program works.</p>
+
+<p>###Initial buggy program:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from threading import Thread, Lock
+import time
+import random
+ 
+queue = []
+lock = Lock()
+ 
+class ProducerThread(Thread):
+    def run(self):
+        nums = range(5) #Will create the list [0, 1, 2, 3, 4]
+        global queue
+        while True:
+            num = random.choice(nums) #Selects a random number from list [0, 1, 2, 3, 4]
+            lock.acquire()
+            queue.append(num)
+            print "Produced", num 
+            lock.release()
+            time.sleep(random.random())
+ 
+ 
+class ConsumerThread(Thread):
+    def run(self):
+        global queue
+        while True:
+            lock.acquire()
+            if not queue:
+                print "Nothing in queue, but consumer will try to consume"
+            num = queue.pop(0)
+            print "Consumed", num 
+            lock.release()
+            time.sleep(random.random())
+ 
+ 
+ProducerThread().start()
+ConsumerThread().start()
+</code></pre></div></div>
+
+<p>Run it few times and notice the result. Your program might not end after raising <strong>IndexError</strong>. Use <strong>Ctrl+Z</strong> to terminate.</p>
+
+<p>Sample output:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Produced 3
+Consumed 3
+Produced 4
+Consumed 4
+Produced 1
+Consumed 1
+Nothing in queue, but consumer will try to consume
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/threading.py", line 551, in __bootstrap_inner
+    self.run()
+  File "producer_consumer.py", line 31, in run
+    num = queue.pop(0)
+IndexError: pop from empty list
+</code></pre></div></div>
+
+<p>####Explanation:</p>
+
+<ul>
+  <li>We started one producer thread(hereafter referred as producer) and one consumer thread(hereafter referred as consumer).</li>
+  <li>Producer keeps on adding to the queue and consumer keeps on removing from the queue.</li>
+  <li>Since queue is a shared variable, we keep it inside lock to avoid race condition.</li>
+  <li>At some point, consumer has consumed everything and producer is still sleeping. Consumer tries to consume more but since queue is empty, an <strong>IndexError</strong> is raised.</li>
+  <li>But on every execution, before IndexError is raised you will see the print statement telling “Nothing in queue, but consumer will try to consume”, which explains why you are getting the error.</li>
+</ul>
+
+<p>We found this implementaion as the wrong behaviour.</p>
+
+<p>####What is the correct behaviour?</p>
+
+<p>When there was nothing in the queue, consumer should have stopped running and waited instead of trying to consume from the queue. And once producer adds something to the queue, there should be a way for it to notify the consumer telling it has added something to queue. So, consumer can again consume from the queue. And thus IndexError will never be raised.</p>
+
+<h3 id="about-condition">About Condition</h3>
+
+<ul>
+  <li>Condition object allows one or more threads to wait until notified by another thread. Taken from <a href="http://docs.python.org/2/library/threading.html#condition-objects">here</a>.</li>
+</ul>
+
+<p>And this is exactly what we want. We want consumer to wait when the queue is empty and resume only when it gets notified by the producer. Producer should notify only after it adds something to the queue. So after notification from producer, we can be sure that queue is not empty and hence no error can crop if consumer consumes.</p>
+
+<ul>
+  <li>Condition is always associated with a lock.</li>
+  <li>A condition has acquire() and release() methods that call the corresponding methods of the associated lock.</li>
+</ul>
+
+<p>Condition provides acquire() and release() which calls lock’s acquire() and release() internally, and so we can replace lock instances with condition instances and our lock behaviour will keep working properly.</p>
+
+<p>Consumer needs to wait using a condition instance and producer needs to notify the consumer using the condition instance too. So, they must use the same condition instance for the wait and notify functionality to work properly.</p>
+
+<p>Let’s rewrite our Consumer and Producer code:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from threading import Condition
+
+condition = Condition()
+
+class ConsumerThread(Thread):
+    def run(self):
+        global queue
+        while True:
+            condition.acquire()
+            if not queue:
+                print "Nothing in queue, consumer is waiting"
+                condition.wait()
+                print "Producer added something to queue and notified the consumer"
+            num = queue.pop(0)
+            print "Consumed", num 
+            condition.release()
+            time.sleep(random.random())
+</code></pre></div></div>
+
+<p>Let’s rewrite Producer code:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class ProducerThread(Thread):
+    def run(self):
+        nums = range(5)
+        global queue
+        while True:
+            condition.acquire()
+            num = random.choice(nums)
+            queue.append(num)
+            print "Produced", num 
+            condition.notify()
+            condition.release()
+            time.sleep(random.random())
+</code></pre></div></div>
+
+<p>Sample output:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Produced 3
+Consumed 3
+Produced 1
+Consumed 1
+Produced 4
+Consumed 4
+Produced 3
+Consumed 3
+Nothing in queue, consumer is waiting
+Produced 2
+Producer added something to queue and notified the consumer
+Consumed 2
+Nothing in queue, consumer is waiting
+Produced 2
+Producer added something to queue and notified the consumer
+Consumed 2
+Nothing in queue, consumer is waiting
+Produced 3
+Producer added something to queue and notified the consumer
+Consumed 3
+Produced 4
+Consumed 4
+Produced 1
+Consumed 1
+</code></pre></div></div>
+
+<p>####Explanation:</p>
+
+<ul>
+  <li>For consumer, we check if the queue is empty before consuming.</li>
+  <li>If yes then call <strong>wait()</strong> on condition instance.</li>
+  <li>wait() blocks the consumer and also releases the lock associated with the condition. This lock was held by consumer, so basically consumer loses hold of the lock.</li>
+  <li>Now unless consumer is notified, it will not run.</li>
+  <li>Producer can acquire the lock because lock was released by consumer.</li>
+  <li>Producer puts data in queue and calls notify() on the condition instance.</li>
+  <li>Once notify() call is made on condition, consumer wakes up. But waking up doesn’t mean it starts executing.</li>
+  <li>notify() does not release the lock. Even after notify(), lock is still held by producer.</li>
+  <li>Producer explicitly releases the lock by using condition.release().</li>
+  <li>And consumer starts running again. Now it will find data in queue and no IndexError will be raised.</li>
+</ul>
+
+<p>###Adding a max size on the queue</p>
+
+<p>Producer should not put data in the queue if the queue is full.</p>
+
+<p>It can be accomplished in the following way:</p>
+
+<ul>
+  <li>Before putting data in queue, producer should check if the queue is full.</li>
+  <li>If not, producer can continue as usual.</li>
+  <li>If the queue is full, producer must wait. So call <strong>wait()</strong> on condition instance to accomplish this.</li>
+  <li>This gives a chance to consumer to run. Consumer will consume data from queue which will create space in queue.</li>
+  <li>And then consumer should notify the producer.</li>
+  <li>Once consumer releases the lock, producer can acquire the lock and can add data to queue.</li>
+</ul>
+
+<p>Final program looks like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from threading import Thread, Condition
+import time
+import random
+ 
+queue = []
+MAX_NUM = 10
+condition = Condition()
+ 
+class ProducerThread(Thread):
+    def run(self):
+        nums = range(5)
+        global queue
+        while True:
+            condition.acquire()
+            if len(queue) == MAX_NUM:
+                print "Queue full, producer is waiting"
+                condition.wait()
+                print "Space in queue, Consumer notified the producer"
+            num = random.choice(nums)
+            queue.append(num)
+            print "Produced", num
+            condition.notify()
+            condition.release()
+            time.sleep(random.random())
+ 
+ 
+class ConsumerThread(Thread):
+    def run(self):
+        global queue
+        while True:
+            condition.acquire()
+            if not queue:
+                print "Nothing in queue, consumer is waiting"
+                condition.wait()
+                print "Producer added something to queue and notified the consumer"
+            num = queue.pop(0)
+            print "Consumed", num
+            condition.notify()
+            condition.release()
+            time.sleep(random.random())
+ 
+ 
+ProducerThread().start()
+ConsumerThread().start()
+</code></pre></div></div>
+
+<p>Sample output:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Produced 0
+Consumed 0
+Produced 0
+Produced 4
+Consumed 0
+Consumed 4
+Nothing in queue, consumer is waiting
+Produced 4
+Producer added something to queue and notified the consumer
+Consumed 4
+Produced 3
+Produced 2
+Consumed 3
+</code></pre></div></div>
+
+<h3 id="update">Update:</h3>
+<p>Many people on the internet suggested that I use Queue.Queue instead of using a list with conditions and lock. I agree, but I wanted to show how Conditions, wait() and notify() work so I took this approach.</p>
+
+<p>Let’s update our code to use Queue.</p>
+
+<p>Queue encapsulates the behaviour of Condition, wait(), notify(), acquire() etc.</p>
+
+<p>Now is a good time to read the <a href="http://docs.python.org/2/library/queue.html">documentation for Queue</a> and the source code for it.</p>
+
+<p>Updated program:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from threading import Thread
+import time
+import random
+from Queue import Queue
+ 
+queue = Queue(10)
+ 
+class ProducerThread(Thread):
+    def run(self):
+        nums = range(5)
+        global queue
+        while True:
+            num = random.choice(nums)
+            queue.put(num)
+            print "Produced", num
+            time.sleep(random.random())
+ 
+ 
+class ConsumerThread(Thread):
+    def run(self):
+        global queue
+        while True:
+            num = queue.get()
+            queue.task_done()
+            print "Consumed", num
+            time.sleep(random.random())
+ 
+ 
+ProducerThread().start()
+ConsumerThread().start()
+</code></pre></div></div>
+
+<h4 id="explanation">Explanation</h4>
+<ul>
+  <li>In place of list, we are using a Queue instance(hereafter queue).</li>
+  <li>queue has a <strong>Condition</strong> and that condition has its lock. You don’t need to bother about Condition and Lock if you use Queue.</li>
+  <li>Producer uses <strong>put</strong> available on queue to insert data in the queue.</li>
+  <li>put() has the logic to acquire the lock before inserting data in queue.</li>
+  <li>Also put() checks whether the queue is full. If yes, then it calls <strong>wait()</strong> internally and so producer starts waiting.</li>
+  <li>Consumer uses <strong>get</strong>.</li>
+  <li>get() acquires the lock before removing data from queue.</li>
+  <li>get() checks if the queue is empty. If yes, it puts consumer in waiting state.</li>
+  <li>get() and put() has proper logic for notify() too. Why don’t you check the source code for Queue now?</li>
+</ul>
+
+<p>eue now?</p>
+
+
+  </div><a class="u-url" href="/threads/2013/10/17/producer-consumer-problem-in-python.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

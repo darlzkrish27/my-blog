@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Transfer files to amazon s3 using browser instead of server | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Transfer files to amazon s3 using browser instead of server" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="So basically when we try to upload a file to amazon s3, we will do it in a regular way of Getting the file from frontend Passing it to server Make a connection to amazon s3 using python code Upload file to amazon s3 But you should also know that, we have a way of uploading directly from browser to s3 instead of server We are going to show that how to do it, and we are using django, boto, html, jquery, ajax to achieve this Hope all the above requirements are already installed and your django site is up and running Concept of uploading to s3 In order to upload a file to amazon s3 we need to generate a signed url using amazon’s python boto package. Next step is to make the uploaded file public in order for to access it. Lets start designing it Create a template called upload_s3.html in your tempalte directory &lt;!DOCTYPE html&gt; &lt;html&gt; &lt;head&gt; &lt;meta charset=&quot;UTF-8&quot;&gt; &lt;meta name=&quot;description&quot; content=&quot;amazon&quot;&gt; &lt;/head&gt; &lt;body&gt; &lt;form action=&quot;#&quot; method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt; Select image to upload: &lt;input type=&quot;file&quot; name=&quot;fileToUpload&quot; id=&quot;fileToUpload&quot;&gt; &lt;input class=&quot;amazon_upload&quot; type=&quot;submit&quot; value=&quot;Upload File&quot; name=&quot;submit&quot;&gt; &lt;/form&gt; &lt;script type=&quot;text/javascript&quot; src=&quot;{ static &#39;js/amazon/amazon.js&#39; }&quot;&gt;&lt;/script&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;/body&gt; &lt;/html&gt; Create django urls to generate the signed url and make them public project/urls.py from django.conf.urls import url, include from .views import GetS3SignedUrl, Makes3VideoPublic urlpatterns = [ url(r&#39;^generate_signed_url/$&#39;, GetS3SignedUrl.as_view(), name=&#39;generate_signed_url&#39;), url(r&#39;^make_video_public/$&#39;, Makes3VideoPublic.as_view(), name=&#39;make_video_public&#39;), ] Create django views to generate the signed url and make them public You need to copy your AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME in to your settings.py file project/views.py from django.views import View from django.conf import settings from django.http import HttpResponse import os import boto from boto.s3.connection import S3Connection def get_s3_connection(use_host=False): key = getattr(settings, &#39;AWS_ACCESS_KEY_ID&#39;, None) secret = getattr(settings, &#39;AWS_SECRET_ACCESS_KEY&#39;, None) if not key or not secret: return None if use_host: return S3Connection(key, secret, host=&#39;s3.amazonaws.com&#39;) return S3Connection(key, secret) class GetS3SignedUrl(View): &quot;&quot;&quot; Generate Signed url for s3 &quot;&quot;&quot; def get(self, request, *args, **kwargs): os.environ[&#39;S3_USE_SIGV4&#39;] = &#39;True&#39; c = get_s3_connection(use_host=True) file_name = request.GET.get(&#39;file_name&#39;) username = request.GET.get(&#39;username&#39;) final_file_name = &#39;videos/{0}/{1}&#39;.format(username, file_name) secondsPerDay = 24*60*60 url = c.generate_url_sigv4( secondsPerDay, &quot;PUT&quot;, bucket=settings.S3_BUCKET_NAME, key=final_file_name, force_http=True) out_url = &#39;https://%s.s3.amazonaws.com/%s&#39; % (settings.S3_BUCKET_NAME, final_file_name) del os.environ[&#39;S3_USE_SIGV4&#39;] return HttpResponse({&#39;signed_request&#39;: url, &#39;url&#39;: out_url, &#39;s3_key&#39;: final_file_name, &#39;status&#39;: &#39;ok&#39;}) class Makes3VideoPublic(View): &quot;&quot;&quot; Make s3 video public &quot;&quot;&quot; def post(self, request, *args, **kwargs): post_data = request.POST aws_access_key_id = settings.AWS_ACCESS_KEY_ID aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY conn = boto.connect_s3(aws_access_key_id, aws_secret_access_key) try: bucket = conn.get_bucket(settings.S3_BUCKET_NAME, validate=True) except S3ResponseError: bucket = conn.create_bucket(settings.S3_BUCKET_NAME) k = bucket.get_key(request.POST.get(&#39;s3_key&#39;)) k.make_public() print post_data return Response(post_data) Let’s create js file ‘js/amazon/amazon.js’ in your js directory to make calls to the endpoints $( document ).ready(function() { $(&#39;.amazon_upload&#39;).click(function(){ // Get the file from frontend var myFile = $(&#39;#fileToUpload&#39;).prop(&#39;files&#39;); // Send a get request to generate signed url var config = { params: { file_name : myFile.name, username : &#39;Username&#39; }, headers : {&#39;Accept&#39; : &#39;application/json&#39;} }; $http.get(&#39;generate_signed_url/&#39;, config).then( function(response) { self.signed_data = response.data var url = response.data.signed_request // Upload file directly to amazon s3 var xhr = new XMLHttpRequest(); xhr.open(&quot;PUT&quot;, url); xhr.setRequestHeader(&#39;Access-Control-Allow-Headers&#39;, &#39;*&#39;); xhr.upload.onprogress = updateProgress; xhr.onerror = function() { alert(&quot;Could not upload file.&quot;); }; xhr.send(self.video); function updateProgress (ev) { if (ev.lengthComputable) { var percentComplete = Math.round((ev.loaded / ev.total) * 100); console.log(percentComplete); } } // Make posted url / video as public var s3_config = { params : response.data, headers : {&#39;Accept&#39; : &#39;application/json&#39;} } var data = { signed_request : response.data.signed_request, s3_key : response.data.s3_key, status : response.data.status, url : response.data.url, } $.ajax({ type: &quot;POST&quot;, url: &#39;make_video_public/&#39;, data: data, success: function(response){ console.log(response); }, }); },function(response) {} ); }) }) So from the above js code we are making two ajax calls, one is for generating the signed request with below response data { signed_request: &quot;https://xxxxxxxx.s3.amazonaws.com/videos/xxxxxx…EKQLHA%2F20170425%2Fus-east-1%2Fs3%2Faws4_request&quot;, url: &quot;https://xxxxxxx.s3.amazonaws.com/videos/shivaagiliq/FunnyCat.mp4&quot;, s3_key: &quot;videos/shivaagiliq/FunnyCat.mp4&quot;, status: &quot;ok&quot; } and another is to make the video public After this when you navigate to amazon file/video url you can able to access it Finally we achieved posting the file from browser to amazon s3 directly" />
+<meta property="og:description" content="So basically when we try to upload a file to amazon s3, we will do it in a regular way of Getting the file from frontend Passing it to server Make a connection to amazon s3 using python code Upload file to amazon s3 But you should also know that, we have a way of uploading directly from browser to s3 instead of server We are going to show that how to do it, and we are using django, boto, html, jquery, ajax to achieve this Hope all the above requirements are already installed and your django site is up and running Concept of uploading to s3 In order to upload a file to amazon s3 we need to generate a signed url using amazon’s python boto package. Next step is to make the uploaded file public in order for to access it. Lets start designing it Create a template called upload_s3.html in your tempalte directory &lt;!DOCTYPE html&gt; &lt;html&gt; &lt;head&gt; &lt;meta charset=&quot;UTF-8&quot;&gt; &lt;meta name=&quot;description&quot; content=&quot;amazon&quot;&gt; &lt;/head&gt; &lt;body&gt; &lt;form action=&quot;#&quot; method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt; Select image to upload: &lt;input type=&quot;file&quot; name=&quot;fileToUpload&quot; id=&quot;fileToUpload&quot;&gt; &lt;input class=&quot;amazon_upload&quot; type=&quot;submit&quot; value=&quot;Upload File&quot; name=&quot;submit&quot;&gt; &lt;/form&gt; &lt;script type=&quot;text/javascript&quot; src=&quot;{ static &#39;js/amazon/amazon.js&#39; }&quot;&gt;&lt;/script&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;/body&gt; &lt;/html&gt; Create django urls to generate the signed url and make them public project/urls.py from django.conf.urls import url, include from .views import GetS3SignedUrl, Makes3VideoPublic urlpatterns = [ url(r&#39;^generate_signed_url/$&#39;, GetS3SignedUrl.as_view(), name=&#39;generate_signed_url&#39;), url(r&#39;^make_video_public/$&#39;, Makes3VideoPublic.as_view(), name=&#39;make_video_public&#39;), ] Create django views to generate the signed url and make them public You need to copy your AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME in to your settings.py file project/views.py from django.views import View from django.conf import settings from django.http import HttpResponse import os import boto from boto.s3.connection import S3Connection def get_s3_connection(use_host=False): key = getattr(settings, &#39;AWS_ACCESS_KEY_ID&#39;, None) secret = getattr(settings, &#39;AWS_SECRET_ACCESS_KEY&#39;, None) if not key or not secret: return None if use_host: return S3Connection(key, secret, host=&#39;s3.amazonaws.com&#39;) return S3Connection(key, secret) class GetS3SignedUrl(View): &quot;&quot;&quot; Generate Signed url for s3 &quot;&quot;&quot; def get(self, request, *args, **kwargs): os.environ[&#39;S3_USE_SIGV4&#39;] = &#39;True&#39; c = get_s3_connection(use_host=True) file_name = request.GET.get(&#39;file_name&#39;) username = request.GET.get(&#39;username&#39;) final_file_name = &#39;videos/{0}/{1}&#39;.format(username, file_name) secondsPerDay = 24*60*60 url = c.generate_url_sigv4( secondsPerDay, &quot;PUT&quot;, bucket=settings.S3_BUCKET_NAME, key=final_file_name, force_http=True) out_url = &#39;https://%s.s3.amazonaws.com/%s&#39; % (settings.S3_BUCKET_NAME, final_file_name) del os.environ[&#39;S3_USE_SIGV4&#39;] return HttpResponse({&#39;signed_request&#39;: url, &#39;url&#39;: out_url, &#39;s3_key&#39;: final_file_name, &#39;status&#39;: &#39;ok&#39;}) class Makes3VideoPublic(View): &quot;&quot;&quot; Make s3 video public &quot;&quot;&quot; def post(self, request, *args, **kwargs): post_data = request.POST aws_access_key_id = settings.AWS_ACCESS_KEY_ID aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY conn = boto.connect_s3(aws_access_key_id, aws_secret_access_key) try: bucket = conn.get_bucket(settings.S3_BUCKET_NAME, validate=True) except S3ResponseError: bucket = conn.create_bucket(settings.S3_BUCKET_NAME) k = bucket.get_key(request.POST.get(&#39;s3_key&#39;)) k.make_public() print post_data return Response(post_data) Let’s create js file ‘js/amazon/amazon.js’ in your js directory to make calls to the endpoints $( document ).ready(function() { $(&#39;.amazon_upload&#39;).click(function(){ // Get the file from frontend var myFile = $(&#39;#fileToUpload&#39;).prop(&#39;files&#39;); // Send a get request to generate signed url var config = { params: { file_name : myFile.name, username : &#39;Username&#39; }, headers : {&#39;Accept&#39; : &#39;application/json&#39;} }; $http.get(&#39;generate_signed_url/&#39;, config).then( function(response) { self.signed_data = response.data var url = response.data.signed_request // Upload file directly to amazon s3 var xhr = new XMLHttpRequest(); xhr.open(&quot;PUT&quot;, url); xhr.setRequestHeader(&#39;Access-Control-Allow-Headers&#39;, &#39;*&#39;); xhr.upload.onprogress = updateProgress; xhr.onerror = function() { alert(&quot;Could not upload file.&quot;); }; xhr.send(self.video); function updateProgress (ev) { if (ev.lengthComputable) { var percentComplete = Math.round((ev.loaded / ev.total) * 100); console.log(percentComplete); } } // Make posted url / video as public var s3_config = { params : response.data, headers : {&#39;Accept&#39; : &#39;application/json&#39;} } var data = { signed_request : response.data.signed_request, s3_key : response.data.s3_key, status : response.data.status, url : response.data.url, } $.ajax({ type: &quot;POST&quot;, url: &#39;make_video_public/&#39;, data: data, success: function(response){ console.log(response); }, }); },function(response) {} ); }) }) So from the above js code we are making two ajax calls, one is for generating the signed request with below response data { signed_request: &quot;https://xxxxxxxx.s3.amazonaws.com/videos/xxxxxx…EKQLHA%2F20170425%2Fus-east-1%2Fs3%2Faws4_request&quot;, url: &quot;https://xxxxxxx.s3.amazonaws.com/videos/shivaagiliq/FunnyCat.mp4&quot;, s3_key: &quot;videos/shivaagiliq/FunnyCat.mp4&quot;, status: &quot;ok&quot; } and another is to make the video public After this when you navigate to amazon file/video url you can able to access it Finally we achieved posting the file from browser to amazon s3 directly" />
+<link rel="canonical" href="http://localhost:4000/2017/04/26/trsfer-files-amzon-s3-using-browser-instead-server.html" />
+<meta property="og:url" content="http://localhost:4000/2017/04/26/trsfer-files-amzon-s3-using-browser-instead-server.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-04-26T02:29:55+05:30" />
+<script type="application/ld+json">
+{"description":"So basically when we try to upload a file to amazon s3, we will do it in a regular way of Getting the file from frontend Passing it to server Make a connection to amazon s3 using python code Upload file to amazon s3 But you should also know that, we have a way of uploading directly from browser to s3 instead of server We are going to show that how to do it, and we are using django, boto, html, jquery, ajax to achieve this Hope all the above requirements are already installed and your django site is up and running Concept of uploading to s3 In order to upload a file to amazon s3 we need to generate a signed url using amazon’s python boto package. Next step is to make the uploaded file public in order for to access it. Lets start designing it Create a template called upload_s3.html in your tempalte directory &lt;!DOCTYPE html&gt; &lt;html&gt; &lt;head&gt; &lt;meta charset=&quot;UTF-8&quot;&gt; &lt;meta name=&quot;description&quot; content=&quot;amazon&quot;&gt; &lt;/head&gt; &lt;body&gt; &lt;form action=&quot;#&quot; method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt; Select image to upload: &lt;input type=&quot;file&quot; name=&quot;fileToUpload&quot; id=&quot;fileToUpload&quot;&gt; &lt;input class=&quot;amazon_upload&quot; type=&quot;submit&quot; value=&quot;Upload File&quot; name=&quot;submit&quot;&gt; &lt;/form&gt; &lt;script type=&quot;text/javascript&quot; src=&quot;{ static &#39;js/amazon/amazon.js&#39; }&quot;&gt;&lt;/script&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;/body&gt; &lt;/html&gt; Create django urls to generate the signed url and make them public project/urls.py from django.conf.urls import url, include from .views import GetS3SignedUrl, Makes3VideoPublic urlpatterns = [ url(r&#39;^generate_signed_url/$&#39;, GetS3SignedUrl.as_view(), name=&#39;generate_signed_url&#39;), url(r&#39;^make_video_public/$&#39;, Makes3VideoPublic.as_view(), name=&#39;make_video_public&#39;), ] Create django views to generate the signed url and make them public You need to copy your AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME in to your settings.py file project/views.py from django.views import View from django.conf import settings from django.http import HttpResponse import os import boto from boto.s3.connection import S3Connection def get_s3_connection(use_host=False): key = getattr(settings, &#39;AWS_ACCESS_KEY_ID&#39;, None) secret = getattr(settings, &#39;AWS_SECRET_ACCESS_KEY&#39;, None) if not key or not secret: return None if use_host: return S3Connection(key, secret, host=&#39;s3.amazonaws.com&#39;) return S3Connection(key, secret) class GetS3SignedUrl(View): &quot;&quot;&quot; Generate Signed url for s3 &quot;&quot;&quot; def get(self, request, *args, **kwargs): os.environ[&#39;S3_USE_SIGV4&#39;] = &#39;True&#39; c = get_s3_connection(use_host=True) file_name = request.GET.get(&#39;file_name&#39;) username = request.GET.get(&#39;username&#39;) final_file_name = &#39;videos/{0}/{1}&#39;.format(username, file_name) secondsPerDay = 24*60*60 url = c.generate_url_sigv4( secondsPerDay, &quot;PUT&quot;, bucket=settings.S3_BUCKET_NAME, key=final_file_name, force_http=True) out_url = &#39;https://%s.s3.amazonaws.com/%s&#39; % (settings.S3_BUCKET_NAME, final_file_name) del os.environ[&#39;S3_USE_SIGV4&#39;] return HttpResponse({&#39;signed_request&#39;: url, &#39;url&#39;: out_url, &#39;s3_key&#39;: final_file_name, &#39;status&#39;: &#39;ok&#39;}) class Makes3VideoPublic(View): &quot;&quot;&quot; Make s3 video public &quot;&quot;&quot; def post(self, request, *args, **kwargs): post_data = request.POST aws_access_key_id = settings.AWS_ACCESS_KEY_ID aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY conn = boto.connect_s3(aws_access_key_id, aws_secret_access_key) try: bucket = conn.get_bucket(settings.S3_BUCKET_NAME, validate=True) except S3ResponseError: bucket = conn.create_bucket(settings.S3_BUCKET_NAME) k = bucket.get_key(request.POST.get(&#39;s3_key&#39;)) k.make_public() print post_data return Response(post_data) Let’s create js file ‘js/amazon/amazon.js’ in your js directory to make calls to the endpoints $( document ).ready(function() { $(&#39;.amazon_upload&#39;).click(function(){ // Get the file from frontend var myFile = $(&#39;#fileToUpload&#39;).prop(&#39;files&#39;); // Send a get request to generate signed url var config = { params: { file_name : myFile.name, username : &#39;Username&#39; }, headers : {&#39;Accept&#39; : &#39;application/json&#39;} }; $http.get(&#39;generate_signed_url/&#39;, config).then( function(response) { self.signed_data = response.data var url = response.data.signed_request // Upload file directly to amazon s3 var xhr = new XMLHttpRequest(); xhr.open(&quot;PUT&quot;, url); xhr.setRequestHeader(&#39;Access-Control-Allow-Headers&#39;, &#39;*&#39;); xhr.upload.onprogress = updateProgress; xhr.onerror = function() { alert(&quot;Could not upload file.&quot;); }; xhr.send(self.video); function updateProgress (ev) { if (ev.lengthComputable) { var percentComplete = Math.round((ev.loaded / ev.total) * 100); console.log(percentComplete); } } // Make posted url / video as public var s3_config = { params : response.data, headers : {&#39;Accept&#39; : &#39;application/json&#39;} } var data = { signed_request : response.data.signed_request, s3_key : response.data.s3_key, status : response.data.status, url : response.data.url, } $.ajax({ type: &quot;POST&quot;, url: &#39;make_video_public/&#39;, data: data, success: function(response){ console.log(response); }, }); },function(response) {} ); }) }) So from the above js code we are making two ajax calls, one is for generating the signed request with below response data { signed_request: &quot;https://xxxxxxxx.s3.amazonaws.com/videos/xxxxxx…EKQLHA%2F20170425%2Fus-east-1%2Fs3%2Faws4_request&quot;, url: &quot;https://xxxxxxx.s3.amazonaws.com/videos/shivaagiliq/FunnyCat.mp4&quot;, s3_key: &quot;videos/shivaagiliq/FunnyCat.mp4&quot;, status: &quot;ok&quot; } and another is to make the video public After this when you navigate to amazon file/video url you can able to access it Finally we achieved posting the file from browser to amazon s3 directly","@type":"BlogPosting","url":"http://localhost:4000/2017/04/26/trsfer-files-amzon-s3-using-browser-instead-server.html","headline":"Transfer files to amazon s3 using browser instead of server","dateModified":"2017-04-26T02:29:55+05:30","datePublished":"2017-04-26T02:29:55+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2017/04/26/trsfer-files-amzon-s3-using-browser-instead-server.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Transfer files to amazon s3 using browser instead of server</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2017-04-26T02:29:55+05:30" itemprop="datePublished">Apr 26, 2017
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>So basically when we try to upload a file to amazon s3, we will do it in a regular way of</p>
+
+<ol>
+  <li>Getting the file from frontend</li>
+  <li>Passing it to server</li>
+  <li>Make a connection to amazon s3 using python code</li>
+  <li>Upload file to amazon s3</li>
+</ol>
+
+<p>But you should also know that, we have a way of uploading directly from browser to s3 instead of server</p>
+
+<p>We are going to show that how to do it, and we are using django, boto, html, jquery, ajax to achieve this</p>
+
+<p>Hope all the above requirements are already installed and your django site is up and running</p>
+
+<h3 id="concept-of-uploading-to-s3">Concept of uploading to s3</h3>
+
+<ol>
+  <li>In order to upload a file to amazon s3 we need to generate a signed url using amazon’s python boto package.</li>
+  <li>Next step is to make the uploaded file public in order for to access it.</li>
+</ol>
+
+<p><strong>Lets start designing it</strong></p>
+
+<h3 id="create-a-template-called-upload_s3html-in-your-tempalte-directory">Create a template called <strong>upload_s3.html</strong> in your tempalte directory</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"UTF-8"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"description"</span> <span class="na">content=</span><span class="s">"amazon"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+	<span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"#"</span> <span class="na">method=</span><span class="s">"post"</span> <span class="na">enctype=</span><span class="s">"multipart/form-data"</span><span class="nt">&gt;</span>
+	    Select image to upload:
+	    <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"file"</span> <span class="na">name=</span><span class="s">"fileToUpload"</span> <span class="na">id=</span><span class="s">"fileToUpload"</span><span class="nt">&gt;</span>
+	    <span class="nt">&lt;input</span> <span class="na">class=</span><span class="s">"amazon_upload"</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">value=</span><span class="s">"Upload File"</span> <span class="na">name=</span><span class="s">"submit"</span><span class="nt">&gt;</span>
+	<span class="nt">&lt;/form&gt;</span>
+<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"{ static 'js/amazon/amazon.js' }"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<h3 id="create-django-urls-to-generate-the-signed-url-and-make-them-public">Create django urls to generate the signed url and make them public</h3>
+
+<p><strong>project/urls.py</strong></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.conf.urls import url, include
+from .views import GetS3SignedUrl, Makes3VideoPublic
+
+urlpatterns = [
+	url(r'^generate_signed_url/$', GetS3SignedUrl.as_view(), name='generate_signed_url'),
+    url(r'^make_video_public/$', Makes3VideoPublic.as_view(), name='make_video_public'),
+]
+</code></pre></div></div>
+
+<h3 id="create-django-views-to-generate-the-signed-url-and-make-them-public">Create django views to generate the signed url and make them public</h3>
+
+<p>You need to copy your <strong>AWS_ACCESS_KEY_ID</strong>, <strong>AWS_SECRET_ACCESS_KEY</strong>, <strong>S3_BUCKET_NAME</strong> in to your settings.py file</p>
+
+<p><strong>project/views.py</strong></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.views import View
+from django.conf import settings
+from django.http import HttpResponse
+
+import os
+import boto
+from boto.s3.connection import S3Connection
+
+def get_s3_connection(use_host=False):
+    key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
+    secret = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
+    if not key or not secret:
+        return None
+    if use_host:
+        return S3Connection(key, secret, host='s3.amazonaws.com')
+    return S3Connection(key, secret)
+
+class GetS3SignedUrl(View):
+    """
+    Generate Signed url for s3
+    """
+
+    def get(self, request, *args, **kwargs):
+        os.environ['S3_USE_SIGV4'] = 'True'
+        c = get_s3_connection(use_host=True)
+        file_name = request.GET.get('file_name')
+        username = request.GET.get('username')
+        final_file_name = 'videos/{0}/{1}'.format(username, file_name)
+        secondsPerDay = 24*60*60
+        url = c.generate_url_sigv4(
+            secondsPerDay, "PUT", bucket=settings.S3_BUCKET_NAME, key=final_file_name, force_http=True)
+        out_url = 'https://%s.s3.amazonaws.com/%s' % (settings.S3_BUCKET_NAME, final_file_name)
+        del os.environ['S3_USE_SIGV4']
+        return HttpResponse({'signed_request': url, 'url': out_url, 's3_key': final_file_name, 'status': 'ok'})
+
+class Makes3VideoPublic(View):
+    """
+    Make s3 video public
+    """
+    def post(self, request, *args, **kwargs):
+        post_data = request.POST
+        aws_access_key_id = settings.AWS_ACCESS_KEY_ID
+        aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
+        conn = boto.connect_s3(aws_access_key_id, aws_secret_access_key)
+        try:
+            bucket = conn.get_bucket(settings.S3_BUCKET_NAME, validate=True)
+        except S3ResponseError:
+            bucket = conn.create_bucket(settings.S3_BUCKET_NAME)
+        k = bucket.get_key(request.POST.get('s3_key'))
+        k.make_public()
+        print post_data
+        return Response(post_data)
+</code></pre></div></div>
+
+<h3 id="lets-create-js-file-jsamazonamazonjs-in-your-js-directory-to-make-calls-to-the-endpoints">Let’s create js file ‘js/amazon/amazon.js’ in your js directory to make calls to the endpoints</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$( document ).ready(function() {
+   $('.amazon_upload').click(function(){
+   	// Get the file from frontend
+   	var myFile = $('#fileToUpload').prop('files');
+   	// Send a get request to generate signed url
+   	var config = {
+         params: {
+            file_name : myFile.name,
+            username : 'Username'
+         },
+         headers : {'Accept' : 'application/json'}
+        };
+
+    $http.get('generate_signed_url/', config).then(
+        function(response) {
+            self.signed_data = response.data
+            var url = response.data.signed_request
+
+            // Upload file directly to amazon s3
+            var xhr = new XMLHttpRequest();
+            xhr.open("PUT", url);
+            xhr.setRequestHeader('Access-Control-Allow-Headers', '*');
+            xhr.upload.onprogress = updateProgress;
+            xhr.onerror = function() {
+                alert("Could not upload file.");
+            };
+            xhr.send(self.video);
+
+            function updateProgress (ev) {
+                    if (ev.lengthComputable) {
+                        var percentComplete = Math.round((ev.loaded / ev.total) * 100);
+                        console.log(percentComplete);
+                    }
+                }
+
+            // Make posted url / video as public
+            var s3_config = {
+                params : response.data,
+                headers : {'Accept' : 'application/json'}
+            }
+            var data = {
+                signed_request : response.data.signed_request,
+                s3_key : response.data.s3_key,
+                status : response.data.status,
+                url : response.data.url,
+            }
+            $.ajax({
+              type: "POST",
+              url: 'make_video_public/',
+              data: data,
+              success: function(response){
+                console.log(response);
+              },
+            });
+
+         },function(response) {}
+         );
+
+   })
+
+})
+</code></pre></div></div>
+
+<p>So from the above js code we are making two ajax calls, one is for generating the signed request with below response data</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+	signed_request: "https://xxxxxxxx.s3.amazonaws.com/videos/xxxxxx…EKQLHA%2F20170425%2Fus-east-1%2Fs3%2Faws4_request", 
+	url: "https://xxxxxxx.s3.amazonaws.com/videos/shivaagiliq/FunnyCat.mp4", 
+	s3_key: "videos/shivaagiliq/FunnyCat.mp4", 
+	status: "ok"
+}
+</code></pre></div></div>
+
+<p>and another is to make the video public</p>
+
+<p>After this when you navigate to amazon file/video url you can able to access it</p>
+
+<p>Finally we achieved posting the file from browser to amazon s3 directly</p>
+
+
+  </div><a class="u-url" href="/2017/04/26/trsfer-files-amzon-s3-using-browser-instead-server.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

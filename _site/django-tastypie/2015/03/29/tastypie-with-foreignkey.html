@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Tastypie with ForeignKey | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Tastypie with ForeignKey" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Tastypie with ForeignKeys This is a followup post on Getting started with tastypie. We will use the same project setup as used in the last post. This post will cover: Fetch ForeignKey data in GET calls Create an object with ForeignKeys using POST calls Setup the application Let’s add the capability to categorise the expenses Add a model called ExpenseCategory class ExpenseCategory(models.Model): name = models.CharField(max_length=100) description = models.TextField() Add a FK from Expense to ExpenseCategory class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() user = models.ForeignKey(User, null=True) category = models.ForeignKey(ExpenseCategory, null=True) There already exists some Expense in db without an associated category, so make ExpenseCategory as nullable. Create and apply migrations python manage.py makemigrations python manage.py migrate Let’s create an expensecategory from shell and associate it with an expense of user Sheryl. u = User.objects.get(username=&#39;sheryl&#39;) ec = ExpenseCategory.objects.create(name=&#39;Misc&#39;, description=&#39;Miscellaneous expenses&#39;) e = Expense.objects.create(description=&#39;Went to Stockholm&#39;, amount=&#39;5000&#39;, user=u, category=ec) Get FK fields in response too. We want category in Expense GET endpoint too. Our first approach would be adding ‘category’ to ExpenseCategory.Meta.fields. Try it fields = [&#39;description&#39;, &#39;amount&#39;, &#39;category&#39;] Try the expense GET endpoint for Sheryl http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json Still don’t see category in response. We need something more than this. Adding fields.ForeignKey on ExpenseResource There is no easy way to achieve this without adding a resource for ExpenseCategory. We need to create an ExpenseCategoryResource similar to ExpenseResource Add ExpenseCategoryResource to expenses/api.py class ExpenseCategoryResource(ModelResource): class Meta: queryset = ExpenseCategory.objects.all() resource_name = &#39;expensecategory&#39; Add proper url pattern for ExpenseCategoryResource in expenses/api.py expense_category_resource = ExpenseCategoryResource() urlpatterns = patterns(&#39;&#39;, url(r&#39;^admin/&#39;, include(admin.site.urls)), url(r&#39;^api/&#39;, include(expense_resource.urls)), url(r&#39;^api/&#39;, include(expense_category_resource.urls)), ) Verify things are properly setup for ExpenseCategoryResource by accessing http://localhost:8000/api/expensecategory/?format=json Add the following to ExpenseCategory category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True) Try http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json After this you’ll be able to see category in response This will return resource_uri of ExpenseCategory by default Using full=True Probably you want to see the name and description of category in the response Make the following modification category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True, full=True) Try the GET endpoint again http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json POST data with FK There are several ways in which we can set category on expense while making POST call to create expenses. Post with resource_uri of FK We already have one ExpenseCategory in the db and the resource_uri for that expensecategory is ‘/api/expensecategory/1/’ We want to create an expense and set the category as our earlier created expensecategory. post_data = {&#39;description&#39;: &#39;Bought a phone for testing&#39;, &#39;amount&#39;: 2200, &#39;category&#39;: &#39;/api/expensecategory/1/&#39;} post_url = &#39;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&#39; r = requests.post(post_url, data=json.dumps(post_data), headers=headers) Posting entire data of FK You find that the expense you want to create doesn’t fit in any of the existing categories. You want to create a new expensecategory while making POST data to expense endpoint. So we want to creating ExpenseCategory and Expense together. You need to post the following data in such case. post_data = {&#39;description&#39;: &#39;Went to paris to attend a conference&#39;, &#39;amount&#39;: 9000, &#39;category&#39;: {&#39;name&#39;: &#39;Travel&#39;, &#39;description&#39;: &#39;Expenses incurred on travelling&#39;}} No category exists for Travel yet. Check the count of ExpenseCategory currently so that later you can verify that a new ExpenseCategory is created. ExpenseCategory.objects.count() 1 #output POST the data to expense endpoint r = requests.post(post_url, data=json.dumps(post_data), headers=headers) print r.status_code #401 Why you got 401 Even though you tried creating an Expense on expense post endpoint, tastypie internally tries creating an expensecategory because of structure of post_data. But tastypie finds that ExpenseCategoryResource doesn’t have authorization to allow POST yet. So we need to add proper authorization to ExpenseCategory before this post call can succeed. Add the following to ExpenseCategoryResource.Meta authorization = Authorization() POSTing again Try the post call again. r = requests.post(post_url, data=json.dumps(post_data), headers=headers) This would have worked well and a new ExpenseCategory should have been created. ExpenseCategory.objects.count() 2 #output Also the new expense would have got associated with the newly created ExpenseCategory. POST with id of FK post_data = {&#39;description&#39;: &#39;Bought second Disworld book&#39;, &#39;amount&#39;: 399, &#39;category&#39;: {&#39;pk&#39;: 1}} r = requests.post(post_url, json.dumps(post_data), headers=headers) Optimizing FK field calculation If you have full=True on FK resource then a database call will happen for each FK of each row. eg: category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True, full=True) Here if you are hitting expense GET list, and suppose you are getting 20 expenses. For each expense, it’s category needs to be fetched from db and the categorie’s full representation needs to be calculated. So 20 extra db calls will happen. Fixing it. Set ExpenseResource.Meta.queryset to queryset = Expense.objects.all().select_related(&quot;category&quot;) Now the extra 20 calls will not be made. Getting category_id without ExpenseCategoryResource Suppose you are only interested in getting category_id in GET calls and don’t care about name and description of category. Comment out everything about ExpenseCategoryResource and relation to ExpenseCategoryResource from ExpenseResource And add the following line to ExpenseResource category_id = fields.IntegerField(attribute=&#39;category_id&#39;, null=True) After this you will find category_id in GET responses. Handling POST Similarly you want to be able to POST without worrying about ExpenseCategoryResource. You want to send the category_id in post data and using that id, expense should be associated with correct expensecategory. data = {&#39;description&#39;: &#39;Bought iphone&#39;, &#39;amount&#39;: 6500, &#39;category_id&#39;: 1} r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(data), headers=headers) Gotchas We have a FK to ExpenseCategory from Expense and it is nullable. Similarly, we have an en FK from ExpenseResource to ExpenseCategoryResource which is nullable. Mark ExpenseCategoryResource non-null for now, i.e remove null=True from it. So it looks like category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, full=True) Check the count of expenses in the db. In [20]: Expense.objects.count() Out[20]: 23 Make a POST request to expense endpoint but don’t pass any associated expensecategory. post_url = &#39;http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23&#39; post_data = {&#39;description&#39;: &#39;Bought second Disworld book&#39;, &#39;amount&#39;: 399} r = requests.post(post_url, json.dumps(post_data), headers=headers) print r.status_code 400 #output Status code 400 means that request wasn’t successul and so expense shouldn’t have been created. But actually it was created even though tastypie returned us a 400 status code. You can check it using count. In [22]: Expense.objects.count() Out[22]: 24 This happened because at the model/db level ExpenseCategory allows null. So save() on Expense was successful. But at api/tastypie level, ExpenseCategoryResource is not nullable, so tastypie raised an error." />
+<meta property="og:description" content="Tastypie with ForeignKeys This is a followup post on Getting started with tastypie. We will use the same project setup as used in the last post. This post will cover: Fetch ForeignKey data in GET calls Create an object with ForeignKeys using POST calls Setup the application Let’s add the capability to categorise the expenses Add a model called ExpenseCategory class ExpenseCategory(models.Model): name = models.CharField(max_length=100) description = models.TextField() Add a FK from Expense to ExpenseCategory class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() user = models.ForeignKey(User, null=True) category = models.ForeignKey(ExpenseCategory, null=True) There already exists some Expense in db without an associated category, so make ExpenseCategory as nullable. Create and apply migrations python manage.py makemigrations python manage.py migrate Let’s create an expensecategory from shell and associate it with an expense of user Sheryl. u = User.objects.get(username=&#39;sheryl&#39;) ec = ExpenseCategory.objects.create(name=&#39;Misc&#39;, description=&#39;Miscellaneous expenses&#39;) e = Expense.objects.create(description=&#39;Went to Stockholm&#39;, amount=&#39;5000&#39;, user=u, category=ec) Get FK fields in response too. We want category in Expense GET endpoint too. Our first approach would be adding ‘category’ to ExpenseCategory.Meta.fields. Try it fields = [&#39;description&#39;, &#39;amount&#39;, &#39;category&#39;] Try the expense GET endpoint for Sheryl http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json Still don’t see category in response. We need something more than this. Adding fields.ForeignKey on ExpenseResource There is no easy way to achieve this without adding a resource for ExpenseCategory. We need to create an ExpenseCategoryResource similar to ExpenseResource Add ExpenseCategoryResource to expenses/api.py class ExpenseCategoryResource(ModelResource): class Meta: queryset = ExpenseCategory.objects.all() resource_name = &#39;expensecategory&#39; Add proper url pattern for ExpenseCategoryResource in expenses/api.py expense_category_resource = ExpenseCategoryResource() urlpatterns = patterns(&#39;&#39;, url(r&#39;^admin/&#39;, include(admin.site.urls)), url(r&#39;^api/&#39;, include(expense_resource.urls)), url(r&#39;^api/&#39;, include(expense_category_resource.urls)), ) Verify things are properly setup for ExpenseCategoryResource by accessing http://localhost:8000/api/expensecategory/?format=json Add the following to ExpenseCategory category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True) Try http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json After this you’ll be able to see category in response This will return resource_uri of ExpenseCategory by default Using full=True Probably you want to see the name and description of category in the response Make the following modification category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True, full=True) Try the GET endpoint again http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json POST data with FK There are several ways in which we can set category on expense while making POST call to create expenses. Post with resource_uri of FK We already have one ExpenseCategory in the db and the resource_uri for that expensecategory is ‘/api/expensecategory/1/’ We want to create an expense and set the category as our earlier created expensecategory. post_data = {&#39;description&#39;: &#39;Bought a phone for testing&#39;, &#39;amount&#39;: 2200, &#39;category&#39;: &#39;/api/expensecategory/1/&#39;} post_url = &#39;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&#39; r = requests.post(post_url, data=json.dumps(post_data), headers=headers) Posting entire data of FK You find that the expense you want to create doesn’t fit in any of the existing categories. You want to create a new expensecategory while making POST data to expense endpoint. So we want to creating ExpenseCategory and Expense together. You need to post the following data in such case. post_data = {&#39;description&#39;: &#39;Went to paris to attend a conference&#39;, &#39;amount&#39;: 9000, &#39;category&#39;: {&#39;name&#39;: &#39;Travel&#39;, &#39;description&#39;: &#39;Expenses incurred on travelling&#39;}} No category exists for Travel yet. Check the count of ExpenseCategory currently so that later you can verify that a new ExpenseCategory is created. ExpenseCategory.objects.count() 1 #output POST the data to expense endpoint r = requests.post(post_url, data=json.dumps(post_data), headers=headers) print r.status_code #401 Why you got 401 Even though you tried creating an Expense on expense post endpoint, tastypie internally tries creating an expensecategory because of structure of post_data. But tastypie finds that ExpenseCategoryResource doesn’t have authorization to allow POST yet. So we need to add proper authorization to ExpenseCategory before this post call can succeed. Add the following to ExpenseCategoryResource.Meta authorization = Authorization() POSTing again Try the post call again. r = requests.post(post_url, data=json.dumps(post_data), headers=headers) This would have worked well and a new ExpenseCategory should have been created. ExpenseCategory.objects.count() 2 #output Also the new expense would have got associated with the newly created ExpenseCategory. POST with id of FK post_data = {&#39;description&#39;: &#39;Bought second Disworld book&#39;, &#39;amount&#39;: 399, &#39;category&#39;: {&#39;pk&#39;: 1}} r = requests.post(post_url, json.dumps(post_data), headers=headers) Optimizing FK field calculation If you have full=True on FK resource then a database call will happen for each FK of each row. eg: category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True, full=True) Here if you are hitting expense GET list, and suppose you are getting 20 expenses. For each expense, it’s category needs to be fetched from db and the categorie’s full representation needs to be calculated. So 20 extra db calls will happen. Fixing it. Set ExpenseResource.Meta.queryset to queryset = Expense.objects.all().select_related(&quot;category&quot;) Now the extra 20 calls will not be made. Getting category_id without ExpenseCategoryResource Suppose you are only interested in getting category_id in GET calls and don’t care about name and description of category. Comment out everything about ExpenseCategoryResource and relation to ExpenseCategoryResource from ExpenseResource And add the following line to ExpenseResource category_id = fields.IntegerField(attribute=&#39;category_id&#39;, null=True) After this you will find category_id in GET responses. Handling POST Similarly you want to be able to POST without worrying about ExpenseCategoryResource. You want to send the category_id in post data and using that id, expense should be associated with correct expensecategory. data = {&#39;description&#39;: &#39;Bought iphone&#39;, &#39;amount&#39;: 6500, &#39;category_id&#39;: 1} r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(data), headers=headers) Gotchas We have a FK to ExpenseCategory from Expense and it is nullable. Similarly, we have an en FK from ExpenseResource to ExpenseCategoryResource which is nullable. Mark ExpenseCategoryResource non-null for now, i.e remove null=True from it. So it looks like category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, full=True) Check the count of expenses in the db. In [20]: Expense.objects.count() Out[20]: 23 Make a POST request to expense endpoint but don’t pass any associated expensecategory. post_url = &#39;http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23&#39; post_data = {&#39;description&#39;: &#39;Bought second Disworld book&#39;, &#39;amount&#39;: 399} r = requests.post(post_url, json.dumps(post_data), headers=headers) print r.status_code 400 #output Status code 400 means that request wasn’t successul and so expense shouldn’t have been created. But actually it was created even though tastypie returned us a 400 status code. You can check it using count. In [22]: Expense.objects.count() Out[22]: 24 This happened because at the model/db level ExpenseCategory allows null. So save() on Expense was successful. But at api/tastypie level, ExpenseCategoryResource is not nullable, so tastypie raised an error." />
+<link rel="canonical" href="http://localhost:4000/django-tastypie/2015/03/29/tastypie-with-foreignkey.html" />
+<meta property="og:url" content="http://localhost:4000/django-tastypie/2015/03/29/tastypie-with-foreignkey.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2015-03-29T13:06:51+05:30" />
+<script type="application/ld+json">
+{"description":"Tastypie with ForeignKeys This is a followup post on Getting started with tastypie. We will use the same project setup as used in the last post. This post will cover: Fetch ForeignKey data in GET calls Create an object with ForeignKeys using POST calls Setup the application Let’s add the capability to categorise the expenses Add a model called ExpenseCategory class ExpenseCategory(models.Model): name = models.CharField(max_length=100) description = models.TextField() Add a FK from Expense to ExpenseCategory class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() user = models.ForeignKey(User, null=True) category = models.ForeignKey(ExpenseCategory, null=True) There already exists some Expense in db without an associated category, so make ExpenseCategory as nullable. Create and apply migrations python manage.py makemigrations python manage.py migrate Let’s create an expensecategory from shell and associate it with an expense of user Sheryl. u = User.objects.get(username=&#39;sheryl&#39;) ec = ExpenseCategory.objects.create(name=&#39;Misc&#39;, description=&#39;Miscellaneous expenses&#39;) e = Expense.objects.create(description=&#39;Went to Stockholm&#39;, amount=&#39;5000&#39;, user=u, category=ec) Get FK fields in response too. We want category in Expense GET endpoint too. Our first approach would be adding ‘category’ to ExpenseCategory.Meta.fields. Try it fields = [&#39;description&#39;, &#39;amount&#39;, &#39;category&#39;] Try the expense GET endpoint for Sheryl http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json Still don’t see category in response. We need something more than this. Adding fields.ForeignKey on ExpenseResource There is no easy way to achieve this without adding a resource for ExpenseCategory. We need to create an ExpenseCategoryResource similar to ExpenseResource Add ExpenseCategoryResource to expenses/api.py class ExpenseCategoryResource(ModelResource): class Meta: queryset = ExpenseCategory.objects.all() resource_name = &#39;expensecategory&#39; Add proper url pattern for ExpenseCategoryResource in expenses/api.py expense_category_resource = ExpenseCategoryResource() urlpatterns = patterns(&#39;&#39;, url(r&#39;^admin/&#39;, include(admin.site.urls)), url(r&#39;^api/&#39;, include(expense_resource.urls)), url(r&#39;^api/&#39;, include(expense_category_resource.urls)), ) Verify things are properly setup for ExpenseCategoryResource by accessing http://localhost:8000/api/expensecategory/?format=json Add the following to ExpenseCategory category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True) Try http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json After this you’ll be able to see category in response This will return resource_uri of ExpenseCategory by default Using full=True Probably you want to see the name and description of category in the response Make the following modification category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True, full=True) Try the GET endpoint again http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json POST data with FK There are several ways in which we can set category on expense while making POST call to create expenses. Post with resource_uri of FK We already have one ExpenseCategory in the db and the resource_uri for that expensecategory is ‘/api/expensecategory/1/’ We want to create an expense and set the category as our earlier created expensecategory. post_data = {&#39;description&#39;: &#39;Bought a phone for testing&#39;, &#39;amount&#39;: 2200, &#39;category&#39;: &#39;/api/expensecategory/1/&#39;} post_url = &#39;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&#39; r = requests.post(post_url, data=json.dumps(post_data), headers=headers) Posting entire data of FK You find that the expense you want to create doesn’t fit in any of the existing categories. You want to create a new expensecategory while making POST data to expense endpoint. So we want to creating ExpenseCategory and Expense together. You need to post the following data in such case. post_data = {&#39;description&#39;: &#39;Went to paris to attend a conference&#39;, &#39;amount&#39;: 9000, &#39;category&#39;: {&#39;name&#39;: &#39;Travel&#39;, &#39;description&#39;: &#39;Expenses incurred on travelling&#39;}} No category exists for Travel yet. Check the count of ExpenseCategory currently so that later you can verify that a new ExpenseCategory is created. ExpenseCategory.objects.count() 1 #output POST the data to expense endpoint r = requests.post(post_url, data=json.dumps(post_data), headers=headers) print r.status_code #401 Why you got 401 Even though you tried creating an Expense on expense post endpoint, tastypie internally tries creating an expensecategory because of structure of post_data. But tastypie finds that ExpenseCategoryResource doesn’t have authorization to allow POST yet. So we need to add proper authorization to ExpenseCategory before this post call can succeed. Add the following to ExpenseCategoryResource.Meta authorization = Authorization() POSTing again Try the post call again. r = requests.post(post_url, data=json.dumps(post_data), headers=headers) This would have worked well and a new ExpenseCategory should have been created. ExpenseCategory.objects.count() 2 #output Also the new expense would have got associated with the newly created ExpenseCategory. POST with id of FK post_data = {&#39;description&#39;: &#39;Bought second Disworld book&#39;, &#39;amount&#39;: 399, &#39;category&#39;: {&#39;pk&#39;: 1}} r = requests.post(post_url, json.dumps(post_data), headers=headers) Optimizing FK field calculation If you have full=True on FK resource then a database call will happen for each FK of each row. eg: category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, null=True, full=True) Here if you are hitting expense GET list, and suppose you are getting 20 expenses. For each expense, it’s category needs to be fetched from db and the categorie’s full representation needs to be calculated. So 20 extra db calls will happen. Fixing it. Set ExpenseResource.Meta.queryset to queryset = Expense.objects.all().select_related(&quot;category&quot;) Now the extra 20 calls will not be made. Getting category_id without ExpenseCategoryResource Suppose you are only interested in getting category_id in GET calls and don’t care about name and description of category. Comment out everything about ExpenseCategoryResource and relation to ExpenseCategoryResource from ExpenseResource And add the following line to ExpenseResource category_id = fields.IntegerField(attribute=&#39;category_id&#39;, null=True) After this you will find category_id in GET responses. Handling POST Similarly you want to be able to POST without worrying about ExpenseCategoryResource. You want to send the category_id in post data and using that id, expense should be associated with correct expensecategory. data = {&#39;description&#39;: &#39;Bought iphone&#39;, &#39;amount&#39;: 6500, &#39;category_id&#39;: 1} r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(data), headers=headers) Gotchas We have a FK to ExpenseCategory from Expense and it is nullable. Similarly, we have an en FK from ExpenseResource to ExpenseCategoryResource which is nullable. Mark ExpenseCategoryResource non-null for now, i.e remove null=True from it. So it looks like category = fields.ForeignKey(ExpenseCategoryResource, attribute=&#39;category&#39;, full=True) Check the count of expenses in the db. In [20]: Expense.objects.count() Out[20]: 23 Make a POST request to expense endpoint but don’t pass any associated expensecategory. post_url = &#39;http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23&#39; post_data = {&#39;description&#39;: &#39;Bought second Disworld book&#39;, &#39;amount&#39;: 399} r = requests.post(post_url, json.dumps(post_data), headers=headers) print r.status_code 400 #output Status code 400 means that request wasn’t successul and so expense shouldn’t have been created. But actually it was created even though tastypie returned us a 400 status code. You can check it using count. In [22]: Expense.objects.count() Out[22]: 24 This happened because at the model/db level ExpenseCategory allows null. So save() on Expense was successful. But at api/tastypie level, ExpenseCategoryResource is not nullable, so tastypie raised an error.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/django-tastypie/2015/03/29/tastypie-with-foreignkey.html","headline":"Tastypie with ForeignKey","dateModified":"2015-03-29T13:06:51+05:30","datePublished":"2015-03-29T13:06:51+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/django-tastypie/2015/03/29/tastypie-with-foreignkey.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Tastypie with ForeignKey</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2015-03-29T13:06:51+05:30" itemprop="datePublished">Mar 29, 2015
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="tastypie-with-foreignkeys">Tastypie with ForeignKeys</h2>
+
+<p>This is a followup post on <a href="http://agiliq.com/blog/2015/03/getting-started-with-django-tastypie/" target="_blank">Getting started with tastypie</a>. We will use the same project setup as used in the last post.</p>
+
+<p>This post will cover:</p>
+
+<ul>
+  <li>Fetch ForeignKey data in GET calls</li>
+  <li>Create an object with ForeignKeys using POST calls</li>
+</ul>
+
+<h3 id="setup-the-application">Setup the application</h3>
+
+<p>Let’s add the capability to categorise the expenses</p>
+
+<p>Add a model called ExpenseCategory</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class ExpenseCategory(models.Model):
+	name = models.CharField(max_length=100)
+	description = models.TextField()
+</code></pre></div></div>
+
+<p>Add a FK from Expense to ExpenseCategory</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Expense(models.Model):
+	description = models.CharField(max_length=100)
+	amount = models.IntegerField()
+	user = models.ForeignKey(User, null=True)
+	category = models.ForeignKey(ExpenseCategory, null=True)
+</code></pre></div></div>
+
+<p>There already exists some Expense in db without an associated category, so make ExpenseCategory as nullable.</p>
+
+<p>Create and apply migrations</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python manage.py makemigrations
+python manage.py migrate
+</code></pre></div></div>
+
+<p>Let’s create an expensecategory from shell and associate it with an expense of user Sheryl.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>u = User.objects.get(username='sheryl')
+ec = ExpenseCategory.objects.create(name='Misc', description='Miscellaneous expenses')
+e = Expense.objects.create(description='Went to Stockholm', amount='5000', user=u, category=ec)
+</code></pre></div></div>
+
+<h3 id="get-fk-fields-in-response-too">Get FK fields in response too.</h3>
+
+<p>We want category in Expense GET endpoint too.</p>
+
+<p>Our first approach would be adding ‘category’ to ExpenseCategory.Meta.fields. Try it</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fields = ['description', 'amount', 'category']
+</code></pre></div></div>
+
+<p>Try the expense GET endpoint for Sheryl</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json
+</code></pre></div></div>
+
+<p>Still don’t see category in response. We need something more than this.</p>
+
+<h4 id="adding-fieldsforeignkey-on-expenseresource">Adding fields.ForeignKey on ExpenseResource</h4>
+
+<p>There is no easy way to achieve this without adding a resource for ExpenseCategory.</p>
+
+<p>We need to create an ExpenseCategoryResource similar to ExpenseResource</p>
+
+<p>Add ExpenseCategoryResource to expenses/api.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class ExpenseCategoryResource(ModelResource):
+	class Meta:
+		queryset = ExpenseCategory.objects.all()
+		resource_name = 'expensecategory'
+</code></pre></div></div>
+
+<p>Add proper url pattern for ExpenseCategoryResource in expenses/api.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>expense_category_resource = ExpenseCategoryResource()
+
+urlpatterns = patterns('',
+	url(r'^admin/', include(admin.site.urls)),
+	url(r'^api/', include(expense_resource.urls)),
+	url(r'^api/', include(expense_category_resource.urls)),
+)
+</code></pre></div></div>
+
+<p>Verify things are properly setup for ExpenseCategoryResource by accessing</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expensecategory/?format=json
+</code></pre></div></div>
+
+<p>Add the following to ExpenseCategory</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>category = fields.ForeignKey(ExpenseCategoryResource, attribute='category', null=True)
+</code></pre></div></div>
+
+<p>Try</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json
+</code></pre></div></div>
+
+<p>After this you’ll be able to see category in response</p>
+
+<p>This will return resource_uri of ExpenseCategory by default</p>
+
+<h4 id="using-fulltrue">Using full=True</h4>
+
+<p>Probably you want to see the name and description of category in the response</p>
+
+<p>Make the following modification</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>category = fields.ForeignKey(ExpenseCategoryResource, attribute='category', null=True, full=True)
+</code></pre></div></div>
+
+<p>Try the GET endpoint again</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json
+</code></pre></div></div>
+
+<h3 id="post-data-with-fk">POST data with FK</h3>
+
+<p>There are several ways in which we can set category on expense while making POST call to create expenses.</p>
+
+<h4 id="post-with-resource_uri-of-fk">Post with resource_uri of FK</h4>
+
+<p>We already have one ExpenseCategory in the db and the resource_uri for that expensecategory is ‘/api/expensecategory/1/’</p>
+
+<p>We want to create an expense and set the category as our earlier created expensecategory.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>post_data = {'description': 'Bought a phone for testing', 'amount': 2200, 'category': '/api/expensecategory/1/'}
+post_url = 'http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23'
+r = requests.post(post_url, data=json.dumps(post_data), headers=headers)
+</code></pre></div></div>
+
+<h4 id="posting-entire-data-of-fk">Posting entire data of FK</h4>
+
+<p>You find that the expense you want to create doesn’t fit in any of the existing categories. You want to create a new expensecategory while making POST data to expense endpoint.</p>
+
+<p>So we want to creating ExpenseCategory and Expense together.</p>
+
+<p>You need to post the following data in such case.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>post_data = {'description': 'Went to paris to attend a conference', 'amount': 9000, 'category': {'name': 'Travel', 'description': 'Expenses incurred on travelling'}}
+</code></pre></div></div>
+
+<p>No category exists for Travel yet.</p>
+
+<p>Check the count of ExpenseCategory currently so that later you can verify that a new ExpenseCategory is created.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ExpenseCategory.objects.count()
+1   #output
+</code></pre></div></div>
+
+<p>POST the data to expense endpoint</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r = requests.post(post_url, data=json.dumps(post_data), headers=headers)
+print r.status_code    #401
+</code></pre></div></div>
+
+<h5 id="why-you-got-401">Why you got 401</h5>
+
+<p>Even though you tried creating an Expense on expense post endpoint, tastypie internally tries creating an expensecategory because of structure of post_data. But tastypie finds that ExpenseCategoryResource doesn’t have <strong>authorization</strong> to allow POST yet.</p>
+
+<p>So we need to add proper authorization to ExpenseCategory before this post call can succeed.</p>
+
+<p>Add the following to ExpenseCategoryResource.Meta</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>authorization = Authorization()
+</code></pre></div></div>
+
+<h4 id="posting-again">POSTing again</h4>
+
+<p>Try the post call again.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r = requests.post(post_url, data=json.dumps(post_data), headers=headers)
+</code></pre></div></div>
+
+<p>This would have worked well and a new ExpenseCategory should have been created.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ExpenseCategory.objects.count()
+2    #output
+</code></pre></div></div>
+
+<p>Also the new expense would have got associated with the newly created ExpenseCategory.</p>
+
+<h4 id="post-with-id-of-fk">POST with id of FK</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>post_data = {'description': 'Bought second Disworld book', 'amount': 399, 'category': {'pk': 1}}
+
+r = requests.post(post_url, json.dumps(post_data), headers=headers)
+</code></pre></div></div>
+
+<h3 id="optimizing-fk-field-calculation">Optimizing FK field calculation</h3>
+
+<p>If you have full=True on FK resource then a database call will happen for each FK of each row.</p>
+
+<p>eg:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>category = fields.ForeignKey(ExpenseCategoryResource, attribute='category', null=True, full=True)
+</code></pre></div></div>
+
+<p>Here if you are hitting expense GET list, and suppose you are getting 20 expenses.</p>
+
+<p>For each expense, it’s category needs to be fetched from db and the categorie’s full representation needs to be calculated. So 20 extra db calls will happen.</p>
+
+<p>Fixing it. Set ExpenseResource.Meta.queryset to</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>queryset = Expense.objects.all().select_related("category")
+</code></pre></div></div>
+
+<p>Now the extra 20 calls will not be made.</p>
+
+<h3 id="getting-category_id-without-expensecategoryresource">Getting category_id without ExpenseCategoryResource</h3>
+
+<p>Suppose you are only interested in getting category_id in GET calls and don’t care about name and description of category.</p>
+
+<p>Comment out everything about ExpenseCategoryResource and relation to ExpenseCategoryResource from ExpenseResource</p>
+
+<p>And add the following line to ExpenseResource</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>category_id = fields.IntegerField(attribute='category_id', null=True)
+</code></pre></div></div>
+
+<p>After this you will find <strong>category_id</strong> in GET responses.</p>
+
+<h4 id="handling-post">Handling POST</h4>
+
+<p>Similarly you want to be able to POST without worrying about ExpenseCategoryResource.</p>
+
+<p>You want to send the category_id in post data and using that id, expense should be associated with correct expensecategory.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>data = {'description': 'Bought iphone', 'amount': 6500, 'category_id': 1}
+r = requests.post("http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23", data=json.dumps(data), headers=headers)
+</code></pre></div></div>
+
+<h3 id="gotchas">Gotchas</h3>
+
+<p>We have a FK to ExpenseCategory from Expense and it is nullable. Similarly, we have an en FK from ExpenseResource to ExpenseCategoryResource which is nullable.</p>
+
+<p>Mark ExpenseCategoryResource non-null for now, i.e remove null=True from it.</p>
+
+<p>So it looks like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>category = fields.ForeignKey(ExpenseCategoryResource, attribute='category', full=True)
+</code></pre></div></div>
+
+<p>Check the count of expenses in the db.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [20]: Expense.objects.count()
+Out[20]: 23
+</code></pre></div></div>
+
+<p>Make a POST request to expense endpoint but don’t pass any associated expensecategory.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>post_url = 'http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23'
+post_data = {'description': 'Bought second Disworld book', 'amount': 399}
+r = requests.post(post_url, json.dumps(post_data), headers=headers)
+print r.status_code
+400 #output
+</code></pre></div></div>
+
+<p>Status code 400 means that request wasn’t successul and so expense shouldn’t have been created.</p>
+
+<p>But actually it was created even though tastypie returned us a 400 status code. You can check it using count.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [22]: Expense.objects.count()
+Out[22]: 24
+</code></pre></div></div>
+
+<p>This happened because at the model/db level ExpenseCategory allows null. So save() on Expense was successful. But at api/tastypie level, ExpenseCategoryResource is not nullable, so tastypie raised an error.</p>
+
+
+  </div><a class="u-url" href="/django-tastypie/2015/03/29/tastypie-with-foreignkey.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

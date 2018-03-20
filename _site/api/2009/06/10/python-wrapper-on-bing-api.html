@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Python Wrapper on Bing API | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Python Wrapper on Bing API" />
+<meta name="author" content="lakshman" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="The newly launched search engine Bing has a simple restful API. We have created a thin Python wrapper over this API, which allows to query the Bing servers in a very pythonic way. Installing this is as easy as easy_install bingapi. [Or get it here or here ] Using from bingapi import bingapi bing = bingapi.Bing(&lt;appid&gt;) bing.do_web_search(&#39;Usware Technologies&#39;) The README from the project is posted below, which provides more details on using this. bingapi.py is a very thin python wrapper over the Bing API. Bing provides a very simple Restful interface to their search engine and provides results in JSON and XML interface. With bingapi.py, we query the rest urls to get the JSON response, which is parsed with simplejson.py. bingapi.py just adds simple niceties like logging and error handling. Installing bingapi.py easy_install bingapi or Svn it from https://svn.uswaretech.com/bingapi/ Using bingapi.py To use this library, you need to have an Appid from Bing. You can get it from http://www.bing.com/developers/createapp.aspx The meat of bingapi.py is talk_to_bing function. It takes a query(eg. salsa) and a sources(eg. web) and other optional parameters in extra_args (eg. {‘web.offset’: 40}) and returns the dictionary of Bing’s response. eg In [2]: from bingapi import bingapi In [3]: bing = bingapi.Bing(&#39;&lt;Your Appid&gt;&#39;) In [4]: bing.talk_to_bing(&#39;salsa&#39;, sources=&#39;web&#39;) Out[4]: .......... In [5]: bing.talk_to_bing(&#39;salsa&#39;, sources=&#39;web&#39;, extra_args={&#39;web.offset&#39;:40}) Out[5]: .......... Class Bing also provides utility functions to do the various types of seraches so you dont have to remember the source type. The various functions available are, do_web_search do_image_search do_news_search do_spell_search do_related_search do_phonebook_search do_answers_search All of them are used similarly. In [6]: bing.do_web_search(&#39;salsa&#39;) Out[6]: .......... In [7]: bing.do_image_search(&#39;salsa&#39;) Out[7]: .............. In [8]: bing.do_answers_search(&#39;what is salsa&#39;) Out[8]: ............... If you want to use multiple sources in one call you can use talk_to_bing directly as In [10]: bing.talk_to_bing(query=&#39;salsa&#39;, sources=&#39;web news&#39;) Out[10]: ............ But, but.. Why bing? you ask. Well, other than the fact that bing search is indeed better in some areas, particularly multimedia, bing has fairer usage quota and API restrictions. Resources http://www.bing.com/developers/ http://pypi.python.org/pypi/bingapi/0.01 Developing a search mashup? Bing API? Yahoo, Google APIs? We can help." />
+<meta property="og:description" content="The newly launched search engine Bing has a simple restful API. We have created a thin Python wrapper over this API, which allows to query the Bing servers in a very pythonic way. Installing this is as easy as easy_install bingapi. [Or get it here or here ] Using from bingapi import bingapi bing = bingapi.Bing(&lt;appid&gt;) bing.do_web_search(&#39;Usware Technologies&#39;) The README from the project is posted below, which provides more details on using this. bingapi.py is a very thin python wrapper over the Bing API. Bing provides a very simple Restful interface to their search engine and provides results in JSON and XML interface. With bingapi.py, we query the rest urls to get the JSON response, which is parsed with simplejson.py. bingapi.py just adds simple niceties like logging and error handling. Installing bingapi.py easy_install bingapi or Svn it from https://svn.uswaretech.com/bingapi/ Using bingapi.py To use this library, you need to have an Appid from Bing. You can get it from http://www.bing.com/developers/createapp.aspx The meat of bingapi.py is talk_to_bing function. It takes a query(eg. salsa) and a sources(eg. web) and other optional parameters in extra_args (eg. {‘web.offset’: 40}) and returns the dictionary of Bing’s response. eg In [2]: from bingapi import bingapi In [3]: bing = bingapi.Bing(&#39;&lt;Your Appid&gt;&#39;) In [4]: bing.talk_to_bing(&#39;salsa&#39;, sources=&#39;web&#39;) Out[4]: .......... In [5]: bing.talk_to_bing(&#39;salsa&#39;, sources=&#39;web&#39;, extra_args={&#39;web.offset&#39;:40}) Out[5]: .......... Class Bing also provides utility functions to do the various types of seraches so you dont have to remember the source type. The various functions available are, do_web_search do_image_search do_news_search do_spell_search do_related_search do_phonebook_search do_answers_search All of them are used similarly. In [6]: bing.do_web_search(&#39;salsa&#39;) Out[6]: .......... In [7]: bing.do_image_search(&#39;salsa&#39;) Out[7]: .............. In [8]: bing.do_answers_search(&#39;what is salsa&#39;) Out[8]: ............... If you want to use multiple sources in one call you can use talk_to_bing directly as In [10]: bing.talk_to_bing(query=&#39;salsa&#39;, sources=&#39;web news&#39;) Out[10]: ............ But, but.. Why bing? you ask. Well, other than the fact that bing search is indeed better in some areas, particularly multimedia, bing has fairer usage quota and API restrictions. Resources http://www.bing.com/developers/ http://pypi.python.org/pypi/bingapi/0.01 Developing a search mashup? Bing API? Yahoo, Google APIs? We can help." />
+<link rel="canonical" href="http://localhost:4000/api/2009/06/10/python-wrapper-on-bing-api.html" />
+<meta property="og:url" content="http://localhost:4000/api/2009/06/10/python-wrapper-on-bing-api.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-06-10T12:09:33+05:30" />
+<script type="application/ld+json">
+{"description":"The newly launched search engine Bing has a simple restful API. We have created a thin Python wrapper over this API, which allows to query the Bing servers in a very pythonic way. Installing this is as easy as easy_install bingapi. [Or get it here or here ] Using from bingapi import bingapi bing = bingapi.Bing(&lt;appid&gt;) bing.do_web_search(&#39;Usware Technologies&#39;) The README from the project is posted below, which provides more details on using this. bingapi.py is a very thin python wrapper over the Bing API. Bing provides a very simple Restful interface to their search engine and provides results in JSON and XML interface. With bingapi.py, we query the rest urls to get the JSON response, which is parsed with simplejson.py. bingapi.py just adds simple niceties like logging and error handling. Installing bingapi.py easy_install bingapi or Svn it from https://svn.uswaretech.com/bingapi/ Using bingapi.py To use this library, you need to have an Appid from Bing. You can get it from http://www.bing.com/developers/createapp.aspx The meat of bingapi.py is talk_to_bing function. It takes a query(eg. salsa) and a sources(eg. web) and other optional parameters in extra_args (eg. {‘web.offset’: 40}) and returns the dictionary of Bing’s response. eg In [2]: from bingapi import bingapi In [3]: bing = bingapi.Bing(&#39;&lt;Your Appid&gt;&#39;) In [4]: bing.talk_to_bing(&#39;salsa&#39;, sources=&#39;web&#39;) Out[4]: .......... In [5]: bing.talk_to_bing(&#39;salsa&#39;, sources=&#39;web&#39;, extra_args={&#39;web.offset&#39;:40}) Out[5]: .......... Class Bing also provides utility functions to do the various types of seraches so you dont have to remember the source type. The various functions available are, do_web_search do_image_search do_news_search do_spell_search do_related_search do_phonebook_search do_answers_search All of them are used similarly. In [6]: bing.do_web_search(&#39;salsa&#39;) Out[6]: .......... In [7]: bing.do_image_search(&#39;salsa&#39;) Out[7]: .............. In [8]: bing.do_answers_search(&#39;what is salsa&#39;) Out[8]: ............... If you want to use multiple sources in one call you can use talk_to_bing directly as In [10]: bing.talk_to_bing(query=&#39;salsa&#39;, sources=&#39;web news&#39;) Out[10]: ............ But, but.. Why bing? you ask. Well, other than the fact that bing search is indeed better in some areas, particularly multimedia, bing has fairer usage quota and API restrictions. Resources http://www.bing.com/developers/ http://pypi.python.org/pypi/bingapi/0.01 Developing a search mashup? Bing API? Yahoo, Google APIs? We can help.","author":{"@type":"Person","name":"lakshman"},"@type":"BlogPosting","url":"http://localhost:4000/api/2009/06/10/python-wrapper-on-bing-api.html","headline":"Python Wrapper on Bing API","dateModified":"2009-06-10T12:09:33+05:30","datePublished":"2009-06-10T12:09:33+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/api/2009/06/10/python-wrapper-on-bing-api.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Python Wrapper on Bing API</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-06-10T12:09:33+05:30" itemprop="datePublished">Jun 10, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">lakshman</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>The newly launched search engine <a href="http://www.bing.com/">Bing</a> has a simple restful API. We have created a thin Python wrapper over this API, which allows to query the Bing servers in a very pythonic way.</p>
+
+<p>Installing this is as easy as <code class="highlighter-rouge">easy_install bingapi</code>.</p>
+
+<p>[Or get it <a href="https://svn.uswaretech.com/bingapi/">here</a> or <a href="http://pypi.python.org/pypi/bingapi/0.01">here</a> ]</p>
+
+<p>Using</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from bingapi import bingapi
+bing = bingapi.Bing(&lt;appid&gt;)
+bing.do_web_search('Usware Technologies')
+</code></pre></div></div>
+
+<hr />
+
+<p>The README from the project is posted below, which provides more details on using this.</p>
+
+<p>bingapi.py is a very thin python wrapper over the Bing API.
+Bing provides a very simple Restful interface to their search engine
+and provides results in JSON and XML interface.</p>
+
+<p>With bingapi.py, we query the rest urls to get the JSON response,
+which is parsed with simplejson.py. bingapi.py just adds simple niceties
+like logging and error handling.</p>
+
+<h3 id="installing-bingapipy">Installing bingapi.py</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>easy_install bingapi
+</code></pre></div></div>
+
+<p>or Svn it from <code class="highlighter-rouge">https://svn.uswaretech.com/bingapi/</code></p>
+
+<h3 id="using-bingapipy">Using bingapi.py</h3>
+
+<p>To use this library, you need to have an Appid from Bing. You can get it from
+http://www.bing.com/developers/createapp.aspx</p>
+
+<p>The meat of bingapi.py is <code class="highlighter-rouge">talk_to_bing</code> function. It takes a query(eg. salsa)
+and a sources(eg. web) and other optional parameters in extra_args
+(eg. {‘web.offset’: 40}) and returns the dictionary of Bing’s response.</p>
+
+<p>eg</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [2]: from bingapi import bingapi
+
+In [3]: bing = bingapi.Bing('&lt;Your Appid&gt;')
+
+In [4]: bing.talk_to_bing('salsa', sources='web')
+Out[4]: 
+..........
+
+In [5]: bing.talk_to_bing('salsa', sources='web', extra_args={'web.offset':40})
+Out[5]: 
+..........
+</code></pre></div></div>
+
+<p>Class <code class="highlighter-rouge">Bing</code> also provides utility functions to do the various types of seraches
+so you dont have to remember the source type.</p>
+
+<p>The various functions available are,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>do_web_search
+do_image_search
+do_news_search
+do_spell_search
+do_related_search
+do_phonebook_search
+do_answers_search
+</code></pre></div></div>
+
+<p>All of them are used similarly.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [6]: bing.do_web_search('salsa')
+Out[6]: 
+..........
+
+In [7]: bing.do_image_search('salsa')
+Out[7]: 
+..............
+
+In [8]: bing.do_answers_search('what is salsa')
+Out[8]: 
+...............
+</code></pre></div></div>
+
+<p>If you want to use multiple sources in one call you can use <code class="highlighter-rouge">talk_to_bing</code>
+directly as</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [10]: bing.talk_to_bing(query='salsa', sources='web news')
+Out[10]:
+............
+</code></pre></div></div>
+
+<p>But, but.. Why bing? you ask. Well, other than the fact that bing search is indeed better in some areas, particularly multimedia, bing has fairer <a href="http://www.bing.com/community/blogs/developer/archive/2009/05/28/announcing-the-new-live-search-api-version-2-0-beta.aspx">usage quota and API restrictions</a>.</p>
+
+<h3 id="resources">Resources</h3>
+
+<ul>
+  <li><a href="http://www.bing.com/developers/">http://www.bing.com/developers/</a></li>
+  <li><a href="http://pypi.python.org/pypi/bingapi/0.01">http://pypi.python.org/pypi/bingapi/0.01</a></li>
+</ul>
+
+<hr />
+
+<p>Developing a search mashup? Bing API? <a href="http://uswaretech.com/blog/2008/04/new-tutorial-building-a-search-engine-with-appengine-and-yahoo/">Yahoo</a>, Google APIs? <a href="http://uswaretech.com/contact/">We can help</a>.</p>
+
+<p>t/).</p>
+
+
+  </div><a class="u-url" href="/api/2009/06/10/python-wrapper-on-bing-api.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

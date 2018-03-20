@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Getting started with webapp2 and GAE | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Getting started with webapp2 and GAE" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Deploying a webapp2 app on Google app engine We want to setup our dev environment to write a web application using webapp2 which we will deploy to Google app engine. Agenda About GAE(Google App Engine) Setting up dev environment for GAE Running webapp2 locally Deploying it on app engine About GAE They key points around GAE are: It provides Platform as a Service. GAE is not Infrastructure as a service. Fully managed environment. Your runtime, libraries and frameworks are managed, installed and updated behind the scene. You don’t have to do sysadmin task. You don’t have to provision the server. GAE provides shell access when needed. App engine docs puts it as “Infrastructure when you need it.” Setting up dev environment for GAE GAE is part of Google Cloud Platform(GCP), so first we need GCP SDK. GCP SDK can be installed from here. Once GCP is installed, you should be able to run command gcloud. If you are on Mac, you should see a directory called “google-cloud-sdk” in ~/Downloads. If you are on Ubuntu, you will find this directory “google-cloud-sdk” in whichever folder your downloads go. Once GCP is installed, we need App engine extension for Python. App engine extension can be downloaded from here. The most important thing is: gcloud components install app-engine-python Running webapp2 locally Once app engine extension for python is installed, a directory called google_appengine is added to platform directory of Google Cloud SDK installation path. So you should be able to see ~/Downloads/google-cloud-sdk/platform/google_appengine/. This directory has a file called dev_appserver.py which we need for running the app locallly. Let’s write some code now. Create a file main.py with following content import webapp2 class HelloWebapp2(webapp2.RequestHandler): def get(self): self.response.write(&#39;Hello, webapp2!&#39;) app = webapp2.WSGIApplication([ (&#39;/&#39;, HelloWebapp2), ], debug=True) def main(): from paste import httpserver httpserver.serve(app, host=&#39;127.0.0.1&#39;, port=&#39;8080&#39;) if __name__ == &#39;__main__&#39;: main() We need a yaml file called app.yaml which tells to app engine about runtime environment and other provisioning information. Add a file app.yaml at same level as main.py with following content. runtime: python27 api_version: 1 threadsafe: true handlers: - url: /.** script: main.app Start the dev server by issuing following command ./&lt;path-to-dev_appserver.py&gt; app.yaml Deploying to GAE Create or choose an exisiting project on GCP console from here. I have a project with id “the-pentameter-845”. Using gcloud config, I set this as my current project so that I can deploy my code under this project. gcloud config set account akshar@agiliq.com gcloud config set project the-pentameter-845 And then deploy your code using following command gcloud app deploy gcloud would prompt and ask you if you want to deploy to https://the-pentameter-845.appspot.com. Your url would be different depending on your project id. With this deployment should be done and you should be able to view your project at https://.appspot.com. Adding more routes Add one more class. class NedStark(webapp2.RequestHandler): def get(self): self.response.write(&#39;Hi! I am Ned. People considered me very brave.&#39;) And add it as a route so that this class gets used when someone accesses url /ned app = webapp2.WSGIApplication([ (&#39;/&#39;, HelloWebapp2), (&#39;/ned&#39;, NedStark), ], debug=True) After this you should be able to access localhost:8080/ned. No change is needed in app.yaml Deploy the app again. gcloud app deploy app.yaml Now you should be able to access https://.appspot.com/ned Installing libraries with pip GAE runtime environment provides some third party libraries, so these need not be installed with pip. Similarly during development, dev_appserver.py provides these same libraries which need not be installed with pip. eg: One such library is webapp2 itself. You can see complete list of third party libraries available in runtime environment here If you want to use a library which isn’t provided by app engine runtime, you need to follow the steps mentioned &lt;a href=”https://cloud.google.com/appengine/docs/standard/python/tools/using-libraries-python-27#installing_a_third-party_library target=”_blank”&gt;here&lt;/a&gt; Assuming you want to write a handler which has to fetch data from some database. Suppose you want to use SQLAlchemy for fethcing data, so we need SQLAlchemy in our application. Add line import sqlalchemy in main.py and try to access the url. Your development server wouldn’t respond because you don’t have sqlalchemy. To add SQLAlchemy do the following. mkdir lib pip install -t lib/ SQLAlchemy Add a file appengine_config.py with following content from google.appengine.ext import vendor vendor.add(&#39;lib&#39;) Now access any url, and development server would again start serving the urls properly." />
+<meta property="og:description" content="Deploying a webapp2 app on Google app engine We want to setup our dev environment to write a web application using webapp2 which we will deploy to Google app engine. Agenda About GAE(Google App Engine) Setting up dev environment for GAE Running webapp2 locally Deploying it on app engine About GAE They key points around GAE are: It provides Platform as a Service. GAE is not Infrastructure as a service. Fully managed environment. Your runtime, libraries and frameworks are managed, installed and updated behind the scene. You don’t have to do sysadmin task. You don’t have to provision the server. GAE provides shell access when needed. App engine docs puts it as “Infrastructure when you need it.” Setting up dev environment for GAE GAE is part of Google Cloud Platform(GCP), so first we need GCP SDK. GCP SDK can be installed from here. Once GCP is installed, you should be able to run command gcloud. If you are on Mac, you should see a directory called “google-cloud-sdk” in ~/Downloads. If you are on Ubuntu, you will find this directory “google-cloud-sdk” in whichever folder your downloads go. Once GCP is installed, we need App engine extension for Python. App engine extension can be downloaded from here. The most important thing is: gcloud components install app-engine-python Running webapp2 locally Once app engine extension for python is installed, a directory called google_appengine is added to platform directory of Google Cloud SDK installation path. So you should be able to see ~/Downloads/google-cloud-sdk/platform/google_appengine/. This directory has a file called dev_appserver.py which we need for running the app locallly. Let’s write some code now. Create a file main.py with following content import webapp2 class HelloWebapp2(webapp2.RequestHandler): def get(self): self.response.write(&#39;Hello, webapp2!&#39;) app = webapp2.WSGIApplication([ (&#39;/&#39;, HelloWebapp2), ], debug=True) def main(): from paste import httpserver httpserver.serve(app, host=&#39;127.0.0.1&#39;, port=&#39;8080&#39;) if __name__ == &#39;__main__&#39;: main() We need a yaml file called app.yaml which tells to app engine about runtime environment and other provisioning information. Add a file app.yaml at same level as main.py with following content. runtime: python27 api_version: 1 threadsafe: true handlers: - url: /.** script: main.app Start the dev server by issuing following command ./&lt;path-to-dev_appserver.py&gt; app.yaml Deploying to GAE Create or choose an exisiting project on GCP console from here. I have a project with id “the-pentameter-845”. Using gcloud config, I set this as my current project so that I can deploy my code under this project. gcloud config set account akshar@agiliq.com gcloud config set project the-pentameter-845 And then deploy your code using following command gcloud app deploy gcloud would prompt and ask you if you want to deploy to https://the-pentameter-845.appspot.com. Your url would be different depending on your project id. With this deployment should be done and you should be able to view your project at https://.appspot.com. Adding more routes Add one more class. class NedStark(webapp2.RequestHandler): def get(self): self.response.write(&#39;Hi! I am Ned. People considered me very brave.&#39;) And add it as a route so that this class gets used when someone accesses url /ned app = webapp2.WSGIApplication([ (&#39;/&#39;, HelloWebapp2), (&#39;/ned&#39;, NedStark), ], debug=True) After this you should be able to access localhost:8080/ned. No change is needed in app.yaml Deploy the app again. gcloud app deploy app.yaml Now you should be able to access https://.appspot.com/ned Installing libraries with pip GAE runtime environment provides some third party libraries, so these need not be installed with pip. Similarly during development, dev_appserver.py provides these same libraries which need not be installed with pip. eg: One such library is webapp2 itself. You can see complete list of third party libraries available in runtime environment here If you want to use a library which isn’t provided by app engine runtime, you need to follow the steps mentioned &lt;a href=”https://cloud.google.com/appengine/docs/standard/python/tools/using-libraries-python-27#installing_a_third-party_library target=”_blank”&gt;here&lt;/a&gt; Assuming you want to write a handler which has to fetch data from some database. Suppose you want to use SQLAlchemy for fethcing data, so we need SQLAlchemy in our application. Add line import sqlalchemy in main.py and try to access the url. Your development server wouldn’t respond because you don’t have sqlalchemy. To add SQLAlchemy do the following. mkdir lib pip install -t lib/ SQLAlchemy Add a file appengine_config.py with following content from google.appengine.ext import vendor vendor.add(&#39;lib&#39;) Now access any url, and development server would again start serving the urls properly." />
+<link rel="canonical" href="http://localhost:4000/appengine/2017/09/04/getting-started-webapp2-and-gae.html" />
+<meta property="og:url" content="http://localhost:4000/appengine/2017/09/04/getting-started-webapp2-and-gae.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-09-04T12:45:27+05:30" />
+<script type="application/ld+json">
+{"description":"Deploying a webapp2 app on Google app engine We want to setup our dev environment to write a web application using webapp2 which we will deploy to Google app engine. Agenda About GAE(Google App Engine) Setting up dev environment for GAE Running webapp2 locally Deploying it on app engine About GAE They key points around GAE are: It provides Platform as a Service. GAE is not Infrastructure as a service. Fully managed environment. Your runtime, libraries and frameworks are managed, installed and updated behind the scene. You don’t have to do sysadmin task. You don’t have to provision the server. GAE provides shell access when needed. App engine docs puts it as “Infrastructure when you need it.” Setting up dev environment for GAE GAE is part of Google Cloud Platform(GCP), so first we need GCP SDK. GCP SDK can be installed from here. Once GCP is installed, you should be able to run command gcloud. If you are on Mac, you should see a directory called “google-cloud-sdk” in ~/Downloads. If you are on Ubuntu, you will find this directory “google-cloud-sdk” in whichever folder your downloads go. Once GCP is installed, we need App engine extension for Python. App engine extension can be downloaded from here. The most important thing is: gcloud components install app-engine-python Running webapp2 locally Once app engine extension for python is installed, a directory called google_appengine is added to platform directory of Google Cloud SDK installation path. So you should be able to see ~/Downloads/google-cloud-sdk/platform/google_appengine/. This directory has a file called dev_appserver.py which we need for running the app locallly. Let’s write some code now. Create a file main.py with following content import webapp2 class HelloWebapp2(webapp2.RequestHandler): def get(self): self.response.write(&#39;Hello, webapp2!&#39;) app = webapp2.WSGIApplication([ (&#39;/&#39;, HelloWebapp2), ], debug=True) def main(): from paste import httpserver httpserver.serve(app, host=&#39;127.0.0.1&#39;, port=&#39;8080&#39;) if __name__ == &#39;__main__&#39;: main() We need a yaml file called app.yaml which tells to app engine about runtime environment and other provisioning information. Add a file app.yaml at same level as main.py with following content. runtime: python27 api_version: 1 threadsafe: true handlers: - url: /.** script: main.app Start the dev server by issuing following command ./&lt;path-to-dev_appserver.py&gt; app.yaml Deploying to GAE Create or choose an exisiting project on GCP console from here. I have a project with id “the-pentameter-845”. Using gcloud config, I set this as my current project so that I can deploy my code under this project. gcloud config set account akshar@agiliq.com gcloud config set project the-pentameter-845 And then deploy your code using following command gcloud app deploy gcloud would prompt and ask you if you want to deploy to https://the-pentameter-845.appspot.com. Your url would be different depending on your project id. With this deployment should be done and you should be able to view your project at https://.appspot.com. Adding more routes Add one more class. class NedStark(webapp2.RequestHandler): def get(self): self.response.write(&#39;Hi! I am Ned. People considered me very brave.&#39;) And add it as a route so that this class gets used when someone accesses url /ned app = webapp2.WSGIApplication([ (&#39;/&#39;, HelloWebapp2), (&#39;/ned&#39;, NedStark), ], debug=True) After this you should be able to access localhost:8080/ned. No change is needed in app.yaml Deploy the app again. gcloud app deploy app.yaml Now you should be able to access https://.appspot.com/ned Installing libraries with pip GAE runtime environment provides some third party libraries, so these need not be installed with pip. Similarly during development, dev_appserver.py provides these same libraries which need not be installed with pip. eg: One such library is webapp2 itself. You can see complete list of third party libraries available in runtime environment here If you want to use a library which isn’t provided by app engine runtime, you need to follow the steps mentioned &lt;a href=”https://cloud.google.com/appengine/docs/standard/python/tools/using-libraries-python-27#installing_a_third-party_library target=”_blank”&gt;here&lt;/a&gt; Assuming you want to write a handler which has to fetch data from some database. Suppose you want to use SQLAlchemy for fethcing data, so we need SQLAlchemy in our application. Add line import sqlalchemy in main.py and try to access the url. Your development server wouldn’t respond because you don’t have sqlalchemy. To add SQLAlchemy do the following. mkdir lib pip install -t lib/ SQLAlchemy Add a file appengine_config.py with following content from google.appengine.ext import vendor vendor.add(&#39;lib&#39;) Now access any url, and development server would again start serving the urls properly.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/appengine/2017/09/04/getting-started-webapp2-and-gae.html","headline":"Getting started with webapp2 and GAE","dateModified":"2017-09-04T12:45:27+05:30","datePublished":"2017-09-04T12:45:27+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/appengine/2017/09/04/getting-started-webapp2-and-gae.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Getting started with webapp2 and GAE</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2017-09-04T12:45:27+05:30" itemprop="datePublished">Sep 4, 2017
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Deploying a webapp2 app on Google app engine</p>
+
+<p>We want to setup our dev environment to write a web application using webapp2 which we will deploy to Google app engine.</p>
+
+<h3 id="agenda">Agenda</h3>
+
+<ul>
+  <li>About GAE(Google App Engine)</li>
+  <li>Setting up dev environment for GAE</li>
+  <li>Running webapp2 locally</li>
+  <li>Deploying it on app engine</li>
+</ul>
+
+<h3 id="about-gae">About GAE</h3>
+
+<p>They key points around GAE are:</p>
+
+<ul>
+  <li>It provides Platform as a Service. GAE is not Infrastructure as a service.</li>
+  <li>Fully managed environment. Your runtime, libraries and frameworks are managed, installed and updated behind the scene. You don’t have to do sysadmin task. You don’t have to provision the server.</li>
+  <li>GAE provides shell access when needed. <a href="https://cloud.google.com/appengine/">App engine docs</a> puts it as “Infrastructure when you need it.”</li>
+</ul>
+
+<h3 id="setting-up-dev-environment-for-gae">Setting up dev environment for GAE</h3>
+
+<p>GAE is part of Google Cloud Platform(GCP), so first we need GCP SDK.</p>
+
+<p>GCP SDK can be installed from <a href="https://cloud.google.com/sdk/docs/">here</a>. Once GCP is installed, you should be able to run command <strong>gcloud</strong>.</p>
+
+<p>If you are on Mac, you should see a directory called “google-cloud-sdk” in ~/Downloads. If you are on Ubuntu, you will find this directory “google-cloud-sdk” in whichever folder your downloads go.</p>
+
+<p>Once GCP is installed, we need App engine extension for Python. App engine extension can be downloaded from <a href="https://cloud.google.com/appengine/docs/standard/python/download" target="_blank">here</a>. The most important thing is:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcloud components install app-engine-python
+</code></pre></div></div>
+
+<h3 id="running-webapp2-locally">Running webapp2 locally</h3>
+
+<p>Once app engine extension for python is installed, a directory called <code class="highlighter-rouge">google_appengine</code> is added to <strong>platform</strong> directory of Google Cloud SDK installation path.</p>
+
+<p>So you should be able to see ~/Downloads/google-cloud-sdk/platform/google_appengine/. This directory has a file called <strong>dev_appserver.py</strong> which we need for running the app locallly.</p>
+
+<p>Let’s write some code now. Create a file main.py with following content</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import webapp2
+
+class HelloWebapp2(webapp2.RequestHandler):
+	def get(self):
+		self.response.write('Hello, webapp2!')
+
+app = webapp2.WSGIApplication([
+	('/', HelloWebapp2),
+], debug=True)
+
+def main():
+	from paste import httpserver
+	httpserver.serve(app, host='127.0.0.1', port='8080')
+
+if __name__ == '__main__':
+	main()
+</code></pre></div></div>
+
+<p>We need a yaml file called app.yaml which tells to app engine about runtime environment and other provisioning information. Add a file app.yaml at same level as main.py with following content.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /.**
+  script: main.app
+</code></pre></div></div>
+
+<p>Start the dev server by issuing following command</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./&lt;path-to-dev_appserver.py&gt; app.yaml
+</code></pre></div></div>
+
+<h3 id="deploying-to-gae">Deploying to GAE</h3>
+
+<p>Create or choose an exisiting <strong>project</strong> on GCP console from <a href="https://console.cloud.google.com/start">here</a>.</p>
+
+<p>I have a project with id “the-pentameter-845”. Using <code class="highlighter-rouge">gcloud config</code>, I set this as my current project so that I can deploy my code under this project.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcloud config set account akshar@agiliq.com
+gcloud config set project the-pentameter-845
+</code></pre></div></div>
+
+<p>And then deploy your code using following command</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcloud app deploy
+</code></pre></div></div>
+
+<p>gcloud would prompt and ask you if you want to deploy to https://the-pentameter-845.appspot.com. Your url would be different depending on your project id.</p>
+
+<p>With this deployment should be done and you should be able to view your project at https://<your-project-id>.appspot.com.</your-project-id></p>
+
+<h3 id="adding-more-routes">Adding more routes</h3>
+
+<p>Add one more class.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class NedStark(webapp2.RequestHandler):
+	def get(self):
+		self.response.write('Hi! I am Ned. People considered me very brave.')
+</code></pre></div></div>
+
+<p>And add it as a route so that this class gets used when someone accesses url /ned</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>app = webapp2.WSGIApplication([
+	('/', HelloWebapp2),
+	('/ned', NedStark),
+], debug=True)
+</code></pre></div></div>
+
+<p>After this you should be able to access localhost:8080/ned. No change is needed in app.yaml</p>
+
+<p>Deploy the app again.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcloud app deploy app.yaml
+</code></pre></div></div>
+
+<p>Now you should be able to access https://<your-project-id>.appspot.com/ned</your-project-id></p>
+
+<h3 id="installing-libraries-with-pip">Installing libraries with pip</h3>
+
+<p>GAE runtime environment provides some third party libraries, so these need not be installed with pip. Similarly during development, dev_appserver.py provides these same libraries which need not be installed with pip. eg: One such library is webapp2 itself. You can see complete list of third party libraries available in runtime environment <a href="https://cloud.google.com/appengine/docs/standard/python/tools/built-in-libraries-27" target="_blank">here</a></p>
+
+<p>If you want to use a library which isn’t provided by app engine runtime, you need to follow the steps mentioned &lt;a href=”https://cloud.google.com/appengine/docs/standard/python/tools/using-libraries-python-27#installing_a_third-party_library target=”_blank”&gt;here&lt;/a&gt;</p>
+
+<p>Assuming you want to write a handler which has to fetch data from some database. Suppose you want to use SQLAlchemy for fethcing data, so we need SQLAlchemy in our application.</p>
+
+<p>Add line <code class="highlighter-rouge">import sqlalchemy</code> in main.py and try to access the url. Your development server wouldn’t respond because you don’t have sqlalchemy. To add SQLAlchemy do the following.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir lib
+pip install -t lib/ SQLAlchemy
+</code></pre></div></div>
+
+<p>Add a file appengine_config.py with following content</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from google.appengine.ext import vendor
+
+vendor.add('lib')
+</code></pre></div></div>
+
+<p>Now access any url, and development server would again start serving the urls properly.</p>
+
+
+  </div><a class="u-url" href="/appengine/2017/09/04/getting-started-webapp2-and-gae.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>A response to Dropping Django | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="A response to Dropping Django" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Brandon Bloom yesterday wrote an interesting post titled dropping Django. Despite a lot of hand waving(We needed a pragmatic template language to replace Django’s idealistic one.), it raises some valid questions, so here is a solution to some of them. No support for hierarchical url creation. The simplest representation of nested urls I can think of is a nested tuple. Lets represent, the urls for a simple app by, &gt;&gt;&gt; tree_urls = (&#39;&#39;, &#39;list&#39;, ... (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), ... (&#39;^add/&#39;, &#39;add&#39;), ... (&#39;delete/&#39;, &#39;delete&#39;, (&#39;hard/&#39;, &#39;delete_hard&#39;)) ... ) Guess what, urls.py is just a python module which excepts a variable names urlpatterns. Which means it is very easy to write a function which converts this nested structure to flat, structure. Here is a quick attempt at that, def merge(url): full_url=[] for i, el in enumerate(url): if i%2==0: full_url.append(el) full_url = &#39;&#39;.join(full_url) return full_url def combineflatten(seq): items= tuple(item for item in seq if not isinstance(item, tuple)) yield items for item in seq: if isinstance(item, tuple): for yielded in combineflatten(item): yield items+yielded def generate_flat_urls(tree_urls): &quot;&quot;&quot; &gt;&gt;&gt; tree_urls = (&#39;&#39;, &#39;list&#39;, ... (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), ... (&#39;^add/&#39;, &#39;add&#39;), ... (&#39;delete/&#39;, &#39;delete&#39;, (&#39;delete/&#39;, &#39;delete_hard&#39;)) ... ) &gt;&gt;&gt; generate_flat_urls(tree_urls) [(&#39;^$&#39;, &#39;list&#39;), (&#39;^edit/$&#39;, &#39;edit&#39;), (&#39;^edit/auto/$&#39;, &#39;edit_auto&#39;), (&#39;^^add/$&#39;, &#39;add&#39;), (&#39;^delete/$&#39;, &#39;delete&#39;), (&#39;^delete/delete/$&#39;, &#39;delete_hard&#39;)] &quot;&quot;&quot; return [(&#39;^%s$&#39;%merge(el), el[-1]) for el in tuple(combineflatten(tree_urls))] With this you can use hierarchical urls in urls.py as, #All of urls.py tree_urls = (&#39;&#39;, &#39;list&#39;, (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), (&#39;^add/&#39;, &#39;add&#39;), (&#39;delete/&#39;, &#39;delete&#39;, (&#39;delete/&#39;, &#39;delete_hard&#39;)) ) flat_urls = generate_flat_urls(tree_urls) urlpatterns = patterns(&#39;app.views&#39;, **flat_urls ) No support for per user, per resource authorisation. If you want to do this in a almost no-touching-the-existing-code way, replace all your render_to_response with, def render_with_auth_check(request, payload, request_context, *args, **kwrags): for el in payload.itervalues(): try: has_auth = el.check_auth(request.user) if not has_auth: raise AuthFailException except ValueError: pass #Not all objects have check_auth return render_to_response(request, payload, request_context, *args, **kwrags) And enable this middleware, class AuthFailHandlerMiddleware: def process_exception(self, request, exception): if type(exception) == AuthFailException: return render_to_response(&#39;accounts/login/&#39;, {}, RequestContext(request)) This assumes that all resources which are authorisation protected have a .check_auth, but I cant see any way round that in any other way as well. A different, and more robust way would be to write custom managers for all resources, which need authorization. class ResourceAuthManager(models.Manager): def get(self, user, *args, **kwargs): res = super(ResourceAuthManager, self).get(*args, **kwargs) try: has_auth = res.check_auth(request.user) if not has_auth: raise AuthFailException except ValueError: pass #Not all objects have check_auth ... The Django templating language is too constrained. Despite believing that Django templating language hits the sweet spot between, power and convenience to people who would be using it, I never understood this argument, If you are using sqlalchemy with Django you lose the admin, what do you lose if you use Jinja? In particular what do you lose by replacing render_to_response with this, def render_jinja_to_response(template_name, payload): #This should probably go in settings.py from jinja2 import Environment env = Environment(loader=PackageLoader(&#39;app&#39;, &#39;templates&#39;)) template = env.get_template(template_name) response = template.render(**payload) return HttpResponse(response) Extending authentication - In particular enable loggin in with email Django authenticates against a wide range of backends, including Email, LDAP, Twitter and Facebook. While it is true that email backend doesn’t work with Admin login, Admin is meant for use by staff and superusers, so why cant we provide them usernames? There are a few other questions raised, some of which I agree with(“Sadly, it[the admin app] struggles a little bit with nullable fields and is tricky to customize.”), and some which I dont, (“I will never write CSS by hand again.” - You shouldn’t be, someone else on your team should be doing that. ) But this line is interesting Personally, I&#39;ve developed a moderate fear of the word &quot;framework&quot;. This is arguable, but the way all frameworks essentially help you is by providing Dependency Injection, (the Hollywood principle - Dont call me, I will call you). Django provides that in a lot of ways. (You write a middleware, and django calls it at appropriate places - Dont call me, I will call you), but still leaves something to be desired. My ideal framework would be one where models are POPO and views are functions which return strings . (Plain old python objects -like POJO). JPA does this correctly, but then JPA has the typing information, so maybe in python the only way to provide the required typing information is name=models.CharField(...). But the point being, we need better Dependency Inversion, not less of it. We have been dow that path earlier, and it is a much harder way to build complex systems. Resources This code on github Discussion about converting the nested tuple to a flat one My apologies if this post was aggressive, argumentative or disrespectful to the original author. We generally try to stay away from controversial posts on this blog. But I believe that this post raised some valid technical questions, and the intent of this post was to answer them. For Django to develop the best way, we need more of these kind of “What is wrong with Django” posts, not less, so my thanks to the original author. :) Do you want to build Amazing Web Apps? We can help." />
+<meta property="og:description" content="Brandon Bloom yesterday wrote an interesting post titled dropping Django. Despite a lot of hand waving(We needed a pragmatic template language to replace Django’s idealistic one.), it raises some valid questions, so here is a solution to some of them. No support for hierarchical url creation. The simplest representation of nested urls I can think of is a nested tuple. Lets represent, the urls for a simple app by, &gt;&gt;&gt; tree_urls = (&#39;&#39;, &#39;list&#39;, ... (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), ... (&#39;^add/&#39;, &#39;add&#39;), ... (&#39;delete/&#39;, &#39;delete&#39;, (&#39;hard/&#39;, &#39;delete_hard&#39;)) ... ) Guess what, urls.py is just a python module which excepts a variable names urlpatterns. Which means it is very easy to write a function which converts this nested structure to flat, structure. Here is a quick attempt at that, def merge(url): full_url=[] for i, el in enumerate(url): if i%2==0: full_url.append(el) full_url = &#39;&#39;.join(full_url) return full_url def combineflatten(seq): items= tuple(item for item in seq if not isinstance(item, tuple)) yield items for item in seq: if isinstance(item, tuple): for yielded in combineflatten(item): yield items+yielded def generate_flat_urls(tree_urls): &quot;&quot;&quot; &gt;&gt;&gt; tree_urls = (&#39;&#39;, &#39;list&#39;, ... (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), ... (&#39;^add/&#39;, &#39;add&#39;), ... (&#39;delete/&#39;, &#39;delete&#39;, (&#39;delete/&#39;, &#39;delete_hard&#39;)) ... ) &gt;&gt;&gt; generate_flat_urls(tree_urls) [(&#39;^$&#39;, &#39;list&#39;), (&#39;^edit/$&#39;, &#39;edit&#39;), (&#39;^edit/auto/$&#39;, &#39;edit_auto&#39;), (&#39;^^add/$&#39;, &#39;add&#39;), (&#39;^delete/$&#39;, &#39;delete&#39;), (&#39;^delete/delete/$&#39;, &#39;delete_hard&#39;)] &quot;&quot;&quot; return [(&#39;^%s$&#39;%merge(el), el[-1]) for el in tuple(combineflatten(tree_urls))] With this you can use hierarchical urls in urls.py as, #All of urls.py tree_urls = (&#39;&#39;, &#39;list&#39;, (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), (&#39;^add/&#39;, &#39;add&#39;), (&#39;delete/&#39;, &#39;delete&#39;, (&#39;delete/&#39;, &#39;delete_hard&#39;)) ) flat_urls = generate_flat_urls(tree_urls) urlpatterns = patterns(&#39;app.views&#39;, **flat_urls ) No support for per user, per resource authorisation. If you want to do this in a almost no-touching-the-existing-code way, replace all your render_to_response with, def render_with_auth_check(request, payload, request_context, *args, **kwrags): for el in payload.itervalues(): try: has_auth = el.check_auth(request.user) if not has_auth: raise AuthFailException except ValueError: pass #Not all objects have check_auth return render_to_response(request, payload, request_context, *args, **kwrags) And enable this middleware, class AuthFailHandlerMiddleware: def process_exception(self, request, exception): if type(exception) == AuthFailException: return render_to_response(&#39;accounts/login/&#39;, {}, RequestContext(request)) This assumes that all resources which are authorisation protected have a .check_auth, but I cant see any way round that in any other way as well. A different, and more robust way would be to write custom managers for all resources, which need authorization. class ResourceAuthManager(models.Manager): def get(self, user, *args, **kwargs): res = super(ResourceAuthManager, self).get(*args, **kwargs) try: has_auth = res.check_auth(request.user) if not has_auth: raise AuthFailException except ValueError: pass #Not all objects have check_auth ... The Django templating language is too constrained. Despite believing that Django templating language hits the sweet spot between, power and convenience to people who would be using it, I never understood this argument, If you are using sqlalchemy with Django you lose the admin, what do you lose if you use Jinja? In particular what do you lose by replacing render_to_response with this, def render_jinja_to_response(template_name, payload): #This should probably go in settings.py from jinja2 import Environment env = Environment(loader=PackageLoader(&#39;app&#39;, &#39;templates&#39;)) template = env.get_template(template_name) response = template.render(**payload) return HttpResponse(response) Extending authentication - In particular enable loggin in with email Django authenticates against a wide range of backends, including Email, LDAP, Twitter and Facebook. While it is true that email backend doesn’t work with Admin login, Admin is meant for use by staff and superusers, so why cant we provide them usernames? There are a few other questions raised, some of which I agree with(“Sadly, it[the admin app] struggles a little bit with nullable fields and is tricky to customize.”), and some which I dont, (“I will never write CSS by hand again.” - You shouldn’t be, someone else on your team should be doing that. ) But this line is interesting Personally, I&#39;ve developed a moderate fear of the word &quot;framework&quot;. This is arguable, but the way all frameworks essentially help you is by providing Dependency Injection, (the Hollywood principle - Dont call me, I will call you). Django provides that in a lot of ways. (You write a middleware, and django calls it at appropriate places - Dont call me, I will call you), but still leaves something to be desired. My ideal framework would be one where models are POPO and views are functions which return strings . (Plain old python objects -like POJO). JPA does this correctly, but then JPA has the typing information, so maybe in python the only way to provide the required typing information is name=models.CharField(...). But the point being, we need better Dependency Inversion, not less of it. We have been dow that path earlier, and it is a much harder way to build complex systems. Resources This code on github Discussion about converting the nested tuple to a flat one My apologies if this post was aggressive, argumentative or disrespectful to the original author. We generally try to stay away from controversial posts on this blog. But I believe that this post raised some valid technical questions, and the intent of this post was to answer them. For Django to develop the best way, we need more of these kind of “What is wrong with Django” posts, not less, so my thanks to the original author. :) Do you want to build Amazing Web Apps? We can help." />
+<link rel="canonical" href="http://localhost:4000/rambling/2009/08/20/a-response-to-dropping-django.html" />
+<meta property="og:url" content="http://localhost:4000/rambling/2009/08/20/a-response-to-dropping-django.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-08-20T17:28:37+05:30" />
+<script type="application/ld+json">
+{"description":"Brandon Bloom yesterday wrote an interesting post titled dropping Django. Despite a lot of hand waving(We needed a pragmatic template language to replace Django’s idealistic one.), it raises some valid questions, so here is a solution to some of them. No support for hierarchical url creation. The simplest representation of nested urls I can think of is a nested tuple. Lets represent, the urls for a simple app by, &gt;&gt;&gt; tree_urls = (&#39;&#39;, &#39;list&#39;, ... (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), ... (&#39;^add/&#39;, &#39;add&#39;), ... (&#39;delete/&#39;, &#39;delete&#39;, (&#39;hard/&#39;, &#39;delete_hard&#39;)) ... ) Guess what, urls.py is just a python module which excepts a variable names urlpatterns. Which means it is very easy to write a function which converts this nested structure to flat, structure. Here is a quick attempt at that, def merge(url): full_url=[] for i, el in enumerate(url): if i%2==0: full_url.append(el) full_url = &#39;&#39;.join(full_url) return full_url def combineflatten(seq): items= tuple(item for item in seq if not isinstance(item, tuple)) yield items for item in seq: if isinstance(item, tuple): for yielded in combineflatten(item): yield items+yielded def generate_flat_urls(tree_urls): &quot;&quot;&quot; &gt;&gt;&gt; tree_urls = (&#39;&#39;, &#39;list&#39;, ... (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), ... (&#39;^add/&#39;, &#39;add&#39;), ... (&#39;delete/&#39;, &#39;delete&#39;, (&#39;delete/&#39;, &#39;delete_hard&#39;)) ... ) &gt;&gt;&gt; generate_flat_urls(tree_urls) [(&#39;^$&#39;, &#39;list&#39;), (&#39;^edit/$&#39;, &#39;edit&#39;), (&#39;^edit/auto/$&#39;, &#39;edit_auto&#39;), (&#39;^^add/$&#39;, &#39;add&#39;), (&#39;^delete/$&#39;, &#39;delete&#39;), (&#39;^delete/delete/$&#39;, &#39;delete_hard&#39;)] &quot;&quot;&quot; return [(&#39;^%s$&#39;%merge(el), el[-1]) for el in tuple(combineflatten(tree_urls))] With this you can use hierarchical urls in urls.py as, #All of urls.py tree_urls = (&#39;&#39;, &#39;list&#39;, (&#39;edit/&#39;, &#39;edit&#39;, (&#39;auto/&#39;, &#39;edit_auto&#39;)), (&#39;^add/&#39;, &#39;add&#39;), (&#39;delete/&#39;, &#39;delete&#39;, (&#39;delete/&#39;, &#39;delete_hard&#39;)) ) flat_urls = generate_flat_urls(tree_urls) urlpatterns = patterns(&#39;app.views&#39;, **flat_urls ) No support for per user, per resource authorisation. If you want to do this in a almost no-touching-the-existing-code way, replace all your render_to_response with, def render_with_auth_check(request, payload, request_context, *args, **kwrags): for el in payload.itervalues(): try: has_auth = el.check_auth(request.user) if not has_auth: raise AuthFailException except ValueError: pass #Not all objects have check_auth return render_to_response(request, payload, request_context, *args, **kwrags) And enable this middleware, class AuthFailHandlerMiddleware: def process_exception(self, request, exception): if type(exception) == AuthFailException: return render_to_response(&#39;accounts/login/&#39;, {}, RequestContext(request)) This assumes that all resources which are authorisation protected have a .check_auth, but I cant see any way round that in any other way as well. A different, and more robust way would be to write custom managers for all resources, which need authorization. class ResourceAuthManager(models.Manager): def get(self, user, *args, **kwargs): res = super(ResourceAuthManager, self).get(*args, **kwargs) try: has_auth = res.check_auth(request.user) if not has_auth: raise AuthFailException except ValueError: pass #Not all objects have check_auth ... The Django templating language is too constrained. Despite believing that Django templating language hits the sweet spot between, power and convenience to people who would be using it, I never understood this argument, If you are using sqlalchemy with Django you lose the admin, what do you lose if you use Jinja? In particular what do you lose by replacing render_to_response with this, def render_jinja_to_response(template_name, payload): #This should probably go in settings.py from jinja2 import Environment env = Environment(loader=PackageLoader(&#39;app&#39;, &#39;templates&#39;)) template = env.get_template(template_name) response = template.render(**payload) return HttpResponse(response) Extending authentication - In particular enable loggin in with email Django authenticates against a wide range of backends, including Email, LDAP, Twitter and Facebook. While it is true that email backend doesn’t work with Admin login, Admin is meant for use by staff and superusers, so why cant we provide them usernames? There are a few other questions raised, some of which I agree with(“Sadly, it[the admin app] struggles a little bit with nullable fields and is tricky to customize.”), and some which I dont, (“I will never write CSS by hand again.” - You shouldn’t be, someone else on your team should be doing that. ) But this line is interesting Personally, I&#39;ve developed a moderate fear of the word &quot;framework&quot;. This is arguable, but the way all frameworks essentially help you is by providing Dependency Injection, (the Hollywood principle - Dont call me, I will call you). Django provides that in a lot of ways. (You write a middleware, and django calls it at appropriate places - Dont call me, I will call you), but still leaves something to be desired. My ideal framework would be one where models are POPO and views are functions which return strings . (Plain old python objects -like POJO). JPA does this correctly, but then JPA has the typing information, so maybe in python the only way to provide the required typing information is name=models.CharField(...). But the point being, we need better Dependency Inversion, not less of it. We have been dow that path earlier, and it is a much harder way to build complex systems. Resources This code on github Discussion about converting the nested tuple to a flat one My apologies if this post was aggressive, argumentative or disrespectful to the original author. We generally try to stay away from controversial posts on this blog. But I believe that this post raised some valid technical questions, and the intent of this post was to answer them. For Django to develop the best way, we need more of these kind of “What is wrong with Django” posts, not less, so my thanks to the original author. :) Do you want to build Amazing Web Apps? We can help.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/rambling/2009/08/20/a-response-to-dropping-django.html","headline":"A response to Dropping Django","dateModified":"2009-08-20T17:28:37+05:30","datePublished":"2009-08-20T17:28:37+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/rambling/2009/08/20/a-response-to-dropping-django.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">A response to Dropping Django</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-08-20T17:28:37+05:30" itemprop="datePublished">Aug 20, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><a href="http://blog.brandonbloom.name/2009/08/dropping-django.html">Brandon Bloom</a> yesterday wrote an interesting post titled
+dropping Django. Despite a lot of hand waving(We needed a pragmatic template language to replace Django’s idealistic one.),
+it raises some valid questions, so here is a solution to some of them.</p>
+
+<h4 id="no-support-for-hierarchical-url-creation">No support for hierarchical url creation.</h4>
+
+<p>The simplest representation of nested urls I can think of is a nested tuple. Lets represent,
+the urls for a simple app by,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; tree_urls = ('', 'list',
+...     ('edit/', 'edit', ('auto/', 'edit_auto')),
+...     ('^add/', 'add'),
+...     ('delete/', 'delete', ('hard/', 'delete_hard'))
+...     )
+</code></pre></div></div>
+
+<p>Guess what, urls.py is <em>just a python module which excepts a variable names urlpatterns</em>.</p>
+
+<p>Which means it is very easy to write a function which converts this nested structure to flat, structure.
+Here is a quick attempt at that,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def merge(url):
+    full_url=[]
+    for i, el in enumerate(url):
+        if i%2==0:    
+            full_url.append(el)
+    full_url = ''.join(full_url)
+    return full_url
+    
+def combineflatten(seq):
+    items= tuple(item for item in seq if not isinstance(item, tuple))
+    yield items
+    for item in seq:
+            if isinstance(item, tuple):
+                for yielded in combineflatten(item):
+                    yield items+yielded
+                    
+def generate_flat_urls(tree_urls):
+    """
+    &gt;&gt;&gt; tree_urls = ('', 'list',
+    ...     ('edit/', 'edit', ('auto/', 'edit_auto')),
+    ...     ('^add/', 'add'),
+    ...     ('delete/', 'delete', ('delete/', 'delete_hard'))
+    ...     )
+
+    &gt;&gt;&gt; generate_flat_urls(tree_urls)
+    [('^$', 'list'), ('^edit/$', 'edit'), ('^edit/auto/$', 'edit_auto'), ('^^add/$', 'add'), ('^delete/$', 'delete'), ('^delete/delete/$', 'delete_hard')]
+    """
+    return [('^%s$'%merge(el), el[-1]) for el in tuple(combineflatten(tree_urls))]
+</code></pre></div></div>
+
+<p>With this you can use hierarchical urls in urls.py as,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#All of urls.py
+tree_urls = ('', 'list',
+    ('edit/', 'edit', ('auto/', 'edit_auto')),
+    ('^add/', 'add'),
+    ('delete/', 'delete', ('delete/', 'delete_hard'))
+    )
+    
+flat_urls = generate_flat_urls(tree_urls)
+
+urlpatterns = patterns('app.views',
+**flat_urls
+)
+</code></pre></div></div>
+
+<h4 id="no-support-for-per-user-per-resource-authorisation">No support for per user, per resource authorisation.</h4>
+
+<p>If you want to do this in a almost no-touching-the-existing-code way, replace all your <code class="highlighter-rouge">render_to_response</code> with,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def render_with_auth_check(request, payload, request_context, *args, **kwrags):
+    for el in payload.itervalues():
+        try:
+            has_auth = el.check_auth(request.user)
+            if not has_auth:
+                raise AuthFailException
+        except ValueError:
+            pass #Not all objects have check_auth
+    return render_to_response(request, payload, request_context, *args, **kwrags)
+</code></pre></div></div>
+
+<p>And enable this middleware,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class AuthFailHandlerMiddleware:
+    def process_exception(self, request, exception):
+        if type(exception) == AuthFailException:
+            return render_to_response('accounts/login/', {}, RequestContext(request))
+</code></pre></div></div>
+
+<p>This assumes that all resources which are authorisation protected have a <code class="highlighter-rouge">.check_auth</code>,
+but I cant see any way round that in any other way as well.</p>
+
+<p>A different, and more robust way would be to write custom managers for all resources, which need authorization.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class ResourceAuthManager(models.Manager):
+    def get(self, user, *args, **kwargs):
+        res = super(ResourceAuthManager, self).get(*args, **kwargs)
+        try:
+            has_auth = res.check_auth(request.user)
+            if not has_auth:
+                raise AuthFailException
+        except ValueError:
+            pass #Not all objects have check_auth
+            
+    ...
+</code></pre></div></div>
+
+<h4 id="the-django-templating-language-is-too-constrained">The Django templating language is too constrained.</h4>
+
+<p>Despite believing that Django templating language hits the sweet spot between, power
+and convenience to <em>people who would be using it</em>, I never understood this argument,</p>
+
+<p>If you are using sqlalchemy with Django you lose the admin, what do you lose if you use Jinja?</p>
+
+<p>In particular what do you lose by replacing <code class="highlighter-rouge">render_to_response</code> with this,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def render_jinja_to_response(template_name, payload):
+    #This should probably go in settings.py
+    from jinja2 import Environment
+    env = Environment(loader=PackageLoader('app', 'templates'))
+    
+    template = env.get_template(template_name)
+    response = template.render(**payload)
+    return HttpResponse(response)
+</code></pre></div></div>
+
+<h4 id="extending-authentication---in-particular-enable-loggin-in-with-email">Extending authentication - In particular enable loggin in with email</h4>
+
+<p>Django authenticates against a <a href="http://www.google.co.in/search?hl=en&amp;client=firefox-a&amp;rls=org.mozilla%3Aen-US%3Aofficial&amp;hs=GGQ&amp;q=authentication+backends+site%3Adjangosnippets.org&amp;btnG=Search&amp;meta=&amp;aq=f&amp;oq=">wide range of backends</a>,
+including Email, LDAP, Twitter and Facebook. While it is true that email backend doesn’t work
+with Admin login, Admin is meant for use by staff and superusers, so why cant we provide
+them usernames?</p>
+
+<p>There are a few other questions raised, some of which I agree with(“Sadly, it[the admin app]
+struggles a little bit with nullable fields and is tricky to customize.”), and some which I dont,
+(“I will never write CSS by hand again.” - You shouldn’t be, someone else on your team should be doing that. )
+But this line is interesting <code class="highlighter-rouge">Personally, I've developed a moderate fear of the word "framework"</code>.</p>
+
+<p>This is arguable, but the way all frameworks essentially help you is by providing
+Dependency Injection, (the Hollywood principle - Dont call me, I will call you).
+Django provides that in a lot of ways. (You write a middleware, and django calls
+it at appropriate places - Dont call me, I will call you), but still leaves something to be desired.
+My ideal framework would be one where models are POPO and views are functions which return strings
+. (Plain old python objects -like POJO). <a href="http://java.sun.com/developer/technicalArticles/J2EE/jpa/figure6.html">JPA</a> does this correctly,
+but then JPA has the typing information, so maybe in python the only way to provide the required typing
+information is <code class="highlighter-rouge">name=models.CharField(...)</code>. But the point being, we need better Dependency Inversion,
+not less of it. We have been dow that path earlier, and it is a much harder way to build complex systems.</p>
+
+<hr />
+<p>Resources</p>
+
+<ol>
+  <li><a href="http://gist.github.com/171016">This code on github</a></li>
+  <li><a href="http://stackoverflow.com/questions/1302653/convert-a-nested-dataset-to-a-flat-dataset-while-retaining-enough-data-to-conver">Discussion about converting the nested tuple to a flat one</a></li>
+</ol>
+
+<hr />
+<p>My apologies if this post was aggressive, argumentative or disrespectful to the
+original author. We generally try to stay away from controversial posts on this blog. But
+I believe that this post raised some valid technical questions, and the intent of this
+post was to answer them. For Django to develop the best way, we need more of these kind
+of “What is wrong with Django” posts, not less, so my thanks to the original author. :)</p>
+
+<hr />
+<p>Do you want to build <strong>Amazing Web Apps</strong>? <a href="http://uswaretech.com/contact/">We can help</a>.</p>
+
+
+  </div><a class="u-url" href="/rambling/2009/08/20/a-response-to-dropping-django.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

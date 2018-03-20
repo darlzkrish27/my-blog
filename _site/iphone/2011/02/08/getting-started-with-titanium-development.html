@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Getting started with Titanium development for Android and Iphone | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Getting started with Titanium development for Android and Iphone" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This is the third post in our mobile app development series. ( You may want to read Phonegap and Android with Java.) Like last time we will build an App which allows calculating the tax payable, per the rules here. We will use Titanium Mobile Installing Titanium Download and install the fairly small Titanium from their sites. Once you download and start it, it will download and install more components. You can then create a new project from their UI. Layout the Layout You can add UI widgets and lay them out using Javascript. You need to use Titanium’s API, to create the UI. Titanium execution starts in app.js. We will modify this file to add the layout code. You can add a label like this Titanium.UI.createLabel({ color:&#39;#999&#39;, text:label_text, font:{fontSize:20,fontFamily:&#39;Helvetica Neue&#39;}, textAlign:&#39;left&#39;, width: &#39;auto&#39;, height: &#39;auto&#39;, top: 5 }); Similarly you can create a Button and TextInput as Titanium.UI.createTextField( { .... } ); Titanium.UI.createButton({ ...[Options] }) Create a window as Titanium.UI.createWindow({}). and add these Items to it via window.add. Your widgets have been added to the UI, and should show up, in the simulator. Here is what mine looks like. You can get the code for the layout at here. Code the code We now need to add the code to handle button clicks, calculate the tax, and update the UI with the tax. Since our code for this is going to be Javascript, we can easily reuse the tax calculation parts from our Phonegap app. function getTax(taxableIncome){ var taxOnThisSlab; if (taxableIncome &lt; 160000) { return 0; } ///More code to calculate the tax //.... } function calculateTax(income, investment, infra_investment, housing_interest, medical_premium){ investment = Math.max(0, Math.min(investment, 100000)); ///More code to calculate the tax //.... } Now we add a EventListener to the Button we added and this is used to calculate the tax and update the Label for showing the text. calculateTaxBut.addEventListener(&quot;click&quot;, function(){ var income = income_f.value; var investment = investment_f.value; //More code to get the values and update the tax area. //..... var tax = calculateTax(income, investment, infra_investment, housing_interest, medical_premium); calculated_tax.text = &quot;&quot;+tax; }); And we are done Overall, the experience with Titanium was OK. The Titanium developer UI could have been better, the UI is Unintuitive. Building for Android is very slow. Lunch button in their developer UI seems to stop working at random intervals. However the promise of building native apps is very alluring, and I would be working more with Titanium. Resources Finished code on Github [Tutorial: Building the same app with Obj-c] - Todo Tutorial: Building the same app with Phonegap Tutorial: Building the same app with Java:Android Code: Phonegap app on Github Code: Java app on Github Code: Obj-C app on Github" />
+<meta property="og:description" content="This is the third post in our mobile app development series. ( You may want to read Phonegap and Android with Java.) Like last time we will build an App which allows calculating the tax payable, per the rules here. We will use Titanium Mobile Installing Titanium Download and install the fairly small Titanium from their sites. Once you download and start it, it will download and install more components. You can then create a new project from their UI. Layout the Layout You can add UI widgets and lay them out using Javascript. You need to use Titanium’s API, to create the UI. Titanium execution starts in app.js. We will modify this file to add the layout code. You can add a label like this Titanium.UI.createLabel({ color:&#39;#999&#39;, text:label_text, font:{fontSize:20,fontFamily:&#39;Helvetica Neue&#39;}, textAlign:&#39;left&#39;, width: &#39;auto&#39;, height: &#39;auto&#39;, top: 5 }); Similarly you can create a Button and TextInput as Titanium.UI.createTextField( { .... } ); Titanium.UI.createButton({ ...[Options] }) Create a window as Titanium.UI.createWindow({}). and add these Items to it via window.add. Your widgets have been added to the UI, and should show up, in the simulator. Here is what mine looks like. You can get the code for the layout at here. Code the code We now need to add the code to handle button clicks, calculate the tax, and update the UI with the tax. Since our code for this is going to be Javascript, we can easily reuse the tax calculation parts from our Phonegap app. function getTax(taxableIncome){ var taxOnThisSlab; if (taxableIncome &lt; 160000) { return 0; } ///More code to calculate the tax //.... } function calculateTax(income, investment, infra_investment, housing_interest, medical_premium){ investment = Math.max(0, Math.min(investment, 100000)); ///More code to calculate the tax //.... } Now we add a EventListener to the Button we added and this is used to calculate the tax and update the Label for showing the text. calculateTaxBut.addEventListener(&quot;click&quot;, function(){ var income = income_f.value; var investment = investment_f.value; //More code to get the values and update the tax area. //..... var tax = calculateTax(income, investment, infra_investment, housing_interest, medical_premium); calculated_tax.text = &quot;&quot;+tax; }); And we are done Overall, the experience with Titanium was OK. The Titanium developer UI could have been better, the UI is Unintuitive. Building for Android is very slow. Lunch button in their developer UI seems to stop working at random intervals. However the promise of building native apps is very alluring, and I would be working more with Titanium. Resources Finished code on Github [Tutorial: Building the same app with Obj-c] - Todo Tutorial: Building the same app with Phonegap Tutorial: Building the same app with Java:Android Code: Phonegap app on Github Code: Java app on Github Code: Obj-C app on Github" />
+<link rel="canonical" href="http://localhost:4000/iphone/2011/02/08/getting-started-with-titanium-development.html" />
+<meta property="og:url" content="http://localhost:4000/iphone/2011/02/08/getting-started-with-titanium-development.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2011-02-08T11:54:11+05:30" />
+<script type="application/ld+json">
+{"description":"This is the third post in our mobile app development series. ( You may want to read Phonegap and Android with Java.) Like last time we will build an App which allows calculating the tax payable, per the rules here. We will use Titanium Mobile Installing Titanium Download and install the fairly small Titanium from their sites. Once you download and start it, it will download and install more components. You can then create a new project from their UI. Layout the Layout You can add UI widgets and lay them out using Javascript. You need to use Titanium’s API, to create the UI. Titanium execution starts in app.js. We will modify this file to add the layout code. You can add a label like this Titanium.UI.createLabel({ color:&#39;#999&#39;, text:label_text, font:{fontSize:20,fontFamily:&#39;Helvetica Neue&#39;}, textAlign:&#39;left&#39;, width: &#39;auto&#39;, height: &#39;auto&#39;, top: 5 }); Similarly you can create a Button and TextInput as Titanium.UI.createTextField( { .... } ); Titanium.UI.createButton({ ...[Options] }) Create a window as Titanium.UI.createWindow({}). and add these Items to it via window.add. Your widgets have been added to the UI, and should show up, in the simulator. Here is what mine looks like. You can get the code for the layout at here. Code the code We now need to add the code to handle button clicks, calculate the tax, and update the UI with the tax. Since our code for this is going to be Javascript, we can easily reuse the tax calculation parts from our Phonegap app. function getTax(taxableIncome){ var taxOnThisSlab; if (taxableIncome &lt; 160000) { return 0; } ///More code to calculate the tax //.... } function calculateTax(income, investment, infra_investment, housing_interest, medical_premium){ investment = Math.max(0, Math.min(investment, 100000)); ///More code to calculate the tax //.... } Now we add a EventListener to the Button we added and this is used to calculate the tax and update the Label for showing the text. calculateTaxBut.addEventListener(&quot;click&quot;, function(){ var income = income_f.value; var investment = investment_f.value; //More code to get the values and update the tax area. //..... var tax = calculateTax(income, investment, infra_investment, housing_interest, medical_premium); calculated_tax.text = &quot;&quot;+tax; }); And we are done Overall, the experience with Titanium was OK. The Titanium developer UI could have been better, the UI is Unintuitive. Building for Android is very slow. Lunch button in their developer UI seems to stop working at random intervals. However the promise of building native apps is very alluring, and I would be working more with Titanium. Resources Finished code on Github [Tutorial: Building the same app with Obj-c] - Todo Tutorial: Building the same app with Phonegap Tutorial: Building the same app with Java:Android Code: Phonegap app on Github Code: Java app on Github Code: Obj-C app on Github","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/iphone/2011/02/08/getting-started-with-titanium-development.html","headline":"Getting started with Titanium development for Android and Iphone","dateModified":"2011-02-08T11:54:11+05:30","datePublished":"2011-02-08T11:54:11+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/iphone/2011/02/08/getting-started-with-titanium-development.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Getting started with Titanium development for Android and Iphone</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2011-02-08T11:54:11+05:30" itemprop="datePublished">Feb 8, 2011
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This is the third post in our mobile app development series. ( You may want to read <a href="http://agiliq.com/blog/2011/02/getting-started-with-phonegap-using-xcode-for-mobi/">Phonegap</a> and <a href="http://agiliq.com/blog/2011/02/starting-android-app-developement-from-zero-to-app/">Android with Java</a>.)</p>
+
+<p>Like last time we will build an App which allows calculating the tax payable, <a href="http://en.wikipedia.org/wiki/Income_tax_in_India">per the rules here</a>. We will
+use <a href="http://www.appcelerator.com/products/titanium-mobile-application-development/">Titanium Mobile</a></p>
+
+<h2 id="installing-titanium">Installing Titanium</h2>
+<p><a href="http://www.appcelerator.com/products/download/">Download and install</a> the fairly small Titanium from their sites. Once you download and start it, 
+it will download and install more components. You can then create a new project from their UI.</p>
+
+<h2 id="layout-the-layout">Layout the Layout</h2>
+<p>You can add UI widgets and lay them out using Javascript. You need to use Titanium’s API, to create
+the UI.</p>
+
+<p>Titanium execution starts in app.js. We will modify this file to add the layout code.</p>
+
+<p>You can add a label like this</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Titanium.UI.createLabel({
+	color:'#999',
+	text:label_text,
+	font:{fontSize:20,fontFamily:'Helvetica Neue'},
+	textAlign:'left',
+	width: 'auto',
+	height: 'auto',
+	top: 5
+});
+</code></pre></div></div>
+
+<p>Similarly you can create a Button and TextInput as</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Titanium.UI.createTextField(
+{
+....
+}
+);
+
+Titanium.UI.createButton({
+	...[Options]
+})
+</code></pre></div></div>
+
+<p>Create a window as <code class="highlighter-rouge">Titanium.UI.createWindow({})</code>. and add these Items to it via <code class="highlighter-rouge">window.add</code>. Your widgets have been added to the UI, and should show up, in the simulator. <a href="http://skitch.com/shabda/rpue1/ios-simulator">Here is what mine looks like</a>. <a href="https://github.com/agiliq/TaxCalculatorTitanium/blob/master/Resources/app.js">You can get the code for the layout at here</a>.</p>
+
+<h2 id="code-the-code">Code the code</h2>
+<p>We now need to add the code to handle button clicks, calculate the tax, and update the UI with the tax. Since our code for this is going to be 
+Javascript, we can easily reuse the tax calculation parts from our Phonegap app.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getTax(taxableIncome){
+    var taxOnThisSlab;
+    if (taxableIncome &lt; 160000) {
+        return 0;
+    }
+ ///More code to calculate the tax
+//....
+
+}
+
+
+function calculateTax(income, investment, infra_investment, housing_interest, medical_premium){
+	investment = Math.max(0, Math.min(investment, 100000));
+	 ///More code to calculate the tax
+	//....
+	
+}
+</code></pre></div></div>
+
+<p>Now we add a <code class="highlighter-rouge">EventListener</code> to the Button we added and this is used to calculate the tax and update the Label for showing the text.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>calculateTaxBut.addEventListener("click", function(){
+	var income = income_f.value;
+	var investment = investment_f.value;
+	//More code to get the values and update the tax area.
+	//.....
+	var tax = calculateTax(income, investment, infra_investment, housing_interest, medical_premium);
+	calculated_tax.text = ""+tax;
+
+});
+</code></pre></div></div>
+
+<h2 id="and-we-are-done">And we are done</h2>
+<p>Overall, the experience with Titanium was <strong>OK</strong>. The Titanium developer UI could have been better, the UI 
+is Unintuitive. Building for Android is very slow. Lunch button in their developer UI seems to stop working at random intervals.
+However the promise of building native apps is very alluring, and I would be working more with Titanium.</p>
+
+<h2 id="resources">Resources</h2>
+<ol>
+  <li><a href="https://github.com/agiliq/TaxCalculatorTitanium">Finished code on Github</a></li>
+  <li>[Tutorial: Building the same app with Obj-c] - Todo</li>
+  <li><a href="http://agiliq.com/blog/2011/02/getting-started-with-phonegap-using-xcode-for-mobi/">Tutorial: Building the same app with Phonegap</a></li>
+  <li><a href="http://agiliq.com/blog/2011/02/starting-android-app-developement-from-zero-to-app/">Tutorial: Building the same app with Java:Android</a></li>
+  <li><a href="https://github.com/agiliq/TaxCalculatorPhoneGap">Code: Phonegap app on Github</a></li>
+  <li><a href="https://github.com/agiliq/TaxCalculatorAndroid">Code: Java app on Github</a></li>
+  <li><a href="https://github.com/agiliq/TaxCalculatorIndia">Code: Obj-C app on Github</a></li>
+</ol>
+
+
+  </div><a class="u-url" href="/iphone/2011/02/08/getting-started-with-titanium-development.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

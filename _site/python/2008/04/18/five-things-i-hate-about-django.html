@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Five Things I Hate About Django. | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Five Things I Hate About Django." />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="The five things I hate about * meme seems have died down, and memes, should not be allowed to die." />
+<meta property="og:description" content="The five things I hate about * meme seems have died down, and memes, should not be allowed to die." />
+<link rel="canonical" href="http://localhost:4000/python/2008/04/18/five-things-i-hate-about-django.html" />
+<meta property="og:url" content="http://localhost:4000/python/2008/04/18/five-things-i-hate-about-django.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2008-04-18T11:48:38+05:30" />
+<script type="application/ld+json">
+{"description":"The five things I hate about * meme seems have died down, and memes, should not be allowed to die.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/python/2008/04/18/five-things-i-hate-about-django.html","headline":"Five Things I Hate About Django.","dateModified":"2008-04-18T11:48:38+05:30","datePublished":"2008-04-18T11:48:38+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/python/2008/04/18/five-things-i-hate-about-django.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Five Things I Hate About Django.</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2008-04-18T11:48:38+05:30" itemprop="datePublished">Apr 18, 2008
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>The <a href="http://www.jacobian.org/writing/2007/mar/04/hate-python/">five</a> <a href="http://ivory.idyll.org/blog/mar-07/five-things-I-hate-about-python">things</a> <a href="http://use.perl.org/~brian_d_foy/journal/32556?from=rss">I hate</a> <a href="http://adam.gomaa.us/blog/five-things-i-hate-about-django/">about *</a> meme seems have died down, and memes, should not be allowed to die.</p>
+
+<p>Of course I love Django, and have bet very heavily on it. But we do not know a topic, until we know it warts, so here you go. The listing is in no particular order, so sorry no numbering.</p>
+
+<h3 id="ajax-with-django-is-hard">Ajax with Django is hard:</h3>
+
+<p>Most of the Django Community has decided that bundling Javascript helpers with a python framework is bad idea. Though I can understand the reasoning, (argued <a href="http://www.b-list.org/weblog/2006/jul/02/django-and-ajax/">here</a> and <a href="http://feh.holsman.net/articles/2006/07/04/what-should-your-framework-do-for-you">rebuttal</a>), that Javascript is so basic that you can not be expected to not know it, I can not agree with it. SQL is as basic as Javascript, and yet we have ORM for abstracting away the common and the tedious.</p>
+
+<p>Of Course, with <a href="http://djangoapi.matee.net/django.utils.simplejson-module.html">simplejson</a>, and a <a href="http://jquery.com">good Javascript library</a>, you can build Ajax apps fast and with only a minimal amout of fuss. And yet switching between Python and Javascript, twice every hour is a huge time drain. Eg. I put commas after the last element in Python arrays, with JS this would work in FF, but fail with weird errors in IE.</p>
+
+<h3 id="lack-of-identity-map">Lack of <a href="http://martinfowler.com/eaaCatalog/identityMap.html">identity map</a>:</h3>
+
+<p>If you get the same row from the DB twice using Model.objects.get, you will get two different objects. Apart from the performance problems of two DB queries, when only one should have done, when you update one of them, the other does not get updated, and you will have <em>interesting</em> things happening in your application. And if you update both of them, you might write two inconsistent changes to the DB.</p>
+
+<p>Look at this code for example.</p>
+
+<!-- <pre lang="python">
+See this code
+In [2]: from django.contrib.auth.models import User
+In [3]: usr1 = User.objects.create_user('ram', 'demo@demo.com', 'demo')
+In [4]: usr2 = User.objects.get(username='ram')
+In [5]: usr3 = User.objects.get(username='ram')
+In [6]: user2 == user3
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+...
+In [7]: usr2 == usr3
+Out[7]: True
+In [8]: usr3.username = 'not_ram'
+In [9]: usr3.save()
+In [10]: usr2.username
+Out[10]: u'ram'
+In [11]: us3.username
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+...
+In [12]: usr3.username
+Out[12]: 'not_ram'
+In [13]: usr2 == usr3
+Out[13]: True
+</pre> -->
+
+<h3 id="whether-sessions-are-browser-lengthpersistent-are-set-sitewide">Whether Sessions are browser length/persistent are set sitewide:</h3>
+
+<p>You can set whether you want sessions to be browser length/persistent using <code class="highlighter-rouge">SESSION_EXPIRE_AT_BROWSER_CLOSE</code> in <code class="highlighter-rouge">settings.py</code>. But you can not set them per user, <a href="http://code.djangoproject.com/wiki/CookBookDualSessionMiddleware">without mucking with django internal</a>. This might seem a minor annoyance, yet this is something which you need to do for every app, as the remember me, function will not work without this.</p>
+
+<h3 id="newforms-is-very-limited">Newforms is very limited:</h3>
+
+<p>Let us say you want the Form to contain a varible number of fields. How can you define the <code class="highlighter-rouge">NewForms</code> class to do your biddings.</p>
+
+<pre lang="python">
+from django import newforms as forms
+class MyForm(forms.Form):
+    foo = froms.CharField()
+	bar = froms.CharField()
+</pre>
+
+<p>This can only create a form with a fixed number of fields. While there are ways to generate forms with variable number of fields, (generate the Form class programatically), they are not easy or well documented. (Remind me to write such tutorial sometime.)</p>
+
+<p>Bonus question: How can you generate a form with same form elements multiple (and variable number) times, ala what happens with <code class="highlighter-rouge">edit_inline</code>?</p>
+
+<h3 id="settings-mixes-application-configuration-which-should-be-public-and-passwords-which-should-be-private">Settings mixes application configuration which should be public and passwords, which should be private:</h3>
+
+<p>If I am distributing an app <code class="highlighter-rouge">MIDDLEWARE_CLASSES</code> is something which I would assume users would not (generally) modify. Similarly, in most of the cases, <code class="highlighter-rouge">INSTALLED_APPS</code>, would also be something which users would not change, (unless you are distributing standalone_apps). This means, I want to source control <code class="highlighter-rouge">settings.py</code>. But <code class="highlighter-rouge">settings.py</code> also contain my DB setiings, and <code class="highlighter-rouge">SECRET_KEY</code>, which means, I cannot source control <code class="highlighter-rouge">settings.py</code>.</p>
+
+<p>And while we are at it, can we refactor <code class="highlighter-rouge">settings.py</code>, so it works without</p>
+
+<pre lang="python">
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+</pre>
+
+<h3 id="bonus">Bonus:</h3>
+
+<p>Two things which used to bug me but no more.</p>
+<ol>
+  <li>You cannot extend Models - Well now you can if you use queryset-refactor, or <a href="http://groups.google.com/group/django-users/browse_thread/thread/6a275999abab2e66">soon</a> can if you are on trunc.</li>
+  <li>Url configuration using regexes. - <a href="http://regex.info/blog/2006-09-15/247">Now they have two problems.</a> joke notwithstanding, mapping URLs to views is one problem where regexes fit the problem beautifully. With less that 50 lines of code, you can manage a large number of views, and Url patterns.</li>
+</ol>
+
+<p><a href="http://42topics.com/blog/feed/">Now stay tuned for Five things I love about Django</a></p>
+
+
+  </div><a class="u-url" href="/python/2008/04/18/five-things-i-hate-about-django.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

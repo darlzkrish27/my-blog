@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Understanding Django Middlewares | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Understanding Django Middlewares" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="I assume you have read official Django docs on middleware. I will elaborate on things mentioned in the documentation but I assume you are familiar with basics of middleware. In this post we will discuss the following. What is a middleware When to use middleware Things to remember when writing middleware Writing some middlewares to understand how order of middleware matters What is a middleware Middlewares are hooks to modify Django request or response object. Putting the definition of middleware from Django docs. Middleware is a framework of hooks into Django’s request/response processing. It’s a light, low-level “plugin” system for globally altering Django’s input or output. When to use middleware You can use middleware if you want to modify the request i.e HttpRequest object which is sent to the view. Or you might want to modify the HttpResponse object returned from the view. Both these can be achieved by using a middleware. You might want to perform an operation before the view executes. In such case you would use a middleware. Django provides some default middleware. eg: AuthenticationMiddleware Very often you would have used request.user inside the view. Django wants user attribute to be set on request before any view executes. Django takes a middleware approach to accomplish this. So Django provides an AuthenticationMiddleware which can modify the request object. And Django modifies the request object like: https://github.com/django/django/blob/master/django/contrib/auth/middleware.py#L22 Similarly you might have an application which works with users of different timezones. You want to use the user’s timezone while showing any page to the user. You want access to user’s timezone in all the views. It makes sense to add it in session in such case. So you can add a middleware like this: class TimezoneMiddleware(object): def process_request(self, request): # Assuming user has a OneToOneField to a model called Profile # And Profile stores the timezone of the User. request.session[&#39;timezone&#39;] = request.user.profile.timezone TimezoneMiddleware is dependent on request.user. And request.user is populated in AuthenticationMiddleware. So TimezoneMiddleware written by us must come after Django provided AuthenticationMiddleware in the tuple settings.MIDDLEWARE_CLASSES. We will get more idea about order of middlewares in coming examples. Things to remember when using middleware Order of middlewares is important. A middleware only need to extend from class object. A middleware is free to implement some of the methods and not implement other methods. A middleware may implement process_request but may not implement process_response and process_view. Infact it is very common and lot of Django provided middlewares do it. A middleware may implement process_response but not implement process_request. AuthenticationMiddleware only implements process_request and doesn’t implement process_response. You can check it here GZipMiddleware only implements process_response and doesn’t implement process_request or process_view. You can see it here Writing some middlewares Make sure you have a Django project with a url and a view, and that you are able to access that view. Since we will try several things with request.user, make sure authentication is properly set for you and that request.user prints the right thing in this view. Create a file middleware.py in any of your app. I have an app called books and so I am writing this in books/middleware.py class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; Add this middleware in MIDDLEWARE_CLASSES MIDDLEWARE_CLASSES = ( &#39;books.middleware.BookMiddleware&#39;, &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Make request to any url. This should get printed on runserver console Middleware executed Modify BookMiddleware.process_request so it looks like class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user Make request to a url again. This will raise an error. &#39;WSGIRequest&#39; object has no attribute &#39;user&#39; This happened because attribute user hasn’t been set on request yet. Now change the order of middlewares so BookMiddleware comes after AuthenticationMiddleware MIDDLEWARE_CLASSES = ( &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;books.middleware.BookMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Make request to any url. This should get printed on runserver console Middleware executed &lt;username&gt; This tells that process_request is executed on the middlewares in the order in which they are listed in settings.MIDDLEWARE_CLASSES You can verify it further. Add another middleware in your middleware.py class AnotherMiddleware(object): def process_request(self, request): print &quot;Another middleware executed&quot; Add this middleware in MIDDLEWARE_CLASSES too. MIDDLEWARE_CLASSES = ( &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;books.middleware.BookMiddleware&#39;, &#39;books.middleware.AnotherMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Now output would be: Middleware executed &lt;username&gt; Another middleware executed How returning HttpResponse from process_request changes things Modify BookMiddleware so it looks like class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user return HttpResponse(&quot;some response&quot;) Try any url now and your output would be: Middleware executed &lt;username&gt; You will notice two things: Your view will no more be executed and no matter which url you try, you will see “some response”. AnotherMiddleware.process_request will not be executed anymore. So if a Middleware’s process_request() returns a HttpResponse object then process_request of any subsequent middlewares is bypassed. Also view execution is bypassed. You would rarely do this or require this in your projects. Comment “return HttpResponse(“some response”)” so process_request of both middlewares keep executing. Working with process_response Add method process_response to both the middlewares class AnotherMiddleware(object): def process_request(self, request): print &quot;Another middleware executed&quot; def process_response(self, request, response): print &quot;AnotherMiddleware process_response executed&quot; return response class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user return HttpResponse(&quot;some response&quot;) #self._start = time.time() def process_response(self, request, response): print &quot;BookMiddleware process_response executed&quot; return response Try some url. Output would be Middleware executed &lt;username&gt; Another middleware executed AnotherMiddleware process_response executed BookMiddleware process_response executed AnotherMiddleware.process_response() is executed before BookMiddleware.process_response() while AnotherMiddleware.process_request() executes after BookMiddleware.process_request(). So process_response() follows the reverse of what happens with process_request. process_response() is executed for last middleware then second last middleware and so on till the first middleware. process_view Django applies middleware’s process_view() in the order it’s defined in MIDDLEWARE_CLASSES, top-down. This is similar to the order followed for process_request(). Also if any process_view() returns an HttpResponse object, then subsequent process_view() calls are bypassed and not executed. Check our next post to see a practical use of middleware." />
+<meta property="og:description" content="I assume you have read official Django docs on middleware. I will elaborate on things mentioned in the documentation but I assume you are familiar with basics of middleware. In this post we will discuss the following. What is a middleware When to use middleware Things to remember when writing middleware Writing some middlewares to understand how order of middleware matters What is a middleware Middlewares are hooks to modify Django request or response object. Putting the definition of middleware from Django docs. Middleware is a framework of hooks into Django’s request/response processing. It’s a light, low-level “plugin” system for globally altering Django’s input or output. When to use middleware You can use middleware if you want to modify the request i.e HttpRequest object which is sent to the view. Or you might want to modify the HttpResponse object returned from the view. Both these can be achieved by using a middleware. You might want to perform an operation before the view executes. In such case you would use a middleware. Django provides some default middleware. eg: AuthenticationMiddleware Very often you would have used request.user inside the view. Django wants user attribute to be set on request before any view executes. Django takes a middleware approach to accomplish this. So Django provides an AuthenticationMiddleware which can modify the request object. And Django modifies the request object like: https://github.com/django/django/blob/master/django/contrib/auth/middleware.py#L22 Similarly you might have an application which works with users of different timezones. You want to use the user’s timezone while showing any page to the user. You want access to user’s timezone in all the views. It makes sense to add it in session in such case. So you can add a middleware like this: class TimezoneMiddleware(object): def process_request(self, request): # Assuming user has a OneToOneField to a model called Profile # And Profile stores the timezone of the User. request.session[&#39;timezone&#39;] = request.user.profile.timezone TimezoneMiddleware is dependent on request.user. And request.user is populated in AuthenticationMiddleware. So TimezoneMiddleware written by us must come after Django provided AuthenticationMiddleware in the tuple settings.MIDDLEWARE_CLASSES. We will get more idea about order of middlewares in coming examples. Things to remember when using middleware Order of middlewares is important. A middleware only need to extend from class object. A middleware is free to implement some of the methods and not implement other methods. A middleware may implement process_request but may not implement process_response and process_view. Infact it is very common and lot of Django provided middlewares do it. A middleware may implement process_response but not implement process_request. AuthenticationMiddleware only implements process_request and doesn’t implement process_response. You can check it here GZipMiddleware only implements process_response and doesn’t implement process_request or process_view. You can see it here Writing some middlewares Make sure you have a Django project with a url and a view, and that you are able to access that view. Since we will try several things with request.user, make sure authentication is properly set for you and that request.user prints the right thing in this view. Create a file middleware.py in any of your app. I have an app called books and so I am writing this in books/middleware.py class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; Add this middleware in MIDDLEWARE_CLASSES MIDDLEWARE_CLASSES = ( &#39;books.middleware.BookMiddleware&#39;, &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Make request to any url. This should get printed on runserver console Middleware executed Modify BookMiddleware.process_request so it looks like class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user Make request to a url again. This will raise an error. &#39;WSGIRequest&#39; object has no attribute &#39;user&#39; This happened because attribute user hasn’t been set on request yet. Now change the order of middlewares so BookMiddleware comes after AuthenticationMiddleware MIDDLEWARE_CLASSES = ( &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;books.middleware.BookMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Make request to any url. This should get printed on runserver console Middleware executed &lt;username&gt; This tells that process_request is executed on the middlewares in the order in which they are listed in settings.MIDDLEWARE_CLASSES You can verify it further. Add another middleware in your middleware.py class AnotherMiddleware(object): def process_request(self, request): print &quot;Another middleware executed&quot; Add this middleware in MIDDLEWARE_CLASSES too. MIDDLEWARE_CLASSES = ( &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;books.middleware.BookMiddleware&#39;, &#39;books.middleware.AnotherMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Now output would be: Middleware executed &lt;username&gt; Another middleware executed How returning HttpResponse from process_request changes things Modify BookMiddleware so it looks like class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user return HttpResponse(&quot;some response&quot;) Try any url now and your output would be: Middleware executed &lt;username&gt; You will notice two things: Your view will no more be executed and no matter which url you try, you will see “some response”. AnotherMiddleware.process_request will not be executed anymore. So if a Middleware’s process_request() returns a HttpResponse object then process_request of any subsequent middlewares is bypassed. Also view execution is bypassed. You would rarely do this or require this in your projects. Comment “return HttpResponse(“some response”)” so process_request of both middlewares keep executing. Working with process_response Add method process_response to both the middlewares class AnotherMiddleware(object): def process_request(self, request): print &quot;Another middleware executed&quot; def process_response(self, request, response): print &quot;AnotherMiddleware process_response executed&quot; return response class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user return HttpResponse(&quot;some response&quot;) #self._start = time.time() def process_response(self, request, response): print &quot;BookMiddleware process_response executed&quot; return response Try some url. Output would be Middleware executed &lt;username&gt; Another middleware executed AnotherMiddleware process_response executed BookMiddleware process_response executed AnotherMiddleware.process_response() is executed before BookMiddleware.process_response() while AnotherMiddleware.process_request() executes after BookMiddleware.process_request(). So process_response() follows the reverse of what happens with process_request. process_response() is executed for last middleware then second last middleware and so on till the first middleware. process_view Django applies middleware’s process_view() in the order it’s defined in MIDDLEWARE_CLASSES, top-down. This is similar to the order followed for process_request(). Also if any process_view() returns an HttpResponse object, then subsequent process_view() calls are bypassed and not executed. Check our next post to see a practical use of middleware." />
+<link rel="canonical" href="http://localhost:4000/middlewares/2015/07/17/understanding-django-middlewares.html" />
+<meta property="og:url" content="http://localhost:4000/middlewares/2015/07/17/understanding-django-middlewares.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2015-07-17T14:26:11+05:30" />
+<script type="application/ld+json">
+{"description":"I assume you have read official Django docs on middleware. I will elaborate on things mentioned in the documentation but I assume you are familiar with basics of middleware. In this post we will discuss the following. What is a middleware When to use middleware Things to remember when writing middleware Writing some middlewares to understand how order of middleware matters What is a middleware Middlewares are hooks to modify Django request or response object. Putting the definition of middleware from Django docs. Middleware is a framework of hooks into Django’s request/response processing. It’s a light, low-level “plugin” system for globally altering Django’s input or output. When to use middleware You can use middleware if you want to modify the request i.e HttpRequest object which is sent to the view. Or you might want to modify the HttpResponse object returned from the view. Both these can be achieved by using a middleware. You might want to perform an operation before the view executes. In such case you would use a middleware. Django provides some default middleware. eg: AuthenticationMiddleware Very often you would have used request.user inside the view. Django wants user attribute to be set on request before any view executes. Django takes a middleware approach to accomplish this. So Django provides an AuthenticationMiddleware which can modify the request object. And Django modifies the request object like: https://github.com/django/django/blob/master/django/contrib/auth/middleware.py#L22 Similarly you might have an application which works with users of different timezones. You want to use the user’s timezone while showing any page to the user. You want access to user’s timezone in all the views. It makes sense to add it in session in such case. So you can add a middleware like this: class TimezoneMiddleware(object): def process_request(self, request): # Assuming user has a OneToOneField to a model called Profile # And Profile stores the timezone of the User. request.session[&#39;timezone&#39;] = request.user.profile.timezone TimezoneMiddleware is dependent on request.user. And request.user is populated in AuthenticationMiddleware. So TimezoneMiddleware written by us must come after Django provided AuthenticationMiddleware in the tuple settings.MIDDLEWARE_CLASSES. We will get more idea about order of middlewares in coming examples. Things to remember when using middleware Order of middlewares is important. A middleware only need to extend from class object. A middleware is free to implement some of the methods and not implement other methods. A middleware may implement process_request but may not implement process_response and process_view. Infact it is very common and lot of Django provided middlewares do it. A middleware may implement process_response but not implement process_request. AuthenticationMiddleware only implements process_request and doesn’t implement process_response. You can check it here GZipMiddleware only implements process_response and doesn’t implement process_request or process_view. You can see it here Writing some middlewares Make sure you have a Django project with a url and a view, and that you are able to access that view. Since we will try several things with request.user, make sure authentication is properly set for you and that request.user prints the right thing in this view. Create a file middleware.py in any of your app. I have an app called books and so I am writing this in books/middleware.py class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; Add this middleware in MIDDLEWARE_CLASSES MIDDLEWARE_CLASSES = ( &#39;books.middleware.BookMiddleware&#39;, &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Make request to any url. This should get printed on runserver console Middleware executed Modify BookMiddleware.process_request so it looks like class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user Make request to a url again. This will raise an error. &#39;WSGIRequest&#39; object has no attribute &#39;user&#39; This happened because attribute user hasn’t been set on request yet. Now change the order of middlewares so BookMiddleware comes after AuthenticationMiddleware MIDDLEWARE_CLASSES = ( &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;books.middleware.BookMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Make request to any url. This should get printed on runserver console Middleware executed &lt;username&gt; This tells that process_request is executed on the middlewares in the order in which they are listed in settings.MIDDLEWARE_CLASSES You can verify it further. Add another middleware in your middleware.py class AnotherMiddleware(object): def process_request(self, request): print &quot;Another middleware executed&quot; Add this middleware in MIDDLEWARE_CLASSES too. MIDDLEWARE_CLASSES = ( &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;, &#39;django.middleware.common.CommonMiddleware&#39;, &#39;django.middleware.csrf.CsrfViewMiddleware&#39;, &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;, &#39;books.middleware.BookMiddleware&#39;, &#39;books.middleware.AnotherMiddleware&#39;, &#39;django.contrib.messages.middleware.MessageMiddleware&#39;, &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;, ) Now output would be: Middleware executed &lt;username&gt; Another middleware executed How returning HttpResponse from process_request changes things Modify BookMiddleware so it looks like class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user return HttpResponse(&quot;some response&quot;) Try any url now and your output would be: Middleware executed &lt;username&gt; You will notice two things: Your view will no more be executed and no matter which url you try, you will see “some response”. AnotherMiddleware.process_request will not be executed anymore. So if a Middleware’s process_request() returns a HttpResponse object then process_request of any subsequent middlewares is bypassed. Also view execution is bypassed. You would rarely do this or require this in your projects. Comment “return HttpResponse(“some response”)” so process_request of both middlewares keep executing. Working with process_response Add method process_response to both the middlewares class AnotherMiddleware(object): def process_request(self, request): print &quot;Another middleware executed&quot; def process_response(self, request, response): print &quot;AnotherMiddleware process_response executed&quot; return response class BookMiddleware(object): def process_request(self, request): print &quot;Middleware executed&quot; print request.user return HttpResponse(&quot;some response&quot;) #self._start = time.time() def process_response(self, request, response): print &quot;BookMiddleware process_response executed&quot; return response Try some url. Output would be Middleware executed &lt;username&gt; Another middleware executed AnotherMiddleware process_response executed BookMiddleware process_response executed AnotherMiddleware.process_response() is executed before BookMiddleware.process_response() while AnotherMiddleware.process_request() executes after BookMiddleware.process_request(). So process_response() follows the reverse of what happens with process_request. process_response() is executed for last middleware then second last middleware and so on till the first middleware. process_view Django applies middleware’s process_view() in the order it’s defined in MIDDLEWARE_CLASSES, top-down. This is similar to the order followed for process_request(). Also if any process_view() returns an HttpResponse object, then subsequent process_view() calls are bypassed and not executed. Check our next post to see a practical use of middleware.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/middlewares/2015/07/17/understanding-django-middlewares.html","headline":"Understanding Django Middlewares","dateModified":"2015-07-17T14:26:11+05:30","datePublished":"2015-07-17T14:26:11+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/middlewares/2015/07/17/understanding-django-middlewares.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Understanding Django Middlewares</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2015-07-17T14:26:11+05:30" itemprop="datePublished">Jul 17, 2015
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>I assume you have read <a href="https://docs.djangoproject.com/en/1.8/topics/http/middleware/" target="_blank">official Django docs on middleware</a>. I will elaborate on things mentioned in the documentation but I assume you are familiar with basics of middleware.</p>
+
+<p>In this post we will discuss the following.</p>
+
+<ul>
+  <li>What is a middleware</li>
+  <li>When to use middleware</li>
+  <li>Things to remember when writing middleware</li>
+  <li>Writing some middlewares to understand how order of middleware matters</li>
+</ul>
+
+<h3 id="what-is-a-middleware">What is a middleware</h3>
+
+<p>Middlewares are hooks to modify Django <strong>request</strong> or <strong>response</strong> object. Putting the definition of middleware from Django <a href="https://docs.djangoproject.com/en/1.8/topics/http/middleware/">docs</a>.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Middleware is a framework of hooks into Django’s request/response processing. It’s a light, low-level “plugin” system for globally altering Django’s input or output.
+</code></pre></div></div>
+
+<h3 id="when-to-use-middleware">When to use middleware</h3>
+
+<p>You can use middleware if you want to modify the <strong>request</strong> i.e <strong>HttpRequest</strong> object which is sent to the view. Or you might want to modify the <strong>HttpResponse</strong> object returned from the view. Both these can be achieved by using a middleware.</p>
+
+<p>You might want to perform an operation before the view executes. In such case you would use a middleware.</p>
+
+<p>Django provides some default middleware. eg: AuthenticationMiddleware</p>
+
+<p>Very often you would have used <strong>request.user</strong> inside the view. Django wants <strong>user</strong> attribute to be set on <code class="highlighter-rouge">request</code> before any view executes. Django takes a middleware approach to accomplish this. So Django provides an AuthenticationMiddleware which can modify the request object.</p>
+
+<p>And Django modifies the request object like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>https://github.com/django/django/blob/master/django/contrib/auth/middleware.py#L22
+</code></pre></div></div>
+
+<p>Similarly you might have an application which works with users of different timezones. You want to use the user’s timezone while showing any page to the user. You want access to user’s timezone in all the views. It makes sense to add it in session in such case. So you can add a middleware like this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class TimezoneMiddleware(object):
+	def process_request(self, request):
+		# Assuming user has a OneToOneField to a model called Profile
+		# And Profile stores the timezone of the User.
+		request.session['timezone'] = request.user.profile.timezone
+</code></pre></div></div>
+
+<p>TimezoneMiddleware is dependent on <code class="highlighter-rouge">request.user</code>. And <code class="highlighter-rouge">request.user</code> is populated in <strong>AuthenticationMiddleware</strong>. So TimezoneMiddleware written by us must come after Django provided AuthenticationMiddleware in the tuple settings.MIDDLEWARE_CLASSES.</p>
+
+<p>We will get more idea about order of middlewares in coming examples.</p>
+
+<h3 id="things-to-remember-when-using-middleware">Things to remember when using middleware</h3>
+
+<ul>
+  <li>Order of middlewares is important.</li>
+  <li>A middleware only need to extend from class <strong>object</strong>.</li>
+  <li>A middleware is free to implement some of the methods and not implement other methods.</li>
+  <li>A middleware may implement <strong>process_request</strong> but may not implement <strong>process_response</strong> and <strong>process_view</strong>. Infact it is very common and lot of Django provided middlewares do it.</li>
+  <li>A middleware may implement <strong>process_response</strong> but not implement <strong>process_request</strong>.</li>
+</ul>
+
+<p>AuthenticationMiddleware only implements process_request and doesn’t implement process_response. You can check it <a href="https://github.com/django/django/blob/master/django/contrib/auth/middleware.py#L14" target="_blank">here</a></p>
+
+<p>GZipMiddleware only implements process_response and doesn’t implement process_request or process_view. You can see it <a href="https://github.com/django/django/blob/master/django/middleware/gzip.py#L9" target="_blank">here</a></p>
+
+<h3 id="writing-some-middlewares">Writing some middlewares</h3>
+
+<p>Make sure you have a Django project with a url and a view, and that you are able to access that view. Since we will try several things with <code class="highlighter-rouge">request.user</code>, make sure authentication is properly set for you and that <code class="highlighter-rouge">request.user</code> prints the right thing in this view.</p>
+
+<p>Create a file middleware.py in any of your app.</p>
+
+<p>I have an app called <code class="highlighter-rouge">books</code> and so I am writing this in books/middleware.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class BookMiddleware(object):
+	def process_request(self, request):
+		print "Middleware executed"
+</code></pre></div></div>
+
+<p>Add this middleware in MIDDLEWARE_CLASSES</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MIDDLEWARE_CLASSES = (
+	'books.middleware.BookMiddleware',
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.middleware.common.CommonMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'django.contrib.messages.middleware.MessageMiddleware',
+	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
+</code></pre></div></div>
+
+<p>Make request to any url. This should get printed on <code class="highlighter-rouge">runserver</code> console</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Middleware executed
+</code></pre></div></div>
+
+<p>Modify BookMiddleware.process_request so it looks like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class BookMiddleware(object):
+	def process_request(self, request):
+		print "Middleware executed"
+		print request.user
+</code></pre></div></div>
+
+<p>Make request to a url again. This will raise an error.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>'WSGIRequest' object has no attribute 'user'
+</code></pre></div></div>
+
+<p>This happened because attribute <code class="highlighter-rouge">user</code> hasn’t been set on <code class="highlighter-rouge">request</code> yet.</p>
+
+<p>Now change the order of middlewares so BookMiddleware comes after AuthenticationMiddleware</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MIDDLEWARE_CLASSES = (
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.middleware.common.CommonMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'books.middleware.BookMiddleware',
+	'django.contrib.messages.middleware.MessageMiddleware',
+	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
+</code></pre></div></div>
+
+<p>Make request to any url. This should get printed on <code class="highlighter-rouge">runserver</code> console</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Middleware executed
+&lt;username&gt;
+</code></pre></div></div>
+
+<p>This tells that <code class="highlighter-rouge">process_request</code> is executed on the middlewares in the order in which they are listed in settings.MIDDLEWARE_CLASSES</p>
+
+<p>You can verify it further. Add another middleware in your middleware.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class AnotherMiddleware(object):
+	def process_request(self, request):
+		print "Another middleware executed"
+</code></pre></div></div>
+
+<p>Add this middleware in MIDDLEWARE_CLASSES too.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MIDDLEWARE_CLASSES = (
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.middleware.common.CommonMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'books.middleware.BookMiddleware',
+	'books.middleware.AnotherMiddleware',
+	'django.contrib.messages.middleware.MessageMiddleware',
+	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
+</code></pre></div></div>
+
+<p>Now output would be:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Middleware executed
+&lt;username&gt;
+Another middleware executed
+</code></pre></div></div>
+
+<h4 id="how-returning-httpresponse-from-process_request-changes-things">How returning HttpResponse from process_request changes things</h4>
+
+<p>Modify BookMiddleware so it looks like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class BookMiddleware(object):
+	def process_request(self, request):
+		print "Middleware executed"
+		print request.user
+		return HttpResponse("some response")
+</code></pre></div></div>
+
+<p>Try any url now and your output would be:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Middleware executed
+&lt;username&gt;
+</code></pre></div></div>
+
+<p>You will notice two things:</p>
+
+<ul>
+  <li>Your view will no more be executed and no matter which url you try, you will see “some response”.</li>
+  <li>AnotherMiddleware.process_request will not be executed anymore.</li>
+</ul>
+
+<p>So if a Middleware’s process_request() returns a HttpResponse object then process_request of any subsequent middlewares is bypassed. Also view execution is bypassed. You would rarely do this or require this in your projects.</p>
+
+<p>Comment “return HttpResponse(“some response”)” so process_request of both middlewares keep executing.</p>
+
+<h4 id="working-with-process_response">Working with process_response</h4>
+
+<p>Add method process_response to both the middlewares</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class AnotherMiddleware(object):
+	def process_request(self, request):
+		print "Another middleware executed"
+
+	def process_response(self, request, response):
+		print "AnotherMiddleware process_response executed"
+		return response
+
+class BookMiddleware(object):
+	def process_request(self, request):
+		print "Middleware executed"
+		print request.user
+		return HttpResponse("some response")
+		#self._start = time.time()
+
+	def process_response(self, request, response):
+		print "BookMiddleware process_response executed"
+		return response
+</code></pre></div></div>
+
+<p>Try some url. Output would be</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Middleware executed
+&lt;username&gt;
+Another middleware executed
+AnotherMiddleware process_response executed
+BookMiddleware process_response executed
+</code></pre></div></div>
+
+<p>AnotherMiddleware.process_response() is executed before BookMiddleware.process_response() while AnotherMiddleware.process_request() executes after BookMiddleware.process_request(). So process_response() follows the reverse of what happens with process_request. process_response() is executed for last middleware then second last middleware and so on till the first middleware.</p>
+
+<h4 id="process_view">process_view</h4>
+
+<p>Django applies middleware’s process_view() in the order it’s defined in MIDDLEWARE_CLASSES, top-down. This is similar to the order followed for process_request().</p>
+
+<p>Also if any process_view() returns an HttpResponse object, then subsequent process_view() calls are bypassed and not executed.</p>
+
+<p>Check our <a href="http://agiliq.com/blog/2015/07/profiling-django-middlewares/" target="_blank">next post</a> to see a practical use of middleware.</p>
+
+
+  </div><a class="u-url" href="/middlewares/2015/07/17/understanding-django-middlewares.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

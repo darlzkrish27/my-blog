@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Create your own online store in few hours using satchmo (django) | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Create your own online store in few hours using satchmo (django)" />
+<meta name="author" content="rama" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="What is satcmo? Satchmo is a django based framework which allows you to create an online store very quickly. Satchmo also offers powerful customizations which allows you to tune a store to your specific business needs. Sample Demo Store : http://www.xfgw.info/store Login details Use below mail and password to login into the site: Email : test@test.com password : welcome Use dummy credit card number like 4222-2222-2222-2222 (VISA) to make any purchases. Above is the sample demo store which is being provided by satchmo outofbox just after installing it. In this blog post we will discuss very basic things about satchmo like how to install satchmo? , and how to do various customizations ? etc…… Installing satchmo Please note below Installation instructions are applicable to the latest version of satchmo which is available in the trunk. We assume that python setuptools has already been installed on your system. You must have latest version of Django 1.1 beta. Just follow the below 5 steps to install various dependencies of satchmo. 1) easy_install pycrypto 2) easy_install http://code.enthought.com/enstaller/eggs/rhel/3/Reportlab-2.1.0001-py2.5.egg 3) easy_install django-registration 4) easy_install http://tinyforge.org/frs/download.php/1/trml2pdf.tar.gz 5) easy_install PyYAML install django-threaded-multihost Go to : http://banjo.assembla.com/spaces/threaded_multihost/documents. Download latest .tar.gz file and follow below steps 8 tar xvzf django-threaded-multihost-1.3-0.tar.gz 9) cd django-threaded-multihost-1.3-0 10) python setup.py install if you get any error as below Traceback (most recent call last): File &quot;setup.py&quot;, line 1, in &lt;module&gt; import ez_setup ImportError: No module named ez_setup Fix the above error Open setup.py and comment out the first two lines as shown below and repeat the step 10. # ez_setup.use_setuptools() # from setuptools import setup, find_packages Next install django-app-plugins app by following below steps. 11) svn checkout http://django-app-plugins.googlecode.com/svn/trunk/ django-app-plugins-read-only 12) cd /path/to/your/site-packages/dir (usually it is /usr/lib/python2.X/site-packages/) 13) ln -s /path/to/django-app-plugins-read-only/app_plugins . 12) Installing an app means placing an app on python path so that django can find it How do we do it? 13) By convention any directory which is in /usr/lib/python2.X/site-packages/ is on python path.Because of this we are creating a symlink from the sitepackges directory to the directory where we checkedout the latest version of django-app-plugins.Symlinking is more efficient that copying entire directory under sitepackages. Install Sorl thumbnail app for generating thumbnails from images 14) svn checkout http://sorl-thumbnail.googlecode.com/svn/trunk/sorl/ 15) cd /path/to/your/site-packages/dir 16) ln -s /path/to/sorl . 14,15,16 We followed similar approach as that of above to install sorl-thumbnail application. Optional dependencies 17) easy_install elementtree 18) easy_install docutils The above are all dependencies which are required for the satchmo. Now we will see how to create our own custom store using satchmo create new django project 19) django-admin.py startproject customstore check out the latest version of satchmo 20) svn co svn://satchmoproject.com/satchmo/trunk satchmo-trunk Install satchmo 21) cd satchmo-trunk 21) sudo python setup.py install Make sure everything is working fine. &gt;&gt;&gt; import django &gt;&gt;&gt; django.VERSION (1, 1, 0, &#39;alpha&#39;, 1) &gt;&gt;&gt; import satchmo_store &gt;&gt;&gt; satchmo_store.VERSION (0, 9, &#39;pre&#39;) Go to your project cd customstore copy settings.py and localsetting.py from the sample project which is provided along with satchmo. cp ......../satchmo-trunk/satchmo/projects/base/settings.py ........../customstore/settings.py cp ......../satchmo-trunk/satchmo/projects/base/local_settings.py ........../customstore/local_settings.py Edit customstore/settings.py Change the Django_project name from ‘satchmo’ to ‘satchmo_store’.In previous versions project is called as “satchmo” but now it being called as “satchmo_store” In installed apps if you find an app called “satchmo” rename it to “satchmo_store” . Edit customstore/local_settings.py 1.Uncomment DATEBASE_NAME,DATABASE_PASSWORD,DATABASE_USER and add corresponding details of your database DATABASE_NAME = &#39;satchmostore&#39; #Name of the database which you create.Please refer to an additional note for mysql users at the end DATABASE_PASSWORD = &#39;welcome&#39; DATABASE_USER = &#39;operations&#39; The characters which are being transferred from database server to client should be in UTF-8.if your database is MYSQL you need to add the following in local_settings.py. DATABASE_OPTIONS = { &quot;init_command&quot;: &#39;SET NAMES &quot;utf8&quot;&#39; , &quot;init_command&quot;:&#39;SET storage_engine=INNODB&#39; , } The above command also sets INNODB as storage engine for database tables. we need to use INNODB instead of ISAM to support transactions. Uncomment SECRET_KEY and provide some value SECRET_KEY = &#39;asdf&#39; if you are using MYSQL please note that you need to create database in UTF-8 character set as follows create database satchmostore CHARACTER SET UTF-8 Edit urls.py Copy paste the below code in the urls.py from django.conf.urls.defaults import * from django.conf.urls.defaults import * from satchmo_store.urls import urlpatterns if you have any other addtional urls you need to add at the end of urls.py as urlpatterns += patterns(&#39;&#39;,.......) Copy over the static content 22) python manage.py satchmo_copy_static Check whether there are any errors in the configuration using.if there are any errors you need to resolve them before proceeding further. 23) python manage.py satchmo_check Checking your satchmo configuration. Using Django version 1.1 alpha 1 Using Satchmo version 0.9-pre-SVN-unknown Your configuration has no errors. Syncdb and load intial data 24) python manage.py syncdb 25) python manage.py satchmo_load_l10n 26) python manage.py satchmo_load_store 27) python manage.py satchmo_load_us_tax Runserver 28) python manage.py runserver Your store is ready. 29) http://localhost:8000/store when you enter above URL you will be seeing a store and all the functionality which is being provided by satchmo out of box. You can delete all the data which is provided by satchmo by running the below command 30) python manage.py delete_all_dbs You can see all the intial settings and configuration details at 31) http://localhost:8000/settings YOu can see the admin interface by entering the below url 32) http://localhost:8000/admin ##Satchmo Customization: Satchmo has powerfull customization mechanism using which you can tune the store to suit your business needs.The below are basic customizations which you can do.Please refer to documentation for more complex customizations and features. ####To add new products and category etc You need to go to admin interface to add new categories,products,pricing,discounts,option groups,images etc….. More information about this details at: http://www.satchmoproject.com/docs/svn/product.html ####Selling different product types Using satchmo you can also sell products such as Downloadable Product where customer downloads data/other information after paying amount, you can also sell subscription product for which customers have to pay every month. ####Custom product types YOu can also create custom product types by following the below approach. YOu need to create a model which participates in one-to-one relation ship with the default product model as below from django.db import models from django.utils.translation import ugettext_lazy as _ from product.models import Product class MyNewProduct(models.Model): product = models.OneToOneField(Product, verbose_name=_(&#39;Product&#39;), primary_key=True) def _get_subtype(self): return &#39;MyNewProduct&#39; def __unicode__(self): return u&quot;MyNewProduct: %s&quot; % self.product.name class Admin: pass class Meta: verbose_name = _(&#39;My New Product&#39;) verbose_name_plural = _(&#39;My New Products&#39;) Thereafter you need tell satchmo about this product type in config.py,add to admin.py to make it visible via admin etc..More details you can find in the below link: http://www.satchmoproject.com/docs/svn/custom-product.html In addition to above you can do various other customizations like CSS,Template,URL,Checkout process,Shipping module customization,Payment module. More details at satchmo documentation http://www.satchmoproject.com/docs/svn/index.html And important details related to above customizations in the next blog post. Stay Tuned." />
+<meta property="og:description" content="What is satcmo? Satchmo is a django based framework which allows you to create an online store very quickly. Satchmo also offers powerful customizations which allows you to tune a store to your specific business needs. Sample Demo Store : http://www.xfgw.info/store Login details Use below mail and password to login into the site: Email : test@test.com password : welcome Use dummy credit card number like 4222-2222-2222-2222 (VISA) to make any purchases. Above is the sample demo store which is being provided by satchmo outofbox just after installing it. In this blog post we will discuss very basic things about satchmo like how to install satchmo? , and how to do various customizations ? etc…… Installing satchmo Please note below Installation instructions are applicable to the latest version of satchmo which is available in the trunk. We assume that python setuptools has already been installed on your system. You must have latest version of Django 1.1 beta. Just follow the below 5 steps to install various dependencies of satchmo. 1) easy_install pycrypto 2) easy_install http://code.enthought.com/enstaller/eggs/rhel/3/Reportlab-2.1.0001-py2.5.egg 3) easy_install django-registration 4) easy_install http://tinyforge.org/frs/download.php/1/trml2pdf.tar.gz 5) easy_install PyYAML install django-threaded-multihost Go to : http://banjo.assembla.com/spaces/threaded_multihost/documents. Download latest .tar.gz file and follow below steps 8 tar xvzf django-threaded-multihost-1.3-0.tar.gz 9) cd django-threaded-multihost-1.3-0 10) python setup.py install if you get any error as below Traceback (most recent call last): File &quot;setup.py&quot;, line 1, in &lt;module&gt; import ez_setup ImportError: No module named ez_setup Fix the above error Open setup.py and comment out the first two lines as shown below and repeat the step 10. # ez_setup.use_setuptools() # from setuptools import setup, find_packages Next install django-app-plugins app by following below steps. 11) svn checkout http://django-app-plugins.googlecode.com/svn/trunk/ django-app-plugins-read-only 12) cd /path/to/your/site-packages/dir (usually it is /usr/lib/python2.X/site-packages/) 13) ln -s /path/to/django-app-plugins-read-only/app_plugins . 12) Installing an app means placing an app on python path so that django can find it How do we do it? 13) By convention any directory which is in /usr/lib/python2.X/site-packages/ is on python path.Because of this we are creating a symlink from the sitepackges directory to the directory where we checkedout the latest version of django-app-plugins.Symlinking is more efficient that copying entire directory under sitepackages. Install Sorl thumbnail app for generating thumbnails from images 14) svn checkout http://sorl-thumbnail.googlecode.com/svn/trunk/sorl/ 15) cd /path/to/your/site-packages/dir 16) ln -s /path/to/sorl . 14,15,16 We followed similar approach as that of above to install sorl-thumbnail application. Optional dependencies 17) easy_install elementtree 18) easy_install docutils The above are all dependencies which are required for the satchmo. Now we will see how to create our own custom store using satchmo create new django project 19) django-admin.py startproject customstore check out the latest version of satchmo 20) svn co svn://satchmoproject.com/satchmo/trunk satchmo-trunk Install satchmo 21) cd satchmo-trunk 21) sudo python setup.py install Make sure everything is working fine. &gt;&gt;&gt; import django &gt;&gt;&gt; django.VERSION (1, 1, 0, &#39;alpha&#39;, 1) &gt;&gt;&gt; import satchmo_store &gt;&gt;&gt; satchmo_store.VERSION (0, 9, &#39;pre&#39;) Go to your project cd customstore copy settings.py and localsetting.py from the sample project which is provided along with satchmo. cp ......../satchmo-trunk/satchmo/projects/base/settings.py ........../customstore/settings.py cp ......../satchmo-trunk/satchmo/projects/base/local_settings.py ........../customstore/local_settings.py Edit customstore/settings.py Change the Django_project name from ‘satchmo’ to ‘satchmo_store’.In previous versions project is called as “satchmo” but now it being called as “satchmo_store” In installed apps if you find an app called “satchmo” rename it to “satchmo_store” . Edit customstore/local_settings.py 1.Uncomment DATEBASE_NAME,DATABASE_PASSWORD,DATABASE_USER and add corresponding details of your database DATABASE_NAME = &#39;satchmostore&#39; #Name of the database which you create.Please refer to an additional note for mysql users at the end DATABASE_PASSWORD = &#39;welcome&#39; DATABASE_USER = &#39;operations&#39; The characters which are being transferred from database server to client should be in UTF-8.if your database is MYSQL you need to add the following in local_settings.py. DATABASE_OPTIONS = { &quot;init_command&quot;: &#39;SET NAMES &quot;utf8&quot;&#39; , &quot;init_command&quot;:&#39;SET storage_engine=INNODB&#39; , } The above command also sets INNODB as storage engine for database tables. we need to use INNODB instead of ISAM to support transactions. Uncomment SECRET_KEY and provide some value SECRET_KEY = &#39;asdf&#39; if you are using MYSQL please note that you need to create database in UTF-8 character set as follows create database satchmostore CHARACTER SET UTF-8 Edit urls.py Copy paste the below code in the urls.py from django.conf.urls.defaults import * from django.conf.urls.defaults import * from satchmo_store.urls import urlpatterns if you have any other addtional urls you need to add at the end of urls.py as urlpatterns += patterns(&#39;&#39;,.......) Copy over the static content 22) python manage.py satchmo_copy_static Check whether there are any errors in the configuration using.if there are any errors you need to resolve them before proceeding further. 23) python manage.py satchmo_check Checking your satchmo configuration. Using Django version 1.1 alpha 1 Using Satchmo version 0.9-pre-SVN-unknown Your configuration has no errors. Syncdb and load intial data 24) python manage.py syncdb 25) python manage.py satchmo_load_l10n 26) python manage.py satchmo_load_store 27) python manage.py satchmo_load_us_tax Runserver 28) python manage.py runserver Your store is ready. 29) http://localhost:8000/store when you enter above URL you will be seeing a store and all the functionality which is being provided by satchmo out of box. You can delete all the data which is provided by satchmo by running the below command 30) python manage.py delete_all_dbs You can see all the intial settings and configuration details at 31) http://localhost:8000/settings YOu can see the admin interface by entering the below url 32) http://localhost:8000/admin ##Satchmo Customization: Satchmo has powerfull customization mechanism using which you can tune the store to suit your business needs.The below are basic customizations which you can do.Please refer to documentation for more complex customizations and features. ####To add new products and category etc You need to go to admin interface to add new categories,products,pricing,discounts,option groups,images etc….. More information about this details at: http://www.satchmoproject.com/docs/svn/product.html ####Selling different product types Using satchmo you can also sell products such as Downloadable Product where customer downloads data/other information after paying amount, you can also sell subscription product for which customers have to pay every month. ####Custom product types YOu can also create custom product types by following the below approach. YOu need to create a model which participates in one-to-one relation ship with the default product model as below from django.db import models from django.utils.translation import ugettext_lazy as _ from product.models import Product class MyNewProduct(models.Model): product = models.OneToOneField(Product, verbose_name=_(&#39;Product&#39;), primary_key=True) def _get_subtype(self): return &#39;MyNewProduct&#39; def __unicode__(self): return u&quot;MyNewProduct: %s&quot; % self.product.name class Admin: pass class Meta: verbose_name = _(&#39;My New Product&#39;) verbose_name_plural = _(&#39;My New Products&#39;) Thereafter you need tell satchmo about this product type in config.py,add to admin.py to make it visible via admin etc..More details you can find in the below link: http://www.satchmoproject.com/docs/svn/custom-product.html In addition to above you can do various other customizations like CSS,Template,URL,Checkout process,Shipping module customization,Payment module. More details at satchmo documentation http://www.satchmoproject.com/docs/svn/index.html And important details related to above customizations in the next blog post. Stay Tuned." />
+<link rel="canonical" href="http://localhost:4000/satchmo/2009/03/26/create-your-own-online-store-in-few-hours-using-sa.html" />
+<meta property="og:url" content="http://localhost:4000/satchmo/2009/03/26/create-your-own-online-store-in-few-hours-using-sa.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-03-26T09:58:11+05:30" />
+<script type="application/ld+json">
+{"description":"What is satcmo? Satchmo is a django based framework which allows you to create an online store very quickly. Satchmo also offers powerful customizations which allows you to tune a store to your specific business needs. Sample Demo Store : http://www.xfgw.info/store Login details Use below mail and password to login into the site: Email : test@test.com password : welcome Use dummy credit card number like 4222-2222-2222-2222 (VISA) to make any purchases. Above is the sample demo store which is being provided by satchmo outofbox just after installing it. In this blog post we will discuss very basic things about satchmo like how to install satchmo? , and how to do various customizations ? etc…… Installing satchmo Please note below Installation instructions are applicable to the latest version of satchmo which is available in the trunk. We assume that python setuptools has already been installed on your system. You must have latest version of Django 1.1 beta. Just follow the below 5 steps to install various dependencies of satchmo. 1) easy_install pycrypto 2) easy_install http://code.enthought.com/enstaller/eggs/rhel/3/Reportlab-2.1.0001-py2.5.egg 3) easy_install django-registration 4) easy_install http://tinyforge.org/frs/download.php/1/trml2pdf.tar.gz 5) easy_install PyYAML install django-threaded-multihost Go to : http://banjo.assembla.com/spaces/threaded_multihost/documents. Download latest .tar.gz file and follow below steps 8 tar xvzf django-threaded-multihost-1.3-0.tar.gz 9) cd django-threaded-multihost-1.3-0 10) python setup.py install if you get any error as below Traceback (most recent call last): File &quot;setup.py&quot;, line 1, in &lt;module&gt; import ez_setup ImportError: No module named ez_setup Fix the above error Open setup.py and comment out the first two lines as shown below and repeat the step 10. # ez_setup.use_setuptools() # from setuptools import setup, find_packages Next install django-app-plugins app by following below steps. 11) svn checkout http://django-app-plugins.googlecode.com/svn/trunk/ django-app-plugins-read-only 12) cd /path/to/your/site-packages/dir (usually it is /usr/lib/python2.X/site-packages/) 13) ln -s /path/to/django-app-plugins-read-only/app_plugins . 12) Installing an app means placing an app on python path so that django can find it How do we do it? 13) By convention any directory which is in /usr/lib/python2.X/site-packages/ is on python path.Because of this we are creating a symlink from the sitepackges directory to the directory where we checkedout the latest version of django-app-plugins.Symlinking is more efficient that copying entire directory under sitepackages. Install Sorl thumbnail app for generating thumbnails from images 14) svn checkout http://sorl-thumbnail.googlecode.com/svn/trunk/sorl/ 15) cd /path/to/your/site-packages/dir 16) ln -s /path/to/sorl . 14,15,16 We followed similar approach as that of above to install sorl-thumbnail application. Optional dependencies 17) easy_install elementtree 18) easy_install docutils The above are all dependencies which are required for the satchmo. Now we will see how to create our own custom store using satchmo create new django project 19) django-admin.py startproject customstore check out the latest version of satchmo 20) svn co svn://satchmoproject.com/satchmo/trunk satchmo-trunk Install satchmo 21) cd satchmo-trunk 21) sudo python setup.py install Make sure everything is working fine. &gt;&gt;&gt; import django &gt;&gt;&gt; django.VERSION (1, 1, 0, &#39;alpha&#39;, 1) &gt;&gt;&gt; import satchmo_store &gt;&gt;&gt; satchmo_store.VERSION (0, 9, &#39;pre&#39;) Go to your project cd customstore copy settings.py and localsetting.py from the sample project which is provided along with satchmo. cp ......../satchmo-trunk/satchmo/projects/base/settings.py ........../customstore/settings.py cp ......../satchmo-trunk/satchmo/projects/base/local_settings.py ........../customstore/local_settings.py Edit customstore/settings.py Change the Django_project name from ‘satchmo’ to ‘satchmo_store’.In previous versions project is called as “satchmo” but now it being called as “satchmo_store” In installed apps if you find an app called “satchmo” rename it to “satchmo_store” . Edit customstore/local_settings.py 1.Uncomment DATEBASE_NAME,DATABASE_PASSWORD,DATABASE_USER and add corresponding details of your database DATABASE_NAME = &#39;satchmostore&#39; #Name of the database which you create.Please refer to an additional note for mysql users at the end DATABASE_PASSWORD = &#39;welcome&#39; DATABASE_USER = &#39;operations&#39; The characters which are being transferred from database server to client should be in UTF-8.if your database is MYSQL you need to add the following in local_settings.py. DATABASE_OPTIONS = { &quot;init_command&quot;: &#39;SET NAMES &quot;utf8&quot;&#39; , &quot;init_command&quot;:&#39;SET storage_engine=INNODB&#39; , } The above command also sets INNODB as storage engine for database tables. we need to use INNODB instead of ISAM to support transactions. Uncomment SECRET_KEY and provide some value SECRET_KEY = &#39;asdf&#39; if you are using MYSQL please note that you need to create database in UTF-8 character set as follows create database satchmostore CHARACTER SET UTF-8 Edit urls.py Copy paste the below code in the urls.py from django.conf.urls.defaults import * from django.conf.urls.defaults import * from satchmo_store.urls import urlpatterns if you have any other addtional urls you need to add at the end of urls.py as urlpatterns += patterns(&#39;&#39;,.......) Copy over the static content 22) python manage.py satchmo_copy_static Check whether there are any errors in the configuration using.if there are any errors you need to resolve them before proceeding further. 23) python manage.py satchmo_check Checking your satchmo configuration. Using Django version 1.1 alpha 1 Using Satchmo version 0.9-pre-SVN-unknown Your configuration has no errors. Syncdb and load intial data 24) python manage.py syncdb 25) python manage.py satchmo_load_l10n 26) python manage.py satchmo_load_store 27) python manage.py satchmo_load_us_tax Runserver 28) python manage.py runserver Your store is ready. 29) http://localhost:8000/store when you enter above URL you will be seeing a store and all the functionality which is being provided by satchmo out of box. You can delete all the data which is provided by satchmo by running the below command 30) python manage.py delete_all_dbs You can see all the intial settings and configuration details at 31) http://localhost:8000/settings YOu can see the admin interface by entering the below url 32) http://localhost:8000/admin ##Satchmo Customization: Satchmo has powerfull customization mechanism using which you can tune the store to suit your business needs.The below are basic customizations which you can do.Please refer to documentation for more complex customizations and features. ####To add new products and category etc You need to go to admin interface to add new categories,products,pricing,discounts,option groups,images etc….. More information about this details at: http://www.satchmoproject.com/docs/svn/product.html ####Selling different product types Using satchmo you can also sell products such as Downloadable Product where customer downloads data/other information after paying amount, you can also sell subscription product for which customers have to pay every month. ####Custom product types YOu can also create custom product types by following the below approach. YOu need to create a model which participates in one-to-one relation ship with the default product model as below from django.db import models from django.utils.translation import ugettext_lazy as _ from product.models import Product class MyNewProduct(models.Model): product = models.OneToOneField(Product, verbose_name=_(&#39;Product&#39;), primary_key=True) def _get_subtype(self): return &#39;MyNewProduct&#39; def __unicode__(self): return u&quot;MyNewProduct: %s&quot; % self.product.name class Admin: pass class Meta: verbose_name = _(&#39;My New Product&#39;) verbose_name_plural = _(&#39;My New Products&#39;) Thereafter you need tell satchmo about this product type in config.py,add to admin.py to make it visible via admin etc..More details you can find in the below link: http://www.satchmoproject.com/docs/svn/custom-product.html In addition to above you can do various other customizations like CSS,Template,URL,Checkout process,Shipping module customization,Payment module. More details at satchmo documentation http://www.satchmoproject.com/docs/svn/index.html And important details related to above customizations in the next blog post. Stay Tuned.","author":{"@type":"Person","name":"rama"},"@type":"BlogPosting","url":"http://localhost:4000/satchmo/2009/03/26/create-your-own-online-store-in-few-hours-using-sa.html","headline":"Create your own online store in few hours using satchmo (django)","dateModified":"2009-03-26T09:58:11+05:30","datePublished":"2009-03-26T09:58:11+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/satchmo/2009/03/26/create-your-own-online-store-in-few-hours-using-sa.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Create your own online store in few hours using satchmo (django)</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-03-26T09:58:11+05:30" itemprop="datePublished">Mar 26, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">rama</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="what-is-satcmo">What is satcmo?</h2>
+<p>Satchmo is a django based framework which allows  you to  create an online store very quickly.
+Satchmo also offers powerful customizations which allows you to tune a store to your specific business needs.</p>
+
+<p>Sample Demo Store : <a href="http://www.xfgw.info/store">http://www.xfgw.info/store</a></p>
+<h4 id="login-details">Login details</h4>
+<ol>
+  <li>Use below mail and password to login into the site:  <br />
+  Email : test@test.com
+  password : welcome</li>
+  <li>Use dummy credit card number like 4222-2222-2222-2222 (VISA) to make any purchases.</li>
+</ol>
+
+<p>Above is the sample demo store which is being provided by satchmo outofbox just after installing it.</p>
+
+<p>In this blog post we will discuss very basic things about satchmo like how to install satchmo? , and how to do various customizations ? etc……</p>
+
+<h2 id="installing-satchmo">Installing satchmo</h2>
+
+<p>Please note below</p>
+
+<ol>
+  <li>Installation instructions are applicable to the latest version of satchmo  which is available in the trunk.</li>
+  <li>We assume that python setuptools has already been installed on your system.</li>
+  <li>You must have latest version of Django 1.1 beta.</li>
+</ol>
+
+<p>Just follow the below 5 steps to install various dependencies of satchmo.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1) easy_install pycrypto
+2) easy_install http://code.enthought.com/enstaller/eggs/rhel/3/Reportlab-2.1.0001-py2.5.egg
+3) easy_install django-registration
+4) easy_install http://tinyforge.org/frs/download.php/1/trml2pdf.tar.gz
+5) easy_install PyYAML
+</code></pre></div></div>
+
+<h4 id="install-django-threaded-multihost">install django-threaded-multihost</h4>
+<p>Go to  : http://banjo.assembla.com/spaces/threaded_multihost/documents. Download latest .tar.gz file and follow below steps</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>8  tar xvzf django-threaded-multihost-1.3-0.tar.gz  
+9) cd django-threaded-multihost-1.3-0 
+10) python setup.py install
+</code></pre></div></div>
+
+<p>if you get any error as below</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Traceback (most recent call last):
+File "setup.py", line 1, in &lt;module&gt;
+import ez_setup
+ImportError: No module named ez_setup
+</code></pre></div></div>
+
+<h4 id="fix-the-above-error">Fix the above error</h4>
+
+<p>Open setup.py and comment out  the first two lines as shown below and repeat the step 10.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># ez_setup.use_setuptools()
+# from setuptools import setup, find_packages
+</code></pre></div></div>
+
+<p>Next install django-app-plugins app by following below steps.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>11) svn checkout http://django-app-plugins.googlecode.com/svn/trunk/ django-app-plugins-read-only
+12) cd /path/to/your/site-packages/dir (usually it is /usr/lib/python2.X/site-packages/)
+13) ln -s /path/to/django-app-plugins-read-only/app_plugins  . 
+</code></pre></div></div>
+
+<p>12) Installing an app means placing an app on  python path so that django can find it</p>
+<h4 id="how-do-we-do-it">How do we do it?</h4>
+<p>13) By convention any directory which is in  /usr/lib/python2.X/site-packages/ is on python path.Because of this we are creating a symlink from the sitepackges directory to the directory where we checkedout the latest version of django-app-plugins.Symlinking is more efficient that copying entire directory under sitepackages.</p>
+
+<p>Install Sorl thumbnail app for generating thumbnails from images</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>14) svn checkout http://sorl-thumbnail.googlecode.com/svn/trunk/sorl/
+15) cd /path/to/your/site-packages/dir
+16) ln -s /path/to/sorl  .
+</code></pre></div></div>
+
+<p>14,15,16  We followed similar approach as that of above  to install sorl-thumbnail application.</p>
+
+<p>Optional dependencies</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>17) easy_install elementtree
+18) easy_install docutils
+</code></pre></div></div>
+
+<p>The above are all dependencies which are required for the satchmo.</p>
+
+<h4 id="now-we-will-see-how-to-create-our-own-custom-store-using-satchmo">Now we will see how to create our own custom store using satchmo</h4>
+
+<p>create new django project</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>19) django-admin.py startproject customstore
+</code></pre></div></div>
+
+<p>check out the latest version of satchmo</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>20)  svn co svn://satchmoproject.com/satchmo/trunk satchmo-trunk
+</code></pre></div></div>
+
+<p>Install satchmo</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>21) cd satchmo-trunk
+21) sudo python setup.py install
+</code></pre></div></div>
+
+<p>Make sure everything is working fine.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; import django
+&gt;&gt;&gt; django.VERSION
+(1, 1, 0, 'alpha', 1)
+&gt;&gt;&gt; import satchmo_store
+&gt;&gt;&gt; satchmo_store.VERSION
+(0, 9, 'pre')
+</code></pre></div></div>
+
+<p>Go to your project</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cd customstore
+</code></pre></div></div>
+
+<p>copy settings.py and localsetting.py from the sample project which is provided along with satchmo.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cp  ......../satchmo-trunk/satchmo/projects/base/settings.py  ........../customstore/settings.py
+cp  ......../satchmo-trunk/satchmo/projects/base/local_settings.py  ........../customstore/local_settings.py  
+</code></pre></div></div>
+
+<h4 id="edit-customstoresettingspy">Edit customstore/settings.py</h4>
+<ol>
+  <li>
+    <p>Change the Django_project name from ‘satchmo’  to ‘satchmo_store’.In previous versions project is called as “satchmo” but now it being called as “satchmo_store”</p>
+  </li>
+  <li>
+    <p>In installed apps if you find an app called “satchmo” rename it to “satchmo_store” .</p>
+  </li>
+</ol>
+
+<h4 id="edit-customstorelocal_settingspy">Edit customstore/local_settings.py</h4>
+<p>1.Uncomment DATEBASE_NAME,DATABASE_PASSWORD,DATABASE_USER and add corresponding details of your database</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>DATABASE_NAME = 'satchmostore' #Name of the database which you create.Please refer to an additional note for mysql users at the end
+DATABASE_PASSWORD = 'welcome'
+DATABASE_USER = 'operations' 
+</code></pre></div></div>
+
+<p>The characters which are being transferred  from database server to client should be in UTF-8.if your database is MYSQL you need to add
+the following in local_settings.py.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>DATABASE_OPTIONS = { "init_command": 'SET NAMES "utf8"' ,  "init_command":'SET storage_engine=INNODB' , } 
+</code></pre></div></div>
+
+<p>The above command also sets INNODB as storage engine for database tables. we need to use INNODB instead of ISAM to support transactions.
+Uncomment SECRET_KEY and provide some value</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SECRET_KEY = 'asdf'
+</code></pre></div></div>
+
+<p>if you are using MYSQL  please note that you need to create database in UTF-8 character set as follows</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> create database satchmostore  CHARACTER SET UTF-8 
+</code></pre></div></div>
+
+<h4 id="edit-urlspy">Edit urls.py</h4>
+<p>Copy paste the below code in the urls.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.conf.urls.defaults import *
+from django.conf.urls.defaults import *
+from satchmo_store.urls import urlpatterns 
+</code></pre></div></div>
+
+<p>if you have any other addtional urls you need to add at the end of urls.py as</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>urlpatterns += patterns('',.......)
+</code></pre></div></div>
+
+<p>Copy over the static content</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>22) python manage.py satchmo_copy_static
+</code></pre></div></div>
+
+<p>Check whether there are any errors in the configuration using.if there are any errors you need to resolve them before proceeding further.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>23) python manage.py satchmo_check
+Checking your satchmo configuration.
+Using Django version 1.1 alpha 1
+Using Satchmo version 0.9-pre-SVN-unknown
+Your configuration has no errors.
+</code></pre></div></div>
+
+<p>Syncdb and load intial data</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>24) python manage.py syncdb
+25) python manage.py satchmo_load_l10n
+26) python manage.py satchmo_load_store
+27) python manage.py satchmo_load_us_tax
+</code></pre></div></div>
+
+<p>Runserver</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>28) python manage.py runserver
+</code></pre></div></div>
+
+<p>Your store is ready.</p>
+
+<p>29) <a href="http://localhost:8000/store">http://localhost:8000/store</a></p>
+
+<p>when you enter above URL you will be seeing a store and all the functionality which is being provided by satchmo out of box.</p>
+
+<p>You can delete all the data which is provided by satchmo by running the below command</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>30) python manage.py delete_all_dbs
+</code></pre></div></div>
+
+<p>You can see all the intial settings and configuration details at</p>
+
+<p>31) <a href="http://localhost:8000/settings">http://localhost:8000/settings</a></p>
+
+<p>YOu can see the admin interface by entering the below url</p>
+
+<p>32) <a href="http://localhost:8000/admin">http://localhost:8000/admin</a></p>
+
+<p>##Satchmo Customization:
+Satchmo has powerfull customization mechanism using which you can tune the store to suit your business needs.The below are basic customizations which you can 
+do.Please refer to documentation for more complex customizations and features.</p>
+
+<p>####To add new products and category etc
+You need to go to admin interface to add new categories,products,pricing,discounts,option groups,images etc…..</p>
+
+<p>More information about this details at:
+<a href="http://www.satchmoproject.com/docs/svn/product.html">http://www.satchmoproject.com/docs/svn/product.html</a></p>
+
+<p>####Selling different product types
+Using satchmo you can also sell products such as Downloadable Product where customer downloads data/other information after paying amount,
+you can also sell subscription product for which customers have to pay every month.</p>
+
+<p>####Custom product types
+YOu can also create custom product types by following the below approach.
+YOu need to create a model which participates in one-to-one relation ship with the default product model as below</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.db import models
+from django.utils.translation import ugettext_lazy as _
+
+from product.models import Product
+
+class MyNewProduct(models.Model):
+    product = models.OneToOneField(Product, verbose_name=_('Product'),
+    primary_key=True)
+
+def _get_subtype(self):
+    return 'MyNewProduct'
+
+def __unicode__(self):
+    return u"MyNewProduct: %s" % self.product.name
+
+class Admin:
+    pass
+
+class Meta:
+    verbose_name = _('My New Product')
+    verbose_name_plural = _('My New Products')
+</code></pre></div></div>
+
+<ol>
+  <li>Thereafter you need tell satchmo about this product type in config.py,add to admin.py to make it visible via admin etc..More details you can find in the below link:
+ <a href="http://www.satchmoproject.com/docs/svn/custom-product.html">http://www.satchmoproject.com/docs/svn/custom-product.html</a></li>
+</ol>
+
+<p>In addition to above you can do various other customizations like
+ CSS,Template,URL,Checkout process,Shipping module  customization,Payment module.</p>
+
+<p>More details at satchmo documentation <a href="http://www.satchmoproject.com/docs/svn/index.html">http://www.satchmoproject.com/docs/svn/index.html</a></p>
+
+<p>And important details related to above customizations in the next blog post.</p>
+
+<p>Stay Tuned.</p>
+
+
+  </div><a class="u-url" href="/satchmo/2009/03/26/create-your-own-online-store-in-few-hours-using-sa.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

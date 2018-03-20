@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Django is not flexible | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Django is not flexible" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Django is not flexible at all because you can not do simple things like. Using various authentication mechanisms. You can authenticate via Username, emails, Facebook, Twitter or any combination of these. Using different database backends. Use MySQL, PostgreSQL, Non-relational databases, more or a combination. Use different mail sending strategies. Send mail via smtp, queue to database, log to files and more. Different file storage method. Store locally, FTP, Amazon S3 or write your own. Store messages in Sessions, cookies or others. Cache things in Files, DB, Memcache or just fake it. Save sessions in files, DB, Memcache or cookies. Use Jinja, Mako or Gensi as templating library. One of the most lingering criticisms of Django has been that it is not flexible. People have criticised its design as too-tightly coupled, hard to extend, and inflexible. As a result, people have recommended to roll their own using SQLchemy, Jinja or web.py. I think this view is unfounded and wrong. You would be hard pressed to get the choices and flexibility which Django offers. Eg, while development I run with Sqlite, Dummy caching, and emails on console, while on production I switch to PostgreSQL, Memcache, and queued emails. Many apps use this backend pattern themselves. Django registeration, Django-celery and our own merchant. I have always been annoyed at Django is inflexible meme, and the recent Charles Leifer’s post put various Django plug points to make writing this too post easy to not do it." />
+<meta property="og:description" content="Django is not flexible at all because you can not do simple things like. Using various authentication mechanisms. You can authenticate via Username, emails, Facebook, Twitter or any combination of these. Using different database backends. Use MySQL, PostgreSQL, Non-relational databases, more or a combination. Use different mail sending strategies. Send mail via smtp, queue to database, log to files and more. Different file storage method. Store locally, FTP, Amazon S3 or write your own. Store messages in Sessions, cookies or others. Cache things in Files, DB, Memcache or just fake it. Save sessions in files, DB, Memcache or cookies. Use Jinja, Mako or Gensi as templating library. One of the most lingering criticisms of Django has been that it is not flexible. People have criticised its design as too-tightly coupled, hard to extend, and inflexible. As a result, people have recommended to roll their own using SQLchemy, Jinja or web.py. I think this view is unfounded and wrong. You would be hard pressed to get the choices and flexibility which Django offers. Eg, while development I run with Sqlite, Dummy caching, and emails on console, while on production I switch to PostgreSQL, Memcache, and queued emails. Many apps use this backend pattern themselves. Django registeration, Django-celery and our own merchant. I have always been annoyed at Django is inflexible meme, and the recent Charles Leifer’s post put various Django plug points to make writing this too post easy to not do it." />
+<link rel="canonical" href="http://localhost:4000/opinion/2010/10/17/django-is-not-flexible.html" />
+<meta property="og:url" content="http://localhost:4000/opinion/2010/10/17/django-is-not-flexible.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2010-10-17T20:47:46+05:30" />
+<script type="application/ld+json">
+{"description":"Django is not flexible at all because you can not do simple things like. Using various authentication mechanisms. You can authenticate via Username, emails, Facebook, Twitter or any combination of these. Using different database backends. Use MySQL, PostgreSQL, Non-relational databases, more or a combination. Use different mail sending strategies. Send mail via smtp, queue to database, log to files and more. Different file storage method. Store locally, FTP, Amazon S3 or write your own. Store messages in Sessions, cookies or others. Cache things in Files, DB, Memcache or just fake it. Save sessions in files, DB, Memcache or cookies. Use Jinja, Mako or Gensi as templating library. One of the most lingering criticisms of Django has been that it is not flexible. People have criticised its design as too-tightly coupled, hard to extend, and inflexible. As a result, people have recommended to roll their own using SQLchemy, Jinja or web.py. I think this view is unfounded and wrong. You would be hard pressed to get the choices and flexibility which Django offers. Eg, while development I run with Sqlite, Dummy caching, and emails on console, while on production I switch to PostgreSQL, Memcache, and queued emails. Many apps use this backend pattern themselves. Django registeration, Django-celery and our own merchant. I have always been annoyed at Django is inflexible meme, and the recent Charles Leifer’s post put various Django plug points to make writing this too post easy to not do it.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/opinion/2010/10/17/django-is-not-flexible.html","headline":"Django is not flexible","dateModified":"2010-10-17T20:47:46+05:30","datePublished":"2010-10-17T20:47:46+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/opinion/2010/10/17/django-is-not-flexible.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Django is not flexible</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2010-10-17T20:47:46+05:30" itemprop="datePublished">Oct 17, 2010
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Django is not flexible at all because you can not do simple
+things like.</p>
+
+<ul>
+  <li>
+    <p>Using various authentication mechanisms.<br />
+You can authenticate via <a href="http://docs.djangoproject.com/en/dev/topics/auth/#authentication-in-web-requests">Username</a>,
+<a href="http://www.davidcramer.net/code/224/logging-in-with-email-addresses-in-django.html">emails</a>,
+<a href="http://github.com/agiliq/Django-Socialauth">Facebook, Twitter</a> or any combination of these.</p>
+  </li>
+  <li>
+    <p>Using different database backends.<br />
+Use MySQL, PostgreSQL,
+<a href="http://www.allbuttonspressed.com/projects/djangoappengine">Non-relational databases</a>,
+<a href="http://docs.djangoproject.com/en/dev/ref/databases/#using-a-3rd-party-database-backend">more</a>
+or a <a href="http://docs.djangoproject.com/en/dev/topics/db/multi-db/">combination</a>.</p>
+  </li>
+  <li>
+    <p>Use different mail sending strategies.<br />
+Send mail via <a href="http://docs.djangoproject.com/en/dev/topics/email/#smtp-backend">smtp</a>,
+<a href="http://github.com/jtauber/django-mailer">queue to database</a>,
+<a href="http://docs.djangoproject.com/en/dev/topics/email/#file-backend">log to files</a>
+and more.</p>
+  </li>
+  <li>
+    <p>Different file storage method.<br />
+Store locally, <a href="http://djangosnippets.org/snippets/1269/">FTP</a>,
+<a href="http://code.welldev.org/django-storages/wiki/S3Storage">Amazon S3</a>
+or <a href="http://docs.djangoproject.com/en/dev/howto/custom-file-storage/">write your own</a>.</p>
+  </li>
+  <li>
+    <p>Store messages in <a href="http://docs.djangoproject.com/en/dev/ref/contrib/messages/#storage-backends">Sessions, cookies or others</a>.</p>
+  </li>
+  <li>
+    <p>Cache things in <a href="http://docs.djangoproject.com/en/dev/topics/cache/#filesystem-caching">Files</a>,
+<a href="http://docs.djangoproject.com/en/dev/topics/cache/#database-caching">DB</a>,
+<a href="http://docs.djangoproject.com/en/dev/topics/cache/#memcached">Memcache</a>
+or <a href="http://docs.djangoproject.com/en/dev/topics/cache/#dummy-caching-for-development">just fake it</a>.</p>
+  </li>
+  <li>
+    <p>Save sessions in files, DB, Memcache or cookies.</p>
+  </li>
+  <li>
+    <p>Use <a href="http://www.davidcramer.net/code/479/using-jinja2-with-django.html">Jinja</a>,
+<a href="http://djangosnippets.org/snippets/97/">Mako or Gensi</a> as templating library.</p>
+  </li>
+</ul>
+
+<hr />
+
+<p>One of the most lingering criticisms of Django has been
+that it is not flexible. People have criticised its design
+as too-tightly coupled, hard to extend, and inflexible.
+As a result, people have recommended to roll their own
+using SQLchemy, Jinja or web.py.</p>
+
+<p>I think this view is unfounded and wrong. You would be hard
+pressed to get the choices and flexibility which Django offers.
+Eg, while development I run with Sqlite, Dummy caching, and emails
+on console, while on production I switch to PostgreSQL, Memcache, and
+queued emails.</p>
+
+<p>Many apps use this backend pattern themselves.
+<a href="http://docs.b-list.org/django-registration/0.8/backend-api.html">Django registeration</a>,
+<a href="http://ask.github.com/celery/getting-started/first-steps-with-django.html">Django-celery</a>
+and our own <a href="http://github.com/agiliq/merchant">merchant</a>.</p>
+
+<p>I have always been annoyed at Django is inflexible meme, and the recent 
+<a href="http://charlesleifer.com/blog/django-patterns-pluggable-backends/">Charles Leifer’s post</a>
+put various Django plug points to make writing this too post easy to not do it.</p>
+
+
+  </div><a class="u-url" href="/opinion/2010/10/17/django-is-not-flexible.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

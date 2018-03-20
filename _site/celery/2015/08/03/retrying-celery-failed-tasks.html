@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Retrying celery failed tasks | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Retrying celery failed tasks" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="I assume you have a basic understanding of celery. If you want to learn about basics of celery, you can check our last blog. Use case In one of my projects, I work with Twitter api. I need to fetch a user’s tweets. Twitter provides an api endpoint for fetching user’s tweets. Fetching of tweets involve network calls and so should happen in background, so we fetch the tweets using a celery task. So I have a celery task which makes one api call to Twitter. If I am able to fetch the tweets I consider the celery task was successful. But Twitter rate limits this api endpoint and I can’t hit this api endpoint indefinite number of times. Twitter allows maximum of 180 calls to this endpoint in a 15 minute window. Any call beyond 180 calls will start failing and Twitter will raise an exception instead of returning tweets. If Twitter raises exception instead of returning tweets, I consider that the celery task has failed. Assuming a very active Twitter user signs up and we need 200 api calls to fetch all his tweets. So my celery tasks run 200 times. First 180 tasks would succeed but next 20 tasks would fail because of rate limiting. I do not want to miss any tweet by a user, and so any failed task must be retried after 15 minutes. This is where celery retry functionality comes into picture. Pseudocode for my usecase @app.task(bind=True) def fetch_tweets(token_details): # token_details is user specific User token that needs to be passed to Twitter try: resp = make_twitter_call() # Till 180 calls to Twitter, we will get `resp` # process result except TwitterException: # Till 180th call, this part will not be executed # 181th call onwards, Twitter will raise an error and this part of code will be executed # Retry fetch_tweets after 15 mins. Before fixing this use case, let’s play around with some basic examples. Basic example Create a file called add.py with following content add.py from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): return x + y Ensure task defined in this file is running properly by running the worker and trying to run the task from ipython shell. Worker terminal celery worker -A add -l info Ipython from add import add add.delay(3, 4) After you do this, addition should happen and “7”, i.e 3+4, should be printed on worker terminal. Explicity raising error Setting up Twitter access tokens etc will take effort and time, so instead of setting up Twitter, let’s try to replicate a similar scenario where some calls to our task succeed and some calls to task fail. Let’s first replicate a failed task. A failed task means an error happening in the task. Raise an error in your task, and see how it behaves. from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): raise Exception() return x + y Restart celery worker celery worker -A add -l info Run the task again from add import add add.delay(3, 4) On celery terminal, you will see that an exception is raised. [2015-07-31 16:39:13,440: ERROR/MainProcess] Task add.add[fb067fbf-e79e-4fdd-b398-94da6be960e1] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task R = retval = fun(*args, **kwargs) File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 438, in __protected_call__ return self.run(*args, **kwargs) File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 7, in add raise Exception() Exception Suppose you want to retry the task after 2 seconds when it fails. Make the following code change from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): try: raise Exception() except Exception as e: self.retry(countdown=2, exc=e) return x + y Restart celery, run the task and check the output. Output would be 2015-07-31 16:59:24,027: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:26.014576+00:00] [2015-07-31 16:59:24,030: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:26,075: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:28.065412+00:00] [2015-07-31 16:59:26,076: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:28,127: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:30.115907+00:00] [2015-07-31 16:59:28,128: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:30,771: ERROR/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ... .... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 8, in add raise Exception() Exception Explanation Task ran for first time. An error was raised which you caught. We retried the task after 2 seconds in case of error. Currently our task is written in such a way that every run of task raises error. So first retry of task also raised error. Task was retried for 3 times, which is the celery default. Third retry also raised an error, but instead of executing the code of “except” block, celery is smart to figure out that a task should only be retried 3 times and should not be retried forever. Retry only once Suppose you only want to retry a failed task once instead of three which is the celery default. Change self.retry line, so it looks like self.retry(countdown=2, exc=e, max_retries=1) Restart celery and run the task, output would be [2015-07-31 17:36:57,065: INFO/MainProcess] Received task: add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] [2015-07-31 17:36:57,086: INFO/MainProcess] Received task: add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] eta:[2015-07-31 12:06:59.076743+00:00] [2015-07-31 17:36:57,087: INFO/MainProcess] Task add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] retry: Retry in 2s: Exception() [2015-07-31 17:37:00,968: ERROR/MainProcess] Task add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ...... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 8, in add raise Exception() Exception This time, the failed task was retried only once. Replicating exact Twitter scenario We want the task to succeed in some cases and fail in other cases. Modify your code, so it looks like: import random from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): # Get a random number between 1 and 10 num = random.randint(1, 10) print num # To help properly understand output try: # If number is odd, fail the task if num % 2: raise Exception() # If number is even, succeed the task else: return x + y except Exception as e: self.retry(countdown=2, exc=e, max_retries=1) Explanation In our task, we generate a random number between 1 and 10. If the number is even then the task succeeds and returns the sum of numbers. If the generated random number is odd then the task fails, in which case we retry the task after 2 seconds. Outputs of some random runs of tasks [2015-07-31 17:47:13,800: INFO/MainProcess] Received task: add.add[879c089d-54fb-4592-96e4-325f61bdce39] [2015-07-31 17:47:13,801: WARNING/Worker-3] 7 [2015-07-31 17:47:13,822: INFO/MainProcess] Received task: add.add[879c089d-54fb-4592-96e4-325f61bdce39] eta:[2015-07-31 12:17:15.811826+00:00] [2015-07-31 17:47:13,823: INFO/MainProcess] Task add.add[879c089d-54fb-4592-96e4-325f61bdce39] retry: Retry in 2s: Exception() [2015-07-31 17:47:16,873: WARNING/Worker-1] 8 [2015-07-31 17:47:16,874: INFO/MainProcess] Task add.add[879c089d-54fb-4592-96e4-325f61bdce39] succeeded in 0.00106367497938s: 7 Generated random number was 7. So task raised an exception and so it was retried in 2 secs. In the retried run, generated random number was 8 which is even and so no exception was raised and instead the sum was calculated and returned. Another output [2015-07-31 17:47:33,681: INFO/MainProcess] Received task: add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] [2015-07-31 17:47:33,681: WARNING/Worker-2] 7 [2015-07-31 17:47:33,703: INFO/MainProcess] Received task: add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] eta:[2015-07-31 12:17:35.692557+00:00] [2015-07-31 17:47:33,704: INFO/MainProcess] Task add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] retry: Retry in 2s: Exception() [2015-07-31 17:47:36,890: WARNING/Worker-4] 3 [2015-07-31 17:47:36,894: ERROR/MainProcess] Task add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 15, in add raise Exception() Exception Generated random number was 7. So task raised an exception and so it was retried in 2 secs. In the retried run, generated random number was 3 which is again odd, so retried task also raised an exception. And since we have set max_retries as 1, no furter retry was done. Setting a datetime instead of countdown Till now we have been working with countdown which tells the number of seconds in which failed task should be retried. We can also set a datetime at which task should be retried. Let’s retry the failed task after 2 seconds but using datetime instead of countdown. import random import datetime import pytz from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): # Get a random number between 1 and 10 num = random.randint(1, 10) print num try: # If number is odd, fail the task if num % 2: raise Exception() # If number is even, succeed the task else: return x + y except Exception as e: dt = datetime.datetime.now(pytz.utc) + datetime.timedelta(seconds=1) self.retry(eta=dt, exc=e, max_retries=1) Output [2015-07-31 18:59:17,177: INFO/MainProcess] Received task: add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] [2015-07-31 18:59:17,178: WARNING/Worker-3] 1 [2015-07-31 18:59:17,200: INFO/MainProcess] Received task: add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] eta:[2015-07-31 13:29:19.178833+00:00] [2015-07-31 18:59:17,202: INFO/MainProcess] Task add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] retry: Retry at 2015-07-31 13:29:19.178833+00:00: Exception() [2015-07-31 18:59:19,690: WARNING/Worker-1] 10 [2015-07-31 18:59:19,691: INFO/MainProcess] Task add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] succeeded in 0.00107540999306s: 7 Retrying failed Twitter tasks I assume you have the idea of Python twitter library.. My code before using retry looked like. import twitter @app.task(bind=True) def fetch_tweets(self) auth = twitter.OAuth(oauth_token, oauth_token_secret, key, secret) client = twitter.Twitter(auth=auth) params = {&#39;user_id&#39;: user_id, &#39;count&#39;: 2} response = client.favorites.list(**params) return response Till first 180 calls, tasks were succeeding. 181st call onwards the tasks started failing. So I changed it to. import twitter @app.task(bind=True) def fetch_tweets(self) auth = twitter.OAuth(oauth_token, oauth_token_secret, key, secret) client = twitter.Twitter(auth=auth) params = {&#39;user_id&#39;: user_id, &#39;count&#39;: 2} try: response = client.favorites.list(**params) except twitter.TwitterError as e: if e.e.code == 429: # 429: rate limit exceeded # Ask Twitter to tell at what time rate limit window gets reset rate_limit_status = self.client.application.rate_limit_status(resources=&quot;statuses&quot;) reset = rate_limit_status[&quot;resources&quot;][&quot;statuses&quot;][&quot;/statuses/user_timeline&quot;][&quot;reset&quot;] dt = datetime.datetime.utcfromtimestamp(reset) raise self.retry(eta=dt, exc=e, max_retries=1) return response After this, any failed tasks were retried when Twitter rate limit window gets reset." />
+<meta property="og:description" content="I assume you have a basic understanding of celery. If you want to learn about basics of celery, you can check our last blog. Use case In one of my projects, I work with Twitter api. I need to fetch a user’s tweets. Twitter provides an api endpoint for fetching user’s tweets. Fetching of tweets involve network calls and so should happen in background, so we fetch the tweets using a celery task. So I have a celery task which makes one api call to Twitter. If I am able to fetch the tweets I consider the celery task was successful. But Twitter rate limits this api endpoint and I can’t hit this api endpoint indefinite number of times. Twitter allows maximum of 180 calls to this endpoint in a 15 minute window. Any call beyond 180 calls will start failing and Twitter will raise an exception instead of returning tweets. If Twitter raises exception instead of returning tweets, I consider that the celery task has failed. Assuming a very active Twitter user signs up and we need 200 api calls to fetch all his tweets. So my celery tasks run 200 times. First 180 tasks would succeed but next 20 tasks would fail because of rate limiting. I do not want to miss any tweet by a user, and so any failed task must be retried after 15 minutes. This is where celery retry functionality comes into picture. Pseudocode for my usecase @app.task(bind=True) def fetch_tweets(token_details): # token_details is user specific User token that needs to be passed to Twitter try: resp = make_twitter_call() # Till 180 calls to Twitter, we will get `resp` # process result except TwitterException: # Till 180th call, this part will not be executed # 181th call onwards, Twitter will raise an error and this part of code will be executed # Retry fetch_tweets after 15 mins. Before fixing this use case, let’s play around with some basic examples. Basic example Create a file called add.py with following content add.py from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): return x + y Ensure task defined in this file is running properly by running the worker and trying to run the task from ipython shell. Worker terminal celery worker -A add -l info Ipython from add import add add.delay(3, 4) After you do this, addition should happen and “7”, i.e 3+4, should be printed on worker terminal. Explicity raising error Setting up Twitter access tokens etc will take effort and time, so instead of setting up Twitter, let’s try to replicate a similar scenario where some calls to our task succeed and some calls to task fail. Let’s first replicate a failed task. A failed task means an error happening in the task. Raise an error in your task, and see how it behaves. from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): raise Exception() return x + y Restart celery worker celery worker -A add -l info Run the task again from add import add add.delay(3, 4) On celery terminal, you will see that an exception is raised. [2015-07-31 16:39:13,440: ERROR/MainProcess] Task add.add[fb067fbf-e79e-4fdd-b398-94da6be960e1] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task R = retval = fun(*args, **kwargs) File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 438, in __protected_call__ return self.run(*args, **kwargs) File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 7, in add raise Exception() Exception Suppose you want to retry the task after 2 seconds when it fails. Make the following code change from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): try: raise Exception() except Exception as e: self.retry(countdown=2, exc=e) return x + y Restart celery, run the task and check the output. Output would be 2015-07-31 16:59:24,027: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:26.014576+00:00] [2015-07-31 16:59:24,030: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:26,075: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:28.065412+00:00] [2015-07-31 16:59:26,076: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:28,127: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:30.115907+00:00] [2015-07-31 16:59:28,128: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:30,771: ERROR/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ... .... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 8, in add raise Exception() Exception Explanation Task ran for first time. An error was raised which you caught. We retried the task after 2 seconds in case of error. Currently our task is written in such a way that every run of task raises error. So first retry of task also raised error. Task was retried for 3 times, which is the celery default. Third retry also raised an error, but instead of executing the code of “except” block, celery is smart to figure out that a task should only be retried 3 times and should not be retried forever. Retry only once Suppose you only want to retry a failed task once instead of three which is the celery default. Change self.retry line, so it looks like self.retry(countdown=2, exc=e, max_retries=1) Restart celery and run the task, output would be [2015-07-31 17:36:57,065: INFO/MainProcess] Received task: add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] [2015-07-31 17:36:57,086: INFO/MainProcess] Received task: add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] eta:[2015-07-31 12:06:59.076743+00:00] [2015-07-31 17:36:57,087: INFO/MainProcess] Task add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] retry: Retry in 2s: Exception() [2015-07-31 17:37:00,968: ERROR/MainProcess] Task add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ...... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 8, in add raise Exception() Exception This time, the failed task was retried only once. Replicating exact Twitter scenario We want the task to succeed in some cases and fail in other cases. Modify your code, so it looks like: import random from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): # Get a random number between 1 and 10 num = random.randint(1, 10) print num # To help properly understand output try: # If number is odd, fail the task if num % 2: raise Exception() # If number is even, succeed the task else: return x + y except Exception as e: self.retry(countdown=2, exc=e, max_retries=1) Explanation In our task, we generate a random number between 1 and 10. If the number is even then the task succeeds and returns the sum of numbers. If the generated random number is odd then the task fails, in which case we retry the task after 2 seconds. Outputs of some random runs of tasks [2015-07-31 17:47:13,800: INFO/MainProcess] Received task: add.add[879c089d-54fb-4592-96e4-325f61bdce39] [2015-07-31 17:47:13,801: WARNING/Worker-3] 7 [2015-07-31 17:47:13,822: INFO/MainProcess] Received task: add.add[879c089d-54fb-4592-96e4-325f61bdce39] eta:[2015-07-31 12:17:15.811826+00:00] [2015-07-31 17:47:13,823: INFO/MainProcess] Task add.add[879c089d-54fb-4592-96e4-325f61bdce39] retry: Retry in 2s: Exception() [2015-07-31 17:47:16,873: WARNING/Worker-1] 8 [2015-07-31 17:47:16,874: INFO/MainProcess] Task add.add[879c089d-54fb-4592-96e4-325f61bdce39] succeeded in 0.00106367497938s: 7 Generated random number was 7. So task raised an exception and so it was retried in 2 secs. In the retried run, generated random number was 8 which is even and so no exception was raised and instead the sum was calculated and returned. Another output [2015-07-31 17:47:33,681: INFO/MainProcess] Received task: add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] [2015-07-31 17:47:33,681: WARNING/Worker-2] 7 [2015-07-31 17:47:33,703: INFO/MainProcess] Received task: add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] eta:[2015-07-31 12:17:35.692557+00:00] [2015-07-31 17:47:33,704: INFO/MainProcess] Task add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] retry: Retry in 2s: Exception() [2015-07-31 17:47:36,890: WARNING/Worker-4] 3 [2015-07-31 17:47:36,894: ERROR/MainProcess] Task add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 15, in add raise Exception() Exception Generated random number was 7. So task raised an exception and so it was retried in 2 secs. In the retried run, generated random number was 3 which is again odd, so retried task also raised an exception. And since we have set max_retries as 1, no furter retry was done. Setting a datetime instead of countdown Till now we have been working with countdown which tells the number of seconds in which failed task should be retried. We can also set a datetime at which task should be retried. Let’s retry the failed task after 2 seconds but using datetime instead of countdown. import random import datetime import pytz from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): # Get a random number between 1 and 10 num = random.randint(1, 10) print num try: # If number is odd, fail the task if num % 2: raise Exception() # If number is even, succeed the task else: return x + y except Exception as e: dt = datetime.datetime.now(pytz.utc) + datetime.timedelta(seconds=1) self.retry(eta=dt, exc=e, max_retries=1) Output [2015-07-31 18:59:17,177: INFO/MainProcess] Received task: add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] [2015-07-31 18:59:17,178: WARNING/Worker-3] 1 [2015-07-31 18:59:17,200: INFO/MainProcess] Received task: add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] eta:[2015-07-31 13:29:19.178833+00:00] [2015-07-31 18:59:17,202: INFO/MainProcess] Task add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] retry: Retry at 2015-07-31 13:29:19.178833+00:00: Exception() [2015-07-31 18:59:19,690: WARNING/Worker-1] 10 [2015-07-31 18:59:19,691: INFO/MainProcess] Task add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] succeeded in 0.00107540999306s: 7 Retrying failed Twitter tasks I assume you have the idea of Python twitter library.. My code before using retry looked like. import twitter @app.task(bind=True) def fetch_tweets(self) auth = twitter.OAuth(oauth_token, oauth_token_secret, key, secret) client = twitter.Twitter(auth=auth) params = {&#39;user_id&#39;: user_id, &#39;count&#39;: 2} response = client.favorites.list(**params) return response Till first 180 calls, tasks were succeeding. 181st call onwards the tasks started failing. So I changed it to. import twitter @app.task(bind=True) def fetch_tweets(self) auth = twitter.OAuth(oauth_token, oauth_token_secret, key, secret) client = twitter.Twitter(auth=auth) params = {&#39;user_id&#39;: user_id, &#39;count&#39;: 2} try: response = client.favorites.list(**params) except twitter.TwitterError as e: if e.e.code == 429: # 429: rate limit exceeded # Ask Twitter to tell at what time rate limit window gets reset rate_limit_status = self.client.application.rate_limit_status(resources=&quot;statuses&quot;) reset = rate_limit_status[&quot;resources&quot;][&quot;statuses&quot;][&quot;/statuses/user_timeline&quot;][&quot;reset&quot;] dt = datetime.datetime.utcfromtimestamp(reset) raise self.retry(eta=dt, exc=e, max_retries=1) return response After this, any failed tasks were retried when Twitter rate limit window gets reset." />
+<link rel="canonical" href="http://localhost:4000/celery/2015/08/03/retrying-celery-failed-tasks.html" />
+<meta property="og:url" content="http://localhost:4000/celery/2015/08/03/retrying-celery-failed-tasks.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2015-08-03T10:53:19+05:30" />
+<script type="application/ld+json">
+{"description":"I assume you have a basic understanding of celery. If you want to learn about basics of celery, you can check our last blog. Use case In one of my projects, I work with Twitter api. I need to fetch a user’s tweets. Twitter provides an api endpoint for fetching user’s tweets. Fetching of tweets involve network calls and so should happen in background, so we fetch the tweets using a celery task. So I have a celery task which makes one api call to Twitter. If I am able to fetch the tweets I consider the celery task was successful. But Twitter rate limits this api endpoint and I can’t hit this api endpoint indefinite number of times. Twitter allows maximum of 180 calls to this endpoint in a 15 minute window. Any call beyond 180 calls will start failing and Twitter will raise an exception instead of returning tweets. If Twitter raises exception instead of returning tweets, I consider that the celery task has failed. Assuming a very active Twitter user signs up and we need 200 api calls to fetch all his tweets. So my celery tasks run 200 times. First 180 tasks would succeed but next 20 tasks would fail because of rate limiting. I do not want to miss any tweet by a user, and so any failed task must be retried after 15 minutes. This is where celery retry functionality comes into picture. Pseudocode for my usecase @app.task(bind=True) def fetch_tweets(token_details): # token_details is user specific User token that needs to be passed to Twitter try: resp = make_twitter_call() # Till 180 calls to Twitter, we will get `resp` # process result except TwitterException: # Till 180th call, this part will not be executed # 181th call onwards, Twitter will raise an error and this part of code will be executed # Retry fetch_tweets after 15 mins. Before fixing this use case, let’s play around with some basic examples. Basic example Create a file called add.py with following content add.py from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): return x + y Ensure task defined in this file is running properly by running the worker and trying to run the task from ipython shell. Worker terminal celery worker -A add -l info Ipython from add import add add.delay(3, 4) After you do this, addition should happen and “7”, i.e 3+4, should be printed on worker terminal. Explicity raising error Setting up Twitter access tokens etc will take effort and time, so instead of setting up Twitter, let’s try to replicate a similar scenario where some calls to our task succeed and some calls to task fail. Let’s first replicate a failed task. A failed task means an error happening in the task. Raise an error in your task, and see how it behaves. from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): raise Exception() return x + y Restart celery worker celery worker -A add -l info Run the task again from add import add add.delay(3, 4) On celery terminal, you will see that an exception is raised. [2015-07-31 16:39:13,440: ERROR/MainProcess] Task add.add[fb067fbf-e79e-4fdd-b398-94da6be960e1] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task R = retval = fun(*args, **kwargs) File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 438, in __protected_call__ return self.run(*args, **kwargs) File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 7, in add raise Exception() Exception Suppose you want to retry the task after 2 seconds when it fails. Make the following code change from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): try: raise Exception() except Exception as e: self.retry(countdown=2, exc=e) return x + y Restart celery, run the task and check the output. Output would be 2015-07-31 16:59:24,027: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:26.014576+00:00] [2015-07-31 16:59:24,030: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:26,075: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:28.065412+00:00] [2015-07-31 16:59:26,076: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:28,127: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:30.115907+00:00] [2015-07-31 16:59:28,128: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception() [2015-07-31 16:59:30,771: ERROR/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ... .... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 8, in add raise Exception() Exception Explanation Task ran for first time. An error was raised which you caught. We retried the task after 2 seconds in case of error. Currently our task is written in such a way that every run of task raises error. So first retry of task also raised error. Task was retried for 3 times, which is the celery default. Third retry also raised an error, but instead of executing the code of “except” block, celery is smart to figure out that a task should only be retried 3 times and should not be retried forever. Retry only once Suppose you only want to retry a failed task once instead of three which is the celery default. Change self.retry line, so it looks like self.retry(countdown=2, exc=e, max_retries=1) Restart celery and run the task, output would be [2015-07-31 17:36:57,065: INFO/MainProcess] Received task: add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] [2015-07-31 17:36:57,086: INFO/MainProcess] Received task: add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] eta:[2015-07-31 12:06:59.076743+00:00] [2015-07-31 17:36:57,087: INFO/MainProcess] Task add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] retry: Retry in 2s: Exception() [2015-07-31 17:37:00,968: ERROR/MainProcess] Task add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ...... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 8, in add raise Exception() Exception This time, the failed task was retried only once. Replicating exact Twitter scenario We want the task to succeed in some cases and fail in other cases. Modify your code, so it looks like: import random from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): # Get a random number between 1 and 10 num = random.randint(1, 10) print num # To help properly understand output try: # If number is odd, fail the task if num % 2: raise Exception() # If number is even, succeed the task else: return x + y except Exception as e: self.retry(countdown=2, exc=e, max_retries=1) Explanation In our task, we generate a random number between 1 and 10. If the number is even then the task succeeds and returns the sum of numbers. If the generated random number is odd then the task fails, in which case we retry the task after 2 seconds. Outputs of some random runs of tasks [2015-07-31 17:47:13,800: INFO/MainProcess] Received task: add.add[879c089d-54fb-4592-96e4-325f61bdce39] [2015-07-31 17:47:13,801: WARNING/Worker-3] 7 [2015-07-31 17:47:13,822: INFO/MainProcess] Received task: add.add[879c089d-54fb-4592-96e4-325f61bdce39] eta:[2015-07-31 12:17:15.811826+00:00] [2015-07-31 17:47:13,823: INFO/MainProcess] Task add.add[879c089d-54fb-4592-96e4-325f61bdce39] retry: Retry in 2s: Exception() [2015-07-31 17:47:16,873: WARNING/Worker-1] 8 [2015-07-31 17:47:16,874: INFO/MainProcess] Task add.add[879c089d-54fb-4592-96e4-325f61bdce39] succeeded in 0.00106367497938s: 7 Generated random number was 7. So task raised an exception and so it was retried in 2 secs. In the retried run, generated random number was 8 which is even and so no exception was raised and instead the sum was calculated and returned. Another output [2015-07-31 17:47:33,681: INFO/MainProcess] Received task: add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] [2015-07-31 17:47:33,681: WARNING/Worker-2] 7 [2015-07-31 17:47:33,703: INFO/MainProcess] Received task: add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] eta:[2015-07-31 12:17:35.692557+00:00] [2015-07-31 17:47:33,704: INFO/MainProcess] Task add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] retry: Retry in 2s: Exception() [2015-07-31 17:47:36,890: WARNING/Worker-4] 3 [2015-07-31 17:47:36,894: ERROR/MainProcess] Task add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] raised unexpected: Exception() Traceback (most recent call last): File &quot;/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py&quot;, line 240, in trace_task ... File &quot;/Users/akshar/Play/Python/hack/add.py&quot;, line 15, in add raise Exception() Exception Generated random number was 7. So task raised an exception and so it was retried in 2 secs. In the retried run, generated random number was 3 which is again odd, so retried task also raised an exception. And since we have set max_retries as 1, no furter retry was done. Setting a datetime instead of countdown Till now we have been working with countdown which tells the number of seconds in which failed task should be retried. We can also set a datetime at which task should be retried. Let’s retry the failed task after 2 seconds but using datetime instead of countdown. import random import datetime import pytz from celery import Celery app = Celery(&#39;add&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task(bind=True) def add(self, x, y): # Get a random number between 1 and 10 num = random.randint(1, 10) print num try: # If number is odd, fail the task if num % 2: raise Exception() # If number is even, succeed the task else: return x + y except Exception as e: dt = datetime.datetime.now(pytz.utc) + datetime.timedelta(seconds=1) self.retry(eta=dt, exc=e, max_retries=1) Output [2015-07-31 18:59:17,177: INFO/MainProcess] Received task: add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] [2015-07-31 18:59:17,178: WARNING/Worker-3] 1 [2015-07-31 18:59:17,200: INFO/MainProcess] Received task: add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] eta:[2015-07-31 13:29:19.178833+00:00] [2015-07-31 18:59:17,202: INFO/MainProcess] Task add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] retry: Retry at 2015-07-31 13:29:19.178833+00:00: Exception() [2015-07-31 18:59:19,690: WARNING/Worker-1] 10 [2015-07-31 18:59:19,691: INFO/MainProcess] Task add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] succeeded in 0.00107540999306s: 7 Retrying failed Twitter tasks I assume you have the idea of Python twitter library.. My code before using retry looked like. import twitter @app.task(bind=True) def fetch_tweets(self) auth = twitter.OAuth(oauth_token, oauth_token_secret, key, secret) client = twitter.Twitter(auth=auth) params = {&#39;user_id&#39;: user_id, &#39;count&#39;: 2} response = client.favorites.list(**params) return response Till first 180 calls, tasks were succeeding. 181st call onwards the tasks started failing. So I changed it to. import twitter @app.task(bind=True) def fetch_tweets(self) auth = twitter.OAuth(oauth_token, oauth_token_secret, key, secret) client = twitter.Twitter(auth=auth) params = {&#39;user_id&#39;: user_id, &#39;count&#39;: 2} try: response = client.favorites.list(**params) except twitter.TwitterError as e: if e.e.code == 429: # 429: rate limit exceeded # Ask Twitter to tell at what time rate limit window gets reset rate_limit_status = self.client.application.rate_limit_status(resources=&quot;statuses&quot;) reset = rate_limit_status[&quot;resources&quot;][&quot;statuses&quot;][&quot;/statuses/user_timeline&quot;][&quot;reset&quot;] dt = datetime.datetime.utcfromtimestamp(reset) raise self.retry(eta=dt, exc=e, max_retries=1) return response After this, any failed tasks were retried when Twitter rate limit window gets reset.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/celery/2015/08/03/retrying-celery-failed-tasks.html","headline":"Retrying celery failed tasks","dateModified":"2015-08-03T10:53:19+05:30","datePublished":"2015-08-03T10:53:19+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/celery/2015/08/03/retrying-celery-failed-tasks.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Retrying celery failed tasks</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2015-08-03T10:53:19+05:30" itemprop="datePublished">Aug 3, 2015
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>I assume you have a basic understanding of celery. If you want to learn about basics of celery, you can check our <a href="http://agiliq.com/blog/2015/07/getting-started-with-celery-and-redis/" target="_blank">last blog</a>.</p>
+
+<h3 id="use-case">Use case</h3>
+
+<p>In one of my projects, I work with Twitter api. I need to fetch a user’s tweets. Twitter provides an api endpoint for fetching user’s tweets. Fetching of tweets involve network calls and so should happen in background, so we fetch the tweets using a celery task. So I have a celery task which makes one api call to Twitter. If I am able to fetch the tweets I consider the celery task was successful.</p>
+
+<p>But Twitter rate limits this api endpoint and I can’t hit this api endpoint indefinite number of times. Twitter allows maximum of 180 calls to this endpoint in a 15 minute window. Any call beyond 180 calls will start failing and Twitter will raise an exception instead of returning tweets. If Twitter raises exception instead of returning tweets, I consider that the celery task has failed.</p>
+
+<p>Assuming a very active Twitter user signs up and we need 200 api calls to fetch all his tweets. So my celery tasks run 200 times. First 180 tasks would succeed but next 20 tasks would fail because of rate limiting.</p>
+
+<p>I do not want to miss any tweet by a user, and so any failed task must be retried after 15 minutes. This is where celery retry functionality comes into picture.</p>
+
+<h4 id="pseudocode-for-my-usecase">Pseudocode for my usecase</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@app.task(bind=True)
+def fetch_tweets(token_details):
+	# token_details is user specific User token that needs to be passed to Twitter
+	try:
+		resp = make_twitter_call()	
+		# Till 180 calls to Twitter, we will get `resp`
+		# process result
+	except TwitterException:
+		# Till 180th call, this part will not be executed
+		# 181th call onwards, Twitter will raise an error and this part of code will be executed
+		# Retry fetch_tweets after 15 mins.
+</code></pre></div></div>
+
+<p>Before fixing this use case, let’s play around with some basic examples.</p>
+
+<h3 id="basic-example">Basic example</h3>
+
+<p>Create a file called add.py with following content</p>
+
+<h6 id="addpy">add.py</h6>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery import Celery
+
+app = Celery('add', broker='redis://localhost:6379/0')
+
+@app.task(bind=True)
+def add(self, x, y):
+	return x + y
+</code></pre></div></div>
+
+<p>Ensure task defined in this file is running properly by running the worker and trying to run the task from ipython shell.</p>
+
+<h6 id="worker-terminal">Worker terminal</h6>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>celery worker -A add -l info
+</code></pre></div></div>
+
+<h6 id="ipython">Ipython</h6>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from add import add
+add.delay(3, 4)
+</code></pre></div></div>
+
+<p>After you do this, addition should happen and “7”, i.e 3+4, should be printed on worker terminal.</p>
+
+<h4 id="explicity-raising-error">Explicity raising error</h4>
+
+<p>Setting up Twitter access tokens etc will take effort and time, so instead of setting up Twitter, let’s try to replicate a similar scenario where some calls to our task succeed and some calls to task fail.</p>
+
+<p>Let’s first replicate a failed task. A failed task means an error happening in the task. Raise an error in your task, and see how it behaves.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery import Celery
+
+app = Celery('add', broker='redis://localhost:6379/0')
+
+@app.task(bind=True)
+def add(self, x, y):
+	raise Exception()
+	return x + y
+</code></pre></div></div>
+
+<p>Restart celery worker</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>celery worker -A add -l info
+</code></pre></div></div>
+
+<p>Run the task again</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from add import add
+add.delay(3, 4)
+</code></pre></div></div>
+
+<p>On celery terminal, you will see that an exception is raised.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-31 16:39:13,440: ERROR/MainProcess] Task add.add[fb067fbf-e79e-4fdd-b398-94da6be960e1] raised unexpected: Exception()
+Traceback (most recent call last):
+  File "/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py", line 240, in trace_task
+	R = retval = fun(*args, **kwargs)
+  File "/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py", line 438, in __protected_call__
+	return self.run(*args, **kwargs)
+  File "/Users/akshar/Play/Python/hack/add.py", line 7, in add
+	raise Exception()
+Exception
+</code></pre></div></div>
+
+<p>Suppose you want to retry the task after 2 seconds when it fails. Make the following code change</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery import Celery
+
+app = Celery('add', broker='redis://localhost:6379/0')
+
+@app.task(bind=True)
+def add(self, x, y):
+	try:
+		raise Exception()
+	except Exception as e:
+		self.retry(countdown=2, exc=e)
+	return x + y
+</code></pre></div></div>
+
+<p>Restart celery, run the task and check the output. Output would be</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2015-07-31 16:59:24,027: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:26.014576+00:00]
+[2015-07-31 16:59:24,030: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception()
+[2015-07-31 16:59:26,075: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:28.065412+00:00]
+[2015-07-31 16:59:26,076: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception()
+[2015-07-31 16:59:28,127: INFO/MainProcess] Received task: add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] eta:[2015-07-31 11:29:30.115907+00:00]
+[2015-07-31 16:59:28,128: INFO/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] retry: Retry in 2s: Exception()
+[2015-07-31 16:59:30,771: ERROR/MainProcess] Task add.add[f9c6a487-9fd7-4bb2-8db6-2c58849809c7] raised unexpected: Exception()
+Traceback (most recent call last):
+  File "/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py", line 240, in trace_task
+  ...
+  ....
+  File "/Users/akshar/Play/Python/hack/add.py", line 8, in add
+	raise Exception()
+Exception
+</code></pre></div></div>
+
+<h4 id="explanation">Explanation</h4>
+
+<ul>
+  <li>Task ran for first time.</li>
+  <li>An error was raised which you caught.</li>
+  <li>We retried the task after 2 seconds in case of error.</li>
+  <li>Currently our task is written in such a way that every run of task raises error. So first retry of task also raised error.</li>
+  <li>Task was retried for 3 times, which is the celery default.</li>
+  <li>Third retry also raised an error, but instead of executing the code of “except” block, celery is smart to figure out that a task should only be retried 3 times and should not be retried forever.</li>
+</ul>
+
+<h4 id="retry-only-once">Retry only once</h4>
+
+<p>Suppose you only want to retry a failed task once instead of three which is the celery default.</p>
+
+<p>Change self.retry line, so it looks like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>self.retry(countdown=2, exc=e, max_retries=1)
+</code></pre></div></div>
+
+<p>Restart celery and run the task, output would be</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-31 17:36:57,065: INFO/MainProcess] Received task: add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3]
+[2015-07-31 17:36:57,086: INFO/MainProcess] Received task: add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] eta:[2015-07-31 12:06:59.076743+00:00]
+[2015-07-31 17:36:57,087: INFO/MainProcess] Task add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] retry: Retry in 2s: Exception()
+[2015-07-31 17:37:00,968: ERROR/MainProcess] Task add.add[d1b099a4-026f-4bff-9bfd-8833a2b742e3] raised unexpected: Exception()
+Traceback (most recent call last):
+  File "/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py", line 240, in trace_task
+  ......
+  File "/Users/akshar/Play/Python/hack/add.py", line 8, in add
+	raise Exception()
+Exception
+</code></pre></div></div>
+
+<p>This time, the failed task was retried only once.</p>
+
+<h3 id="replicating-exact-twitter-scenario">Replicating exact Twitter scenario</h3>
+
+<p>We want the task to succeed in some cases and fail in other cases. Modify your code, so it looks like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import random
+
+from celery import Celery
+
+app = Celery('add', broker='redis://localhost:6379/0')
+
+@app.task(bind=True)
+def add(self, x, y):
+	# Get a random number between 1 and 10
+	num = random.randint(1, 10)
+	print num # To help properly understand output
+	try:
+		# If number is odd, fail the task
+		if num % 2:
+			raise Exception()
+		# If number is even, succeed the task
+		else:
+			return x + y
+	except Exception as e:
+		self.retry(countdown=2, exc=e, max_retries=1)
+</code></pre></div></div>
+
+<h4 id="explanation-1">Explanation</h4>
+
+<p>In our task, we generate a random number between 1 and 10. If the number is even then the task succeeds and returns the sum of numbers. If the generated random number is odd then the task fails, in which case we retry the task after 2 seconds.</p>
+
+<h4 id="outputs-of-some-random-runs-of-tasks">Outputs of some random runs of tasks</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-31 17:47:13,800: INFO/MainProcess] Received task: add.add[879c089d-54fb-4592-96e4-325f61bdce39]
+[2015-07-31 17:47:13,801: WARNING/Worker-3] 7
+[2015-07-31 17:47:13,822: INFO/MainProcess] Received task: add.add[879c089d-54fb-4592-96e4-325f61bdce39] eta:[2015-07-31 12:17:15.811826+00:00]
+[2015-07-31 17:47:13,823: INFO/MainProcess] Task add.add[879c089d-54fb-4592-96e4-325f61bdce39] retry: Retry in 2s: Exception()
+[2015-07-31 17:47:16,873: WARNING/Worker-1] 8
+[2015-07-31 17:47:16,874: INFO/MainProcess] Task add.add[879c089d-54fb-4592-96e4-325f61bdce39] succeeded in 0.00106367497938s: 7
+</code></pre></div></div>
+
+<p>Generated random number was 7. So task raised an exception and so it was retried in 2 secs. In the retried run, generated random number was 8 which is even and so no exception was raised and instead the sum was calculated and returned.</p>
+
+<p>Another output</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-31 17:47:33,681: INFO/MainProcess] Received task: add.add[64e43f81-0f80-49ac-a068-4c84c689ea16]
+[2015-07-31 17:47:33,681: WARNING/Worker-2] 7
+[2015-07-31 17:47:33,703: INFO/MainProcess] Received task: add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] eta:[2015-07-31 12:17:35.692557+00:00]
+[2015-07-31 17:47:33,704: INFO/MainProcess] Task add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] retry: Retry in 2s: Exception()
+[2015-07-31 17:47:36,890: WARNING/Worker-4] 3
+[2015-07-31 17:47:36,894: ERROR/MainProcess] Task add.add[64e43f81-0f80-49ac-a068-4c84c689ea16] raised unexpected: Exception()
+Traceback (most recent call last):
+  File "/Users/akshar/.virtualenvs/hack/lib/python2.7/site-packages/celery/app/trace.py", line 240, in trace_task
+  ...
+  File "/Users/akshar/Play/Python/hack/add.py", line 15, in add
+	raise Exception()
+Exception
+</code></pre></div></div>
+
+<p>Generated random number was 7. So task raised an exception and so it was retried in 2 secs. In the retried run, generated random number was 3 which is again odd, so retried task also raised an exception. And since we have set <code class="highlighter-rouge">max_retries</code> as 1, no furter retry was done.</p>
+
+<h4 id="setting-a-datetime-instead-of-countdown">Setting a datetime instead of countdown</h4>
+
+<p>Till now we have been working with <strong>countdown</strong> which tells the number of seconds in which failed task should be retried. We can also set a datetime at which task should be retried.</p>
+
+<p>Let’s retry the failed task after 2 seconds but using datetime instead of countdown.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import random
+import datetime
+import pytz
+
+from celery import Celery
+
+app = Celery('add', broker='redis://localhost:6379/0')
+
+@app.task(bind=True)
+def add(self, x, y):
+	# Get a random number between 1 and 10
+	num = random.randint(1, 10)
+	print num
+	try:
+		# If number is odd, fail the task
+		if num % 2:
+			raise Exception()
+		# If number is even, succeed the task
+		else:
+			return x + y
+	except Exception as e:
+		dt = datetime.datetime.now(pytz.utc) + datetime.timedelta(seconds=1)
+		self.retry(eta=dt, exc=e, max_retries=1)
+</code></pre></div></div>
+
+<p>Output</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-31 18:59:17,177: INFO/MainProcess] Received task: add.add[b5f95e50-da3a-4295-871a-fc940bef5c46]
+[2015-07-31 18:59:17,178: WARNING/Worker-3] 1
+[2015-07-31 18:59:17,200: INFO/MainProcess] Received task: add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] eta:[2015-07-31 13:29:19.178833+00:00]
+[2015-07-31 18:59:17,202: INFO/MainProcess] Task add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] retry: Retry at 2015-07-31 13:29:19.178833+00:00: Exception()
+[2015-07-31 18:59:19,690: WARNING/Worker-1] 10
+[2015-07-31 18:59:19,691: INFO/MainProcess] Task add.add[b5f95e50-da3a-4295-871a-fc940bef5c46] succeeded in 0.00107540999306s: 7
+</code></pre></div></div>
+
+<h3 id="retrying-failed-twitter-tasks">Retrying failed Twitter tasks</h3>
+
+<p>I assume you have the idea of <a href="https://pypi.python.org/pypi/twitter" target="_blank">Python twitter library.</a>. My code before using retry looked like.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import twitter
+
+@app.task(bind=True)
+def fetch_tweets(self)
+	auth = twitter.OAuth(oauth_token, oauth_token_secret, key, secret)
+	client = twitter.Twitter(auth=auth)
+	params = {'user_id': user_id, 'count': 2}
+	response = client.favorites.list(**params)
+	return response
+</code></pre></div></div>
+
+<p>Till first 180 calls, tasks were succeeding. 181st call onwards the tasks started failing. So I changed it to.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import twitter
+
+@app.task(bind=True)
+def fetch_tweets(self)
+	auth = twitter.OAuth(oauth_token, oauth_token_secret, key, secret)
+	client = twitter.Twitter(auth=auth)
+	params = {'user_id': user_id, 'count': 2}
+	try:
+		response = client.favorites.list(**params)
+	except twitter.TwitterError as e:
+		if e.e.code == 429:
+			# 429: rate limit exceeded
+			# Ask Twitter to tell at what time rate limit window gets reset
+			rate_limit_status = self.client.application.rate_limit_status(resources="statuses")
+			reset = rate_limit_status["resources"]["statuses"]["/statuses/user_timeline"]["reset"]
+			dt = datetime.datetime.utcfromtimestamp(reset)
+			raise self.retry(eta=dt, exc=e, max_retries=1)
+	return response
+</code></pre></div></div>
+
+<p>After this, any failed tasks were retried when Twitter rate limit window gets reset.</p>
+
+
+  </div><a class="u-url" href="/celery/2015/08/03/retrying-celery-failed-tasks.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

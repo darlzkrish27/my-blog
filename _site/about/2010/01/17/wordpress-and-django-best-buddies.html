@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Wordpress and Django: best buddies | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Wordpress and Django: best buddies" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Summary: How to integrate a non Django database system in your Django code, using Wordpress as example. The completed code is available at github or you can see some screnshots Though there are quite a few good Django blog applications, our blog is based on Wordpress. A number of plugin’s make moving to a Django based app a bad decision for us, and not in the spirit of “best tools for the job”. We moved the other way, and decided to use Django to admin the Wordpress database. The completed code is available on Github It is not too hard, with the the builtin Django commands. Django provides the inspectdb command which allows you to build your models.py from an existing non Django database. Here we will see the steps followed for Wordpress, but it would be about the same for all systems. Take a back up of wordpress mysqldump -u wordpress_user -p --database wordpress_database &gt; data.sql Create a new project, and set its settings to use the Wordpress database. DATABASE_ENGINE = &#39;mysql&#39; # &#39;postgresql_psycopg2&#39;, &#39;postgresql&#39;, &#39;mysql&#39;, &#39;sqlite3&#39; or &#39;oracle&#39;. DATABASE_NAME = &#39;&#39; # Or path to database file if using sqlite3. DATABASE_USER = &#39;&#39; # Not used with sqlite3. DATABASE_PASSWORD = &#39;&#39; # Not used with sqlite3. DATABASE_HOST = &#39;&#39; # Set to empty string for localhost. Not used with sqlite3. DATABASE_PORT = &#39;&#39; # Set to empty string for default. Not used with sqlite3. Get the initial models.py ./manage.py inspectdb &gt; models.py This will create all the database tables in a form Django can understand. Here is what this command creates for a my Wordpress installation with the YARPP plugin. http://gist.github.com/278962 Create a new app and put this models.py there. With this done, you can treat the non Django part as a standalone application. Since Wordpress appends all its table with wp_ prefix, we name this applications wp to maintain table name compatibility with Django naming conventions. You will notice that all models have the db_table populated, so we can rename tables, without changes to the database. Differences between Wordpress and Django style naming. At this point you will notice some differences in how Django names things (in a best practice sort of way), and how Wordpress does it. a. Django table and model class name are (generally) singular. eg class Post(models.Models) leads to table app_post. Wordpress tables are (most of them) named plural eg wp_posts. b. Django attributes are generally named without the table name part. Eg class Comment(models.Model): author_name = models.TextField() content = models.TextField() Wordpress is explicit here and includes the table prefix with attributes. mysql&gt; desc wp_comments; +----------------------+---------------------+------+-----+---------------------+----------------+ | Field | Type | Null | Key | Default | Extra | +----------------------+---------------------+------+-----+---------------------+----------------+ | comment_ID | bigint(20) unsigned | NO | PRI | NULL | auto_increment | | comment_post_ID | bigint(20) unsigned | NO | MUL | 0 | | | comment_author | tinytext | NO | | NULL | | | comment_author_email | varchar(100) | NO | | | | ..... I believe this is due to the way you would generally be using the code. In Django you would do comment.author where being explicit doesn’t add any value, while in Wordpress, you would use, select comment_author, post_title ... from wp_comment, wp_post ... where join, where being explicit is useful. You can decouple the Django and database names by using the db_table and db_column attributes. We choose to rename the Class names to match Django conventions while we let the column names remain the same. Add Admin and other Django niceties. Wordpress doesn’t (seem to) have foreign key constraints setup correctly, and uses bigint(20) unsigned without foreign key constraints to refer to referred entities. This means Django creates all ForeignKeys as IntegerFields. Modify them to use ForeignKey instead. Also add __unicode__, to your classes. Add an admin.py to register all your classes. And you are done! Now you can access, and work with your Wordpress data inside Django and Django admin. There are a few more things which will allow a easier Wordpress setup. Create template tags to show the latest posts and comments. @register.inclusion_tag(&quot;wp/recent_posts.html&quot;) def show_posts(num_comments): return {&quot;posts&quot;: Post.objects.filter(post_type=&quot;post&quot;, post_status=&quot;publish&quot;).order_by(&quot;-post_date&quot;)[:num_comments]} So you can see that there is nothing Wordpress specific we need too do here. Create a better admin. Add ModelAdmin to generally used models. Allows accessing attributes via the Django style names. If you override __getattr__, you can access the attributes via other names. Eg in the current setup you need to do comment.comment_content, comment.comment_author etc, while we would like to do comment.content and comment.author as a shortcut. class WordPressModel(object): def __getattr__(self, v): if v in self.__dict__: return self.__dict__[v] else: new_v = &quot;%s_%s&quot; % (self.__class__.__name__.lower(), v) if new_v in self.__dict__: return self.__dict__[new_v] else: raise AttributeError It is highly debatable whether this is a good idea :), but it is too convenient right now not to test this method out. Here are some screenshots. Do you subscribe to our feed? We recently made a full text feed available, so if you are using the old feed, you should change it. Subscribe now." />
+<meta property="og:description" content="Summary: How to integrate a non Django database system in your Django code, using Wordpress as example. The completed code is available at github or you can see some screnshots Though there are quite a few good Django blog applications, our blog is based on Wordpress. A number of plugin’s make moving to a Django based app a bad decision for us, and not in the spirit of “best tools for the job”. We moved the other way, and decided to use Django to admin the Wordpress database. The completed code is available on Github It is not too hard, with the the builtin Django commands. Django provides the inspectdb command which allows you to build your models.py from an existing non Django database. Here we will see the steps followed for Wordpress, but it would be about the same for all systems. Take a back up of wordpress mysqldump -u wordpress_user -p --database wordpress_database &gt; data.sql Create a new project, and set its settings to use the Wordpress database. DATABASE_ENGINE = &#39;mysql&#39; # &#39;postgresql_psycopg2&#39;, &#39;postgresql&#39;, &#39;mysql&#39;, &#39;sqlite3&#39; or &#39;oracle&#39;. DATABASE_NAME = &#39;&#39; # Or path to database file if using sqlite3. DATABASE_USER = &#39;&#39; # Not used with sqlite3. DATABASE_PASSWORD = &#39;&#39; # Not used with sqlite3. DATABASE_HOST = &#39;&#39; # Set to empty string for localhost. Not used with sqlite3. DATABASE_PORT = &#39;&#39; # Set to empty string for default. Not used with sqlite3. Get the initial models.py ./manage.py inspectdb &gt; models.py This will create all the database tables in a form Django can understand. Here is what this command creates for a my Wordpress installation with the YARPP plugin. http://gist.github.com/278962 Create a new app and put this models.py there. With this done, you can treat the non Django part as a standalone application. Since Wordpress appends all its table with wp_ prefix, we name this applications wp to maintain table name compatibility with Django naming conventions. You will notice that all models have the db_table populated, so we can rename tables, without changes to the database. Differences between Wordpress and Django style naming. At this point you will notice some differences in how Django names things (in a best practice sort of way), and how Wordpress does it. a. Django table and model class name are (generally) singular. eg class Post(models.Models) leads to table app_post. Wordpress tables are (most of them) named plural eg wp_posts. b. Django attributes are generally named without the table name part. Eg class Comment(models.Model): author_name = models.TextField() content = models.TextField() Wordpress is explicit here and includes the table prefix with attributes. mysql&gt; desc wp_comments; +----------------------+---------------------+------+-----+---------------------+----------------+ | Field | Type | Null | Key | Default | Extra | +----------------------+---------------------+------+-----+---------------------+----------------+ | comment_ID | bigint(20) unsigned | NO | PRI | NULL | auto_increment | | comment_post_ID | bigint(20) unsigned | NO | MUL | 0 | | | comment_author | tinytext | NO | | NULL | | | comment_author_email | varchar(100) | NO | | | | ..... I believe this is due to the way you would generally be using the code. In Django you would do comment.author where being explicit doesn’t add any value, while in Wordpress, you would use, select comment_author, post_title ... from wp_comment, wp_post ... where join, where being explicit is useful. You can decouple the Django and database names by using the db_table and db_column attributes. We choose to rename the Class names to match Django conventions while we let the column names remain the same. Add Admin and other Django niceties. Wordpress doesn’t (seem to) have foreign key constraints setup correctly, and uses bigint(20) unsigned without foreign key constraints to refer to referred entities. This means Django creates all ForeignKeys as IntegerFields. Modify them to use ForeignKey instead. Also add __unicode__, to your classes. Add an admin.py to register all your classes. And you are done! Now you can access, and work with your Wordpress data inside Django and Django admin. There are a few more things which will allow a easier Wordpress setup. Create template tags to show the latest posts and comments. @register.inclusion_tag(&quot;wp/recent_posts.html&quot;) def show_posts(num_comments): return {&quot;posts&quot;: Post.objects.filter(post_type=&quot;post&quot;, post_status=&quot;publish&quot;).order_by(&quot;-post_date&quot;)[:num_comments]} So you can see that there is nothing Wordpress specific we need too do here. Create a better admin. Add ModelAdmin to generally used models. Allows accessing attributes via the Django style names. If you override __getattr__, you can access the attributes via other names. Eg in the current setup you need to do comment.comment_content, comment.comment_author etc, while we would like to do comment.content and comment.author as a shortcut. class WordPressModel(object): def __getattr__(self, v): if v in self.__dict__: return self.__dict__[v] else: new_v = &quot;%s_%s&quot; % (self.__class__.__name__.lower(), v) if new_v in self.__dict__: return self.__dict__[new_v] else: raise AttributeError It is highly debatable whether this is a good idea :), but it is too convenient right now not to test this method out. Here are some screenshots. Do you subscribe to our feed? We recently made a full text feed available, so if you are using the old feed, you should change it. Subscribe now." />
+<link rel="canonical" href="http://localhost:4000/about/2010/01/17/wordpress-and-django-best-buddies.html" />
+<meta property="og:url" content="http://localhost:4000/about/2010/01/17/wordpress-and-django-best-buddies.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2010-01-17T20:55:29+05:30" />
+<script type="application/ld+json">
+{"description":"Summary: How to integrate a non Django database system in your Django code, using Wordpress as example. The completed code is available at github or you can see some screnshots Though there are quite a few good Django blog applications, our blog is based on Wordpress. A number of plugin’s make moving to a Django based app a bad decision for us, and not in the spirit of “best tools for the job”. We moved the other way, and decided to use Django to admin the Wordpress database. The completed code is available on Github It is not too hard, with the the builtin Django commands. Django provides the inspectdb command which allows you to build your models.py from an existing non Django database. Here we will see the steps followed for Wordpress, but it would be about the same for all systems. Take a back up of wordpress mysqldump -u wordpress_user -p --database wordpress_database &gt; data.sql Create a new project, and set its settings to use the Wordpress database. DATABASE_ENGINE = &#39;mysql&#39; # &#39;postgresql_psycopg2&#39;, &#39;postgresql&#39;, &#39;mysql&#39;, &#39;sqlite3&#39; or &#39;oracle&#39;. DATABASE_NAME = &#39;&#39; # Or path to database file if using sqlite3. DATABASE_USER = &#39;&#39; # Not used with sqlite3. DATABASE_PASSWORD = &#39;&#39; # Not used with sqlite3. DATABASE_HOST = &#39;&#39; # Set to empty string for localhost. Not used with sqlite3. DATABASE_PORT = &#39;&#39; # Set to empty string for default. Not used with sqlite3. Get the initial models.py ./manage.py inspectdb &gt; models.py This will create all the database tables in a form Django can understand. Here is what this command creates for a my Wordpress installation with the YARPP plugin. http://gist.github.com/278962 Create a new app and put this models.py there. With this done, you can treat the non Django part as a standalone application. Since Wordpress appends all its table with wp_ prefix, we name this applications wp to maintain table name compatibility with Django naming conventions. You will notice that all models have the db_table populated, so we can rename tables, without changes to the database. Differences between Wordpress and Django style naming. At this point you will notice some differences in how Django names things (in a best practice sort of way), and how Wordpress does it. a. Django table and model class name are (generally) singular. eg class Post(models.Models) leads to table app_post. Wordpress tables are (most of them) named plural eg wp_posts. b. Django attributes are generally named without the table name part. Eg class Comment(models.Model): author_name = models.TextField() content = models.TextField() Wordpress is explicit here and includes the table prefix with attributes. mysql&gt; desc wp_comments; +----------------------+---------------------+------+-----+---------------------+----------------+ | Field | Type | Null | Key | Default | Extra | +----------------------+---------------------+------+-----+---------------------+----------------+ | comment_ID | bigint(20) unsigned | NO | PRI | NULL | auto_increment | | comment_post_ID | bigint(20) unsigned | NO | MUL | 0 | | | comment_author | tinytext | NO | | NULL | | | comment_author_email | varchar(100) | NO | | | | ..... I believe this is due to the way you would generally be using the code. In Django you would do comment.author where being explicit doesn’t add any value, while in Wordpress, you would use, select comment_author, post_title ... from wp_comment, wp_post ... where join, where being explicit is useful. You can decouple the Django and database names by using the db_table and db_column attributes. We choose to rename the Class names to match Django conventions while we let the column names remain the same. Add Admin and other Django niceties. Wordpress doesn’t (seem to) have foreign key constraints setup correctly, and uses bigint(20) unsigned without foreign key constraints to refer to referred entities. This means Django creates all ForeignKeys as IntegerFields. Modify them to use ForeignKey instead. Also add __unicode__, to your classes. Add an admin.py to register all your classes. And you are done! Now you can access, and work with your Wordpress data inside Django and Django admin. There are a few more things which will allow a easier Wordpress setup. Create template tags to show the latest posts and comments. @register.inclusion_tag(&quot;wp/recent_posts.html&quot;) def show_posts(num_comments): return {&quot;posts&quot;: Post.objects.filter(post_type=&quot;post&quot;, post_status=&quot;publish&quot;).order_by(&quot;-post_date&quot;)[:num_comments]} So you can see that there is nothing Wordpress specific we need too do here. Create a better admin. Add ModelAdmin to generally used models. Allows accessing attributes via the Django style names. If you override __getattr__, you can access the attributes via other names. Eg in the current setup you need to do comment.comment_content, comment.comment_author etc, while we would like to do comment.content and comment.author as a shortcut. class WordPressModel(object): def __getattr__(self, v): if v in self.__dict__: return self.__dict__[v] else: new_v = &quot;%s_%s&quot; % (self.__class__.__name__.lower(), v) if new_v in self.__dict__: return self.__dict__[new_v] else: raise AttributeError It is highly debatable whether this is a good idea :), but it is too convenient right now not to test this method out. Here are some screenshots. Do you subscribe to our feed? We recently made a full text feed available, so if you are using the old feed, you should change it. Subscribe now.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/about/2010/01/17/wordpress-and-django-best-buddies.html","headline":"Wordpress and Django: best buddies","dateModified":"2010-01-17T20:55:29+05:30","datePublished":"2010-01-17T20:55:29+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/about/2010/01/17/wordpress-and-django-best-buddies.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Wordpress and Django: best buddies</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2010-01-17T20:55:29+05:30" itemprop="datePublished">Jan 17, 2010
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Summary:
+How to integrate a non Django database system in your Django code, using Wordpress
+as example. <a href="http://github.com/uswaretech/django-wordpress">The completed code is available at github</a> or you can <a href="#screenshots_wp">see some screnshots</a></p>
+
+<hr />
+
+<p>Though there are quite a <a href="http://github.com/montylounge/django-mingus">few good</a> <a href="http://byteflow.su/">Django blog</a> applications, our blog is based on
+<a href="http://wordpress.org/">Wordpress</a>. A <a href="http://mitcho.com/code/yarpp/">number</a> <a href="http://diythemes.com/">of</a> <a href="http://www.backtype.com/">plugin’s</a>
+make moving to a Django based app a bad decision
+for us, and not in the spirit of “best tools for the job”.</p>
+
+<p>We moved the other way, and decided to use <a href="http://github.com/uswaretech/django-wordpress">Django to admin the
+Wordpress database</a>. The completed code is available on <a href="http://github.com/uswaretech/django-wordpress">Github</a></p>
+
+<p>It is not too hard, with the the builtin Django commands. Django provides the
+<a href="http://www.djangobook.com/en/1.0/chapter16/"><code class="highlighter-rouge">inspectdb</code></a> command which allows you to build your models.py from an existing
+non Django database.</p>
+
+<p>Here we will see the steps followed for Wordpress, but it would be about the same for all
+systems.</p>
+
+<h5 id="take-a-back-up-of-wordpress">Take a back up of wordpress</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mysqldump -u wordpress_user -p --database wordpress_database &gt; data.sql
+</code></pre></div></div>
+
+<h5 id="create-a-new-project-and-set-its-settings-to-use-the-wordpress-database">Create a new project, and set its settings to use the Wordpress database.</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    DATABASE_ENGINE = 'mysql'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+    DATABASE_NAME = ''             # Or path to database file if using sqlite3.
+    DATABASE_USER = ''             # Not used with sqlite3.
+    DATABASE_PASSWORD = ''         # Not used with sqlite3.
+    DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
+    DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
+</code></pre></div></div>
+
+<h5 id="get-the-initial-modelspy">Get the initial models.py</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./manage.py inspectdb &gt; models.py
+</code></pre></div></div>
+
+<p>This will create all the database tables in a form Django can understand. Here is what this command creates for a
+my Wordpress installation with the YARPP plugin. <a href="http://gist.github.com/278962">http://gist.github.com/278962</a></p>
+
+<h5 id="create-a-new-app-and-put-this-modelspy-there">Create a new app and put this models.py there.</h5>
+
+<p>With this done, you can treat the non Django part as a
+standalone application. Since Wordpress appends all its table with <code class="highlighter-rouge">wp_</code> prefix,
+we name this applications <code class="highlighter-rouge">wp</code> to maintain table name compatibility with Django naming
+conventions.</p>
+
+<p>You will notice that all models have the <code class="highlighter-rouge">db_table</code> populated, so we can rename tables, without changes to the database.</p>
+
+<h5 id="differences-between-wordpress-and-django-style-naming">Differences between Wordpress and Django style naming.</h5>
+
+<p>At this point you will notice some differences in how Django names things (in a
+best practice sort of way), and how Wordpress does it.</p>
+
+<p>a. Django table and model class name are (generally) singular. eg <code class="highlighter-rouge">class Post(models.Models)</code> leads to table <code class="highlighter-rouge">app_post</code>.
+Wordpress tables are (most of them) named plural eg <code class="highlighter-rouge">wp_posts</code>.</p>
+
+<p>b. Django attributes are generally named without the table name part. Eg</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Comment(models.Model):
+    author_name = models.TextField()
+    content = models.TextField()
+</code></pre></div></div>
+
+<p>Wordpress is explicit here and includes the table prefix with attributes.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mysql&gt; desc wp_comments;
++----------------------+---------------------+------+-----+---------------------+----------------+
+| Field                | Type                | Null | Key | Default             | Extra          |
++----------------------+---------------------+------+-----+---------------------+----------------+
+| comment_ID           | bigint(20) unsigned | NO   | PRI | NULL                | auto_increment | 
+| comment_post_ID      | bigint(20) unsigned | NO   | MUL | 0                   |                | 
+| comment_author       | tinytext            | NO   |     | NULL                |                | 
+| comment_author_email | varchar(100)        | NO   |     |                     |                | 
+
+.....
+</code></pre></div></div>
+
+<p>I believe this is due to the way you would generally be using the code. In Django you would do
+<code class="highlighter-rouge">comment.author</code> where being explicit doesn’t add any value, while in Wordpress, you would use,
+<code class="highlighter-rouge">select comment_author, post_title ... from wp_comment, wp_post ... where join</code>, where being explicit
+is useful.</p>
+
+<p>You can decouple the Django and database names by using the <code class="highlighter-rouge">db_table</code> and <code class="highlighter-rouge">db_column</code> attributes.
+We choose to rename the Class names to match Django conventions while we let the column names remain the same.</p>
+
+<h5 id="add-admin-and-other-django-niceties">Add Admin and other Django niceties.</h5>
+
+<p>Wordpress doesn’t (seem to) have foreign key constraints setup correctly, and
+uses  <code class="highlighter-rouge">bigint(20) unsigned</code> without foreign key constraints to refer to referred entities.
+This means Django creates all ForeignKeys as IntegerFields.</p>
+
+<p>Modify them to use ForeignKey instead. Also add <code class="highlighter-rouge">__unicode__</code>, to your classes.</p>
+
+<p>Add an <code class="highlighter-rouge">admin.py</code> to register all your classes.</p>
+
+<p>And you are done! Now you can access, and work with your Wordpress data inside Django
+and Django admin.</p>
+
+<hr />
+
+<p>There are a few more things which will allow a easier Wordpress setup.</p>
+
+<h5 id="create-template-tags-to-show-the-latest-posts-and-comments">Create template tags to show the latest posts and comments.</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@register.inclusion_tag("wp/recent_posts.html")
+def show_posts(num_comments):
+    return {"posts": Post.objects.filter(post_type="post", post_status="publish").order_by("-post_date")[:num_comments]}
+</code></pre></div></div>
+
+<p>So you can see that there is nothing Wordpress specific we need too do here.</p>
+
+<h5 id="create-a-better-admin">Create a better admin.</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Add ModelAdmin to generally used models.
+</code></pre></div></div>
+
+<h5 id="allows-accessing-attributes-via-the-django-style-names">Allows accessing attributes via the Django style names.</h5>
+
+<p>If you override <code class="highlighter-rouge">__getattr__</code>, you can access
+the attributes via other names. Eg in the current setup you need to do <code class="highlighter-rouge">comment.comment_content</code>, <code class="highlighter-rouge">comment.comment_author</code> etc,
+while we would like to do <code class="highlighter-rouge">comment.content</code>  and <code class="highlighter-rouge">comment.author</code> as a shortcut.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class WordPressModel(object):    
+    def __getattr__(self, v):
+        if v in self.__dict__:
+            return self.__dict__[v]
+        else:
+            new_v = "%s_%s" % (self.__class__.__name__.lower(),  v)
+            if new_v in self.__dict__:
+                return self.__dict__[new_v]
+            else:
+                raise AttributeError
+</code></pre></div></div>
+
+<p>It is highly debatable whether this is a good idea :), but it is too convenient right now not to test this method out.</p>
+
+<p><a name="screenshots_wp"></a>
+Here are some screenshots.</p>
+
+<p><img alt="" src="http://uswaretech.com/dump/screenshots/screenshot_010.png" title="Wordpress django admin" class="alignnone" width="600" /></p>
+
+<p><img alt="" src="http://uswaretech.com/dump/screenshots/screenshot_011.png" title="Wordpress django admin" class="alignnone" width="600" /></p>
+
+<hr />
+<p><a href="http://feeds.feedburner.com/uswarearticles">Do you subscribe to our feed</a>? We recently made a full text feed available, so if you are using the old feed, you should change it. <a href="http://feeds.feedburner.com/uswarearticles">Subscribe now</a>.</p>
+
+
+  </div><a class="u-url" href="/about/2010/01/17/wordpress-and-django-best-buddies.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

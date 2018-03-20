@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Using SQLite Database with Android | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Using SQLite Database with Android" />
+<meta name="author" content="balu" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Android embeds an Open Source Database called SQLite, which supports standard relational database features like SQL syntax, transactions and prepared statements. In addition it requires only little memory at runtime (approx. 250 KB). In this post I would like to show how to work with a simple pragmatic example : Baby Names App. Before writing the code, let me show you some of the screen-shots of Baby Names App, which requires interaction with the database. When ever you launch the App, it will shows a Menu of items as below. When we click on the highlighted button - “Common Names”, it will displays a list of all the names present in “common_names” which is a SQLite database table we will create for this app. Here is the screen-shot of the emulator after clicking on the Button. Now, if we click on a name, let us be the first one “andrew” in the above screen-shot, we have to get some details about the name. In this case will get details about “andrew” as below. Let us write the Java Code ————————— Create a SQLiteDatabase with name baby_names_database. To create the database create a class with name BabyNamesDBHelper which extends SQLiteOpenHelper and then call the super class constructor, passing database name and version as arguments. SQLiteOpenHelper is a helper class to manage database creation and version management. Here is the code to implement this. public class BabyNamesDBHelper extends SQLiteOpenHelper { public static final String DATABASE_NAME = &quot;baby_names_database&quot;; public static final int DATABASE_VERSION = 1; public static final String DATABASE_TABLE_1 = &quot;common_names&quot;; // Columns present in DATABASE_TABLE public static final String COMMON_NAME_ROWID = &quot;_id&quot;; public static final String COMMON_NAME = &quot;common_name&quot;; public static final String COMMON_NAME_COUNT = &quot;common_name_count&quot;; // SQL query string for creating DATABASE_TABLE static final String CREATE_DATABASE_TABLE_1 = &quot;create table &quot; + DATABASE_TABLE_1 + &quot; (&quot; + COMMON_NAME_ROWID + &quot; integer primary key autoincrement, &quot; + COMMON_NAME_COUNT + &quot; text not null, &quot; + COMMON_NAME + &quot; text not null);&quot;; // Constructor public BabyNamesDBHelper(Context context) { super(context, DATABASE_NAME, null, DATABASE_VERSION); this.context = context; } Now we have to create a table - common_names in “baby_names_database”. For that we need to execute the SQL command for creating the table using SQLiteDatabase.execSQL() in onCreate(). Here is the code for this. static final String CREATE_DATABASE_TABLE_1 = &quot;create table &quot; + DATABASE_TABLE_1 + &quot; (&quot; + COMMON_NAME_ROWID + &quot; integer primary key autoincrement, &quot; + COMMON_NAME_COUNT + &quot; text not null, &quot; + COMMON_NAME + &quot; text not null);&quot;; @Override public void onCreate(SQLiteDatabase db) { // Creating Table db.execSQL(CREATE_DATABASE_TABLE_1); } We can insert data into database using ContentValues initialValues = new ContentValues(); initialValues.put(COMMON_NAME_COUNT, &#39;424516&#39;); initialValues.put(COMMON_NAME, &#39;andrew&#39;); db.insert(DATABASE_TABLE_1, null, initialValues); Now create a class with name CommonNamesAdapter where we will define the necessary functions that are required to interact with common_names table in the database. Some important implemented functions are… * open * close * fetchAllCommonNames To view the code please click here When ever we click on Common Names button in the first screen-shot, Activity in the second screen-shot will be launched. Here is the code for that. public class CommonNames extends ListActivity { CommonNamesAdapter cnTable; ListView cnListView; Cursor c; private static final int COMMON_NAME_ACTIVITY_START = 1; @Override protected void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState); setContentView(R.layout.common_names_list); cnTable = new CommonNamesAdapter(); cnTable.open(getApplicationContext()); c = cnTable.fetchAllCommonNames(); startManagingCursor(c); if(c!=null){ SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.common_names_row, c, new String[] {c.getColumnName(1)}, new int[] {R.id.commonName}); setListAdapter(adapter); } } Now, we have to implement onListItemClickListner() in CommonNames Activity to handle click events on the menu item. Here is the code… @Override protected void onListItemClick(ListView l, View v, int position, long id) { super.onListItemClick(l, v, position, id); c.moveToPosition(position); Intent i = new Intent(this, CommonNameDescription.class); i.putExtra(CommonNamesAdapter.COMMON_NAME_ROWID, id); i.putExtra(CommonNamesAdapter.COMMON_NAME, c.getString( c.getColumnIndexOrThrow(CommonNamesAdapter.COMMON_NAME))); i.putExtra(CommonNamesAdapter.COMMON_NAME_COUNT, c.getString( c.getColumnIndexOrThrow(CommonNamesAdapter.COMMON_NAME_COUNT))); startActivityForResult(i, COMMON_NAME_ACTIVITY_START); } After clicking on a List Item, a Activity in the third screen-shot will be displayed. Click here to see the code for that. This is how we can use android SQLite API to create and interact with databases. Click here to view the Complete Source which is in github" />
+<meta property="og:description" content="Android embeds an Open Source Database called SQLite, which supports standard relational database features like SQL syntax, transactions and prepared statements. In addition it requires only little memory at runtime (approx. 250 KB). In this post I would like to show how to work with a simple pragmatic example : Baby Names App. Before writing the code, let me show you some of the screen-shots of Baby Names App, which requires interaction with the database. When ever you launch the App, it will shows a Menu of items as below. When we click on the highlighted button - “Common Names”, it will displays a list of all the names present in “common_names” which is a SQLite database table we will create for this app. Here is the screen-shot of the emulator after clicking on the Button. Now, if we click on a name, let us be the first one “andrew” in the above screen-shot, we have to get some details about the name. In this case will get details about “andrew” as below. Let us write the Java Code ————————— Create a SQLiteDatabase with name baby_names_database. To create the database create a class with name BabyNamesDBHelper which extends SQLiteOpenHelper and then call the super class constructor, passing database name and version as arguments. SQLiteOpenHelper is a helper class to manage database creation and version management. Here is the code to implement this. public class BabyNamesDBHelper extends SQLiteOpenHelper { public static final String DATABASE_NAME = &quot;baby_names_database&quot;; public static final int DATABASE_VERSION = 1; public static final String DATABASE_TABLE_1 = &quot;common_names&quot;; // Columns present in DATABASE_TABLE public static final String COMMON_NAME_ROWID = &quot;_id&quot;; public static final String COMMON_NAME = &quot;common_name&quot;; public static final String COMMON_NAME_COUNT = &quot;common_name_count&quot;; // SQL query string for creating DATABASE_TABLE static final String CREATE_DATABASE_TABLE_1 = &quot;create table &quot; + DATABASE_TABLE_1 + &quot; (&quot; + COMMON_NAME_ROWID + &quot; integer primary key autoincrement, &quot; + COMMON_NAME_COUNT + &quot; text not null, &quot; + COMMON_NAME + &quot; text not null);&quot;; // Constructor public BabyNamesDBHelper(Context context) { super(context, DATABASE_NAME, null, DATABASE_VERSION); this.context = context; } Now we have to create a table - common_names in “baby_names_database”. For that we need to execute the SQL command for creating the table using SQLiteDatabase.execSQL() in onCreate(). Here is the code for this. static final String CREATE_DATABASE_TABLE_1 = &quot;create table &quot; + DATABASE_TABLE_1 + &quot; (&quot; + COMMON_NAME_ROWID + &quot; integer primary key autoincrement, &quot; + COMMON_NAME_COUNT + &quot; text not null, &quot; + COMMON_NAME + &quot; text not null);&quot;; @Override public void onCreate(SQLiteDatabase db) { // Creating Table db.execSQL(CREATE_DATABASE_TABLE_1); } We can insert data into database using ContentValues initialValues = new ContentValues(); initialValues.put(COMMON_NAME_COUNT, &#39;424516&#39;); initialValues.put(COMMON_NAME, &#39;andrew&#39;); db.insert(DATABASE_TABLE_1, null, initialValues); Now create a class with name CommonNamesAdapter where we will define the necessary functions that are required to interact with common_names table in the database. Some important implemented functions are… * open * close * fetchAllCommonNames To view the code please click here When ever we click on Common Names button in the first screen-shot, Activity in the second screen-shot will be launched. Here is the code for that. public class CommonNames extends ListActivity { CommonNamesAdapter cnTable; ListView cnListView; Cursor c; private static final int COMMON_NAME_ACTIVITY_START = 1; @Override protected void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState); setContentView(R.layout.common_names_list); cnTable = new CommonNamesAdapter(); cnTable.open(getApplicationContext()); c = cnTable.fetchAllCommonNames(); startManagingCursor(c); if(c!=null){ SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.common_names_row, c, new String[] {c.getColumnName(1)}, new int[] {R.id.commonName}); setListAdapter(adapter); } } Now, we have to implement onListItemClickListner() in CommonNames Activity to handle click events on the menu item. Here is the code… @Override protected void onListItemClick(ListView l, View v, int position, long id) { super.onListItemClick(l, v, position, id); c.moveToPosition(position); Intent i = new Intent(this, CommonNameDescription.class); i.putExtra(CommonNamesAdapter.COMMON_NAME_ROWID, id); i.putExtra(CommonNamesAdapter.COMMON_NAME, c.getString( c.getColumnIndexOrThrow(CommonNamesAdapter.COMMON_NAME))); i.putExtra(CommonNamesAdapter.COMMON_NAME_COUNT, c.getString( c.getColumnIndexOrThrow(CommonNamesAdapter.COMMON_NAME_COUNT))); startActivityForResult(i, COMMON_NAME_ACTIVITY_START); } After clicking on a List Item, a Activity in the third screen-shot will be displayed. Click here to see the code for that. This is how we can use android SQLite API to create and interact with databases. Click here to view the Complete Source which is in github" />
+<link rel="canonical" href="http://localhost:4000/java/2011/12/28/using-sqlite-database-with-android.html" />
+<meta property="og:url" content="http://localhost:4000/java/2011/12/28/using-sqlite-database-with-android.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2011-12-28T11:30:00+05:30" />
+<script type="application/ld+json">
+{"description":"Android embeds an Open Source Database called SQLite, which supports standard relational database features like SQL syntax, transactions and prepared statements. In addition it requires only little memory at runtime (approx. 250 KB). In this post I would like to show how to work with a simple pragmatic example : Baby Names App. Before writing the code, let me show you some of the screen-shots of Baby Names App, which requires interaction with the database. When ever you launch the App, it will shows a Menu of items as below. When we click on the highlighted button - “Common Names”, it will displays a list of all the names present in “common_names” which is a SQLite database table we will create for this app. Here is the screen-shot of the emulator after clicking on the Button. Now, if we click on a name, let us be the first one “andrew” in the above screen-shot, we have to get some details about the name. In this case will get details about “andrew” as below. Let us write the Java Code ————————— Create a SQLiteDatabase with name baby_names_database. To create the database create a class with name BabyNamesDBHelper which extends SQLiteOpenHelper and then call the super class constructor, passing database name and version as arguments. SQLiteOpenHelper is a helper class to manage database creation and version management. Here is the code to implement this. public class BabyNamesDBHelper extends SQLiteOpenHelper { public static final String DATABASE_NAME = &quot;baby_names_database&quot;; public static final int DATABASE_VERSION = 1; public static final String DATABASE_TABLE_1 = &quot;common_names&quot;; // Columns present in DATABASE_TABLE public static final String COMMON_NAME_ROWID = &quot;_id&quot;; public static final String COMMON_NAME = &quot;common_name&quot;; public static final String COMMON_NAME_COUNT = &quot;common_name_count&quot;; // SQL query string for creating DATABASE_TABLE static final String CREATE_DATABASE_TABLE_1 = &quot;create table &quot; + DATABASE_TABLE_1 + &quot; (&quot; + COMMON_NAME_ROWID + &quot; integer primary key autoincrement, &quot; + COMMON_NAME_COUNT + &quot; text not null, &quot; + COMMON_NAME + &quot; text not null);&quot;; // Constructor public BabyNamesDBHelper(Context context) { super(context, DATABASE_NAME, null, DATABASE_VERSION); this.context = context; } Now we have to create a table - common_names in “baby_names_database”. For that we need to execute the SQL command for creating the table using SQLiteDatabase.execSQL() in onCreate(). Here is the code for this. static final String CREATE_DATABASE_TABLE_1 = &quot;create table &quot; + DATABASE_TABLE_1 + &quot; (&quot; + COMMON_NAME_ROWID + &quot; integer primary key autoincrement, &quot; + COMMON_NAME_COUNT + &quot; text not null, &quot; + COMMON_NAME + &quot; text not null);&quot;; @Override public void onCreate(SQLiteDatabase db) { // Creating Table db.execSQL(CREATE_DATABASE_TABLE_1); } We can insert data into database using ContentValues initialValues = new ContentValues(); initialValues.put(COMMON_NAME_COUNT, &#39;424516&#39;); initialValues.put(COMMON_NAME, &#39;andrew&#39;); db.insert(DATABASE_TABLE_1, null, initialValues); Now create a class with name CommonNamesAdapter where we will define the necessary functions that are required to interact with common_names table in the database. Some important implemented functions are… * open * close * fetchAllCommonNames To view the code please click here When ever we click on Common Names button in the first screen-shot, Activity in the second screen-shot will be launched. Here is the code for that. public class CommonNames extends ListActivity { CommonNamesAdapter cnTable; ListView cnListView; Cursor c; private static final int COMMON_NAME_ACTIVITY_START = 1; @Override protected void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState); setContentView(R.layout.common_names_list); cnTable = new CommonNamesAdapter(); cnTable.open(getApplicationContext()); c = cnTable.fetchAllCommonNames(); startManagingCursor(c); if(c!=null){ SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.common_names_row, c, new String[] {c.getColumnName(1)}, new int[] {R.id.commonName}); setListAdapter(adapter); } } Now, we have to implement onListItemClickListner() in CommonNames Activity to handle click events on the menu item. Here is the code… @Override protected void onListItemClick(ListView l, View v, int position, long id) { super.onListItemClick(l, v, position, id); c.moveToPosition(position); Intent i = new Intent(this, CommonNameDescription.class); i.putExtra(CommonNamesAdapter.COMMON_NAME_ROWID, id); i.putExtra(CommonNamesAdapter.COMMON_NAME, c.getString( c.getColumnIndexOrThrow(CommonNamesAdapter.COMMON_NAME))); i.putExtra(CommonNamesAdapter.COMMON_NAME_COUNT, c.getString( c.getColumnIndexOrThrow(CommonNamesAdapter.COMMON_NAME_COUNT))); startActivityForResult(i, COMMON_NAME_ACTIVITY_START); } After clicking on a List Item, a Activity in the third screen-shot will be displayed. Click here to see the code for that. This is how we can use android SQLite API to create and interact with databases. Click here to view the Complete Source which is in github","author":{"@type":"Person","name":"balu"},"@type":"BlogPosting","url":"http://localhost:4000/java/2011/12/28/using-sqlite-database-with-android.html","headline":"Using SQLite Database with Android","dateModified":"2011-12-28T11:30:00+05:30","datePublished":"2011-12-28T11:30:00+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/java/2011/12/28/using-sqlite-database-with-android.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Using SQLite Database with Android</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2011-12-28T11:30:00+05:30" itemprop="datePublished">Dec 28, 2011
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">balu</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Android embeds an Open Source Database called SQLite, which supports standard relational database features like SQL syntax, transactions and prepared statements. In addition it requires only little memory at runtime (approx. 250 KB). In this post I would like to show how to work with a simple pragmatic example : Baby Names App.</p>
+
+<p>Before writing the code, let me show you some of the screen-shots of Baby Names App, which requires interaction with the database.</p>
+
+<ol>
+  <li>
+    <p>When ever you launch the App, it will shows a Menu of items as below.
+<img src="/dumps/20111229/baby_names_menu.png" alt="Baby Names App Menu" /></p>
+  </li>
+  <li>
+    <p>When we click on the highlighted button - “Common Names”, it will displays a list of all the names present in “common_names” which is a SQLite database table we will create for this app. Here is the screen-shot of the emulator after clicking on the Button.
+<img src="/dumps/20111229/baby_names_cn_list.png" alt="List of Common Names" /></p>
+  </li>
+  <li>
+    <p>Now, if we click on a name, let us be the first one “andrew” in the above screen-shot, we have to get some details about the name. In this case will get details about “andrew” as below.
+<img src="/dumps/20111229/baby_names_cn_desc.png" alt="Description of the Person" /></p>
+  </li>
+</ol>
+
+<hr />
+<p>Let us write the Java Code
+—————————
+Create a SQLiteDatabase with name <strong>baby_names_database</strong>.</p>
+
+<p>To create the database create a class with name <strong>BabyNamesDBHelper</strong> which extends <strong>SQLiteOpenHelper</strong> and then call the super class constructor, passing database name and version as arguments. <em>SQLiteOpenHelper</em> is a helper class to manage database creation and version management. Here is the code to implement this.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class BabyNamesDBHelper extends SQLiteOpenHelper {
+
+public static final String DATABASE_NAME = "baby_names_database";
+public static final int DATABASE_VERSION = 1;
+
+public static final String DATABASE_TABLE_1 = "common_names";
+
+// Columns present in DATABASE_TABLE
+public static final String COMMON_NAME_ROWID = "_id";
+public static final String COMMON_NAME = "common_name";
+public static final String COMMON_NAME_COUNT = "common_name_count";
+
+// SQL query string for creating DATABASE_TABLE
+static final String CREATE_DATABASE_TABLE_1 =
+		"create table " + DATABASE_TABLE_1 + " (" + COMMON_NAME_ROWID + 
+		" integer primary key autoincrement, " + COMMON_NAME_COUNT +
+		" text not null, " + COMMON_NAME + " text not null);";
+
+// Constructor
+public BabyNamesDBHelper(Context context) {
+	super(context, DATABASE_NAME, null, DATABASE_VERSION);
+	this.context = context;
+}
+</code></pre></div></div>
+
+<p>Now we have to create a table - <strong>common_names</strong> in “baby_names_database”. For that we need to execute the SQL command for creating the table using SQLiteDatabase.execSQL() in onCreate(). Here is the code for this.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    static final String CREATE_DATABASE_TABLE_1 =
+		"create table " + DATABASE_TABLE_1 + " (" + COMMON_NAME_ROWID + 
+		" integer primary key autoincrement, " + COMMON_NAME_COUNT +
+		" text not null, " + COMMON_NAME + " text not null);";
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+    	// Creating Table
+    	db.execSQL(CREATE_DATABASE_TABLE_1);
+    }
+</code></pre></div></div>
+
+<p>We can insert data into database using</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    ContentValues initialValues = new ContentValues();
+    
+    initialValues.put(COMMON_NAME_COUNT, '424516');
+    initialValues.put(COMMON_NAME, 'andrew');
+    
+    db.insert(DATABASE_TABLE_1, null, initialValues);
+</code></pre></div></div>
+
+<p>Now create a class with name CommonNamesAdapter where we will define the necessary functions that are required to interact with common_names table in the database. Some important implemented functions are…</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>* open
+* close
+* fetchAllCommonNames
+</code></pre></div></div>
+
+<p>To view the code please <a href="https://github.com/Balu-Varanasi/BabyNamesApp/blob/master/src/balu/android/database/CommonNamesAdapter.java">click here</a></p>
+
+<p>When ever we click on Common Names button in the first screen-shot, Activity in the second screen-shot will be launched. Here is the code for that.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class CommonNames extends ListActivity {
+
+CommonNamesAdapter cnTable;
+ListView cnListView;
+Cursor c;
+
+private static final int COMMON_NAME_ACTIVITY_START = 1;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+
+	super.onCreate(savedInstanceState);
+	setContentView(R.layout.common_names_list);
+
+	cnTable = new CommonNamesAdapter();
+	cnTable.open(getApplicationContext());
+
+	c = cnTable.fetchAllCommonNames();
+	startManagingCursor(c);
+
+	if(c!=null){
+		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
+				R.layout.common_names_row,
+				c,
+				new String[] {c.getColumnName(1)},
+				new int[] {R.id.commonName});
+		setListAdapter(adapter);		
+	}
+}
+</code></pre></div></div>
+
+<p>Now, we have to implement onListItemClickListner() in CommonNames Activity to handle click events on the menu item. Here is the code…</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@Override
+protected void onListItemClick(ListView l, View v, int position, long id) {
+	super.onListItemClick(l, v, position, id);
+
+	c.moveToPosition(position);
+
+	Intent i = new Intent(this, CommonNameDescription.class);
+	i.putExtra(CommonNamesAdapter.COMMON_NAME_ROWID, id);
+	i.putExtra(CommonNamesAdapter.COMMON_NAME, c.getString(
+			c.getColumnIndexOrThrow(CommonNamesAdapter.COMMON_NAME)));
+	i.putExtra(CommonNamesAdapter.COMMON_NAME_COUNT, c.getString(
+			c.getColumnIndexOrThrow(CommonNamesAdapter.COMMON_NAME_COUNT)));
+	startActivityForResult(i, COMMON_NAME_ACTIVITY_START);
+}
+</code></pre></div></div>
+
+<p>After clicking on a List Item, a Activity in the third screen-shot will be displayed. <a href="https://github.com/Balu-Varanasi/BabyNamesApp/blob/master/src/balu/android/CommonNameDescription.java">Click here</a> to see the code for that.</p>
+
+<p>This is how we can use android SQLite API to create and interact with databases.</p>
+
+<ul>
+  <li><a href="https://github.com/Balu-Varanasi/BabyNamesApp/tree/master/src/balu/android">Click here to view the Complete Source which is in github</a></li>
+</ul>
+
+
+  </div><a class="u-url" href="/java/2011/12/28/using-sqlite-database-with-android.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Google diff match patch library | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Google diff match patch library" />
+<meta name="author" content="manjunath" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Diff match patch library is useful to compare the differences between the two texts.It compares the texts and displays what is added, removed or unchanged. We use Python in our example below. Let us see a quick example Firstly, we will install diff match patch pip install diff-match-patch Moving forward we will import diff_match_patch import diff_match_patch Let us consider using two strings, we will name it as old_string and new_string import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; Now, we will create an object of diff_match_patch and call diff_main(old_string, new_string) import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; diff_obj = diff_match_patch.diff_match_patch() diffs = diff_obj.diff_main(old_string, new_string) What diff_main(text1, text2) does? It computes an array of differences to describe the transformation of text1 into text2. For Example in the above code diffs contains an array of tuples. We will see what this tuple contains, before that let us make this array Human readable. diff_match_patch has a method diff_cleanupSemantic(diffs) which does the job for us. diff_obj.diff_cleanupSemantic(diffs) Now variable diffs contains [(0, &quot;I&#39;m selfish, impatient and a little &quot;), (-1, &#39;in&#39;), (0, &#39;secure. I &#39;), (1, &quot;don&#39;t &quot;), (0, &#39;make mistakes,\nI am out of control and at times hard to handle&#39;), (1, &#39; difficult things&#39;), (0, &quot;. But if you can&#39;t handle me at my worst,\nthen you sure as hell don&#39;t deserve me at my best.&quot;)] Now it looks better, let us see what these tuples contains: The first element specifies if it is an insertion (1), a deletion (-1) or an equality (0). The second element specifies the affected text. To convert these array of tuples to HTML.We use diff_prettyHtml(diffs). html = diff_obj.diff_prettyHtml(diffs) There you are, we can now see the differences in old and new text. ** I&#39;m selfish, impatient and a little insecure. I don&#39;t make mistakes,¶I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst,¶then you sure as hell don&#39;t deserve me at my best. ** But the above html is not so clear to understand what is added and removed right? We will write a method to see these changes side by side. import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; class SideBySideDiff(diff_match_patch.diff_match_patch): def old_content(self, diffs): &quot;&quot;&quot; Returns HTML representation of &#39;deletions&#39; &quot;&quot;&quot; html = [] for (flag, data) in diffs: text = (data.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;) .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;) .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;) .replace(&quot;\n&quot;, &quot;&lt;br&gt;&quot;)) if flag == self.DIFF_DELETE: html.append(&quot;&quot;&quot;&lt;del style=\&quot;background:#ffe6e6; \&quot;&gt;%s&lt;/del&gt;&quot;&quot;&quot; % text) elif flag == self.DIFF_EQUAL: html.append(&quot;&lt;span&gt;%s&lt;/span&gt;&quot; % text) return &quot;&quot;.join(html) def new_content(self, diffs): &quot;&quot;&quot; Returns HTML representation of &#39;insertions&#39; &quot;&quot;&quot; html = [] for (flag, data) in diffs: text = (data.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;) .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;) .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;) .replace(&quot;\n&quot;, &quot;&lt;br&gt;&quot;)) if flag == self.DIFF_INSERT: html.append(&quot;&quot;&quot;&lt;ins style=\&quot;background:#e6ffe6; \&quot;&gt;%s&lt;/ins&gt;&quot;&quot;&quot; % text) elif flag == self.DIFF_EQUAL: html.append(&quot;&lt;span&gt;%s&lt;/span&gt;&quot; % text) return &quot;&quot;.join(html) diff_obj = SideBySideDiff() result = diff_obj.diff_main(old_string, new_string) diff_obj.diff_cleanupSemantic(result) old_record = diff_obj.old_content(result) new_record = diff_obj.new_content(result) Here is the output for the above code: Old record I&#39;m selfish, impatient and a little insecure. I make mistakes,I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst,then you sure as hell don&#39;t deserve me at my best. New record I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes,I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst,then you sure as hell don&#39;t deserve me at my best. For reference and some more methods see API Feedbacks and suggestions are welcome :)" />
+<meta property="og:description" content="Diff match patch library is useful to compare the differences between the two texts.It compares the texts and displays what is added, removed or unchanged. We use Python in our example below. Let us see a quick example Firstly, we will install diff match patch pip install diff-match-patch Moving forward we will import diff_match_patch import diff_match_patch Let us consider using two strings, we will name it as old_string and new_string import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; Now, we will create an object of diff_match_patch and call diff_main(old_string, new_string) import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; diff_obj = diff_match_patch.diff_match_patch() diffs = diff_obj.diff_main(old_string, new_string) What diff_main(text1, text2) does? It computes an array of differences to describe the transformation of text1 into text2. For Example in the above code diffs contains an array of tuples. We will see what this tuple contains, before that let us make this array Human readable. diff_match_patch has a method diff_cleanupSemantic(diffs) which does the job for us. diff_obj.diff_cleanupSemantic(diffs) Now variable diffs contains [(0, &quot;I&#39;m selfish, impatient and a little &quot;), (-1, &#39;in&#39;), (0, &#39;secure. I &#39;), (1, &quot;don&#39;t &quot;), (0, &#39;make mistakes,\nI am out of control and at times hard to handle&#39;), (1, &#39; difficult things&#39;), (0, &quot;. But if you can&#39;t handle me at my worst,\nthen you sure as hell don&#39;t deserve me at my best.&quot;)] Now it looks better, let us see what these tuples contains: The first element specifies if it is an insertion (1), a deletion (-1) or an equality (0). The second element specifies the affected text. To convert these array of tuples to HTML.We use diff_prettyHtml(diffs). html = diff_obj.diff_prettyHtml(diffs) There you are, we can now see the differences in old and new text. ** I&#39;m selfish, impatient and a little insecure. I don&#39;t make mistakes,¶I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst,¶then you sure as hell don&#39;t deserve me at my best. ** But the above html is not so clear to understand what is added and removed right? We will write a method to see these changes side by side. import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; class SideBySideDiff(diff_match_patch.diff_match_patch): def old_content(self, diffs): &quot;&quot;&quot; Returns HTML representation of &#39;deletions&#39; &quot;&quot;&quot; html = [] for (flag, data) in diffs: text = (data.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;) .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;) .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;) .replace(&quot;\n&quot;, &quot;&lt;br&gt;&quot;)) if flag == self.DIFF_DELETE: html.append(&quot;&quot;&quot;&lt;del style=\&quot;background:#ffe6e6; \&quot;&gt;%s&lt;/del&gt;&quot;&quot;&quot; % text) elif flag == self.DIFF_EQUAL: html.append(&quot;&lt;span&gt;%s&lt;/span&gt;&quot; % text) return &quot;&quot;.join(html) def new_content(self, diffs): &quot;&quot;&quot; Returns HTML representation of &#39;insertions&#39; &quot;&quot;&quot; html = [] for (flag, data) in diffs: text = (data.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;) .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;) .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;) .replace(&quot;\n&quot;, &quot;&lt;br&gt;&quot;)) if flag == self.DIFF_INSERT: html.append(&quot;&quot;&quot;&lt;ins style=\&quot;background:#e6ffe6; \&quot;&gt;%s&lt;/ins&gt;&quot;&quot;&quot; % text) elif flag == self.DIFF_EQUAL: html.append(&quot;&lt;span&gt;%s&lt;/span&gt;&quot; % text) return &quot;&quot;.join(html) diff_obj = SideBySideDiff() result = diff_obj.diff_main(old_string, new_string) diff_obj.diff_cleanupSemantic(result) old_record = diff_obj.old_content(result) new_record = diff_obj.new_content(result) Here is the output for the above code: Old record I&#39;m selfish, impatient and a little insecure. I make mistakes,I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst,then you sure as hell don&#39;t deserve me at my best. New record I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes,I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst,then you sure as hell don&#39;t deserve me at my best. For reference and some more methods see API Feedbacks and suggestions are welcome :)" />
+<link rel="canonical" href="http://localhost:4000/google/2014/05/09/google-diff-match-patch-library.html" />
+<meta property="og:url" content="http://localhost:4000/google/2014/05/09/google-diff-match-patch-library.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-05-09T16:29:34+05:30" />
+<script type="application/ld+json">
+{"description":"Diff match patch library is useful to compare the differences between the two texts.It compares the texts and displays what is added, removed or unchanged. We use Python in our example below. Let us see a quick example Firstly, we will install diff match patch pip install diff-match-patch Moving forward we will import diff_match_patch import diff_match_patch Let us consider using two strings, we will name it as old_string and new_string import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; Now, we will create an object of diff_match_patch and call diff_main(old_string, new_string) import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; diff_obj = diff_match_patch.diff_match_patch() diffs = diff_obj.diff_main(old_string, new_string) What diff_main(text1, text2) does? It computes an array of differences to describe the transformation of text1 into text2. For Example in the above code diffs contains an array of tuples. We will see what this tuple contains, before that let us make this array Human readable. diff_match_patch has a method diff_cleanupSemantic(diffs) which does the job for us. diff_obj.diff_cleanupSemantic(diffs) Now variable diffs contains [(0, &quot;I&#39;m selfish, impatient and a little &quot;), (-1, &#39;in&#39;), (0, &#39;secure. I &#39;), (1, &quot;don&#39;t &quot;), (0, &#39;make mistakes,\\nI am out of control and at times hard to handle&#39;), (1, &#39; difficult things&#39;), (0, &quot;. But if you can&#39;t handle me at my worst,\\nthen you sure as hell don&#39;t deserve me at my best.&quot;)] Now it looks better, let us see what these tuples contains: The first element specifies if it is an insertion (1), a deletion (-1) or an equality (0). The second element specifies the affected text. To convert these array of tuples to HTML.We use diff_prettyHtml(diffs). html = diff_obj.diff_prettyHtml(diffs) There you are, we can now see the differences in old and new text. ** I&#39;m selfish, impatient and a little insecure. I don&#39;t make mistakes,¶I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst,¶then you sure as hell don&#39;t deserve me at my best. ** But the above html is not so clear to understand what is added and removed right? We will write a method to see these changes side by side. import diff_match_patch old_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; new_string = &quot;&quot;&quot;I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes, I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst, then you sure as hell don&#39;t deserve me at my best.&quot;&quot;&quot; class SideBySideDiff(diff_match_patch.diff_match_patch): def old_content(self, diffs): &quot;&quot;&quot; Returns HTML representation of &#39;deletions&#39; &quot;&quot;&quot; html = [] for (flag, data) in diffs: text = (data.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;) .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;) .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;) .replace(&quot;\\n&quot;, &quot;&lt;br&gt;&quot;)) if flag == self.DIFF_DELETE: html.append(&quot;&quot;&quot;&lt;del style=\\&quot;background:#ffe6e6; \\&quot;&gt;%s&lt;/del&gt;&quot;&quot;&quot; % text) elif flag == self.DIFF_EQUAL: html.append(&quot;&lt;span&gt;%s&lt;/span&gt;&quot; % text) return &quot;&quot;.join(html) def new_content(self, diffs): &quot;&quot;&quot; Returns HTML representation of &#39;insertions&#39; &quot;&quot;&quot; html = [] for (flag, data) in diffs: text = (data.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;) .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;) .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;) .replace(&quot;\\n&quot;, &quot;&lt;br&gt;&quot;)) if flag == self.DIFF_INSERT: html.append(&quot;&quot;&quot;&lt;ins style=\\&quot;background:#e6ffe6; \\&quot;&gt;%s&lt;/ins&gt;&quot;&quot;&quot; % text) elif flag == self.DIFF_EQUAL: html.append(&quot;&lt;span&gt;%s&lt;/span&gt;&quot; % text) return &quot;&quot;.join(html) diff_obj = SideBySideDiff() result = diff_obj.diff_main(old_string, new_string) diff_obj.diff_cleanupSemantic(result) old_record = diff_obj.old_content(result) new_record = diff_obj.new_content(result) Here is the output for the above code: Old record I&#39;m selfish, impatient and a little insecure. I make mistakes,I am out of control and at times hard to handle. But if you can&#39;t handle me at my worst,then you sure as hell don&#39;t deserve me at my best. New record I&#39;m selfish, impatient and a little secure. I don&#39;t make mistakes,I am out of control and at times hard to handle difficult things. But if you can&#39;t handle me at my worst,then you sure as hell don&#39;t deserve me at my best. For reference and some more methods see API Feedbacks and suggestions are welcome :)","author":{"@type":"Person","name":"manjunath"},"@type":"BlogPosting","url":"http://localhost:4000/google/2014/05/09/google-diff-match-patch-library.html","headline":"Google diff match patch library","dateModified":"2014-05-09T16:29:34+05:30","datePublished":"2014-05-09T16:29:34+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/google/2014/05/09/google-diff-match-patch-library.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Google diff match patch library</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-05-09T16:29:34+05:30" itemprop="datePublished">May 9, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">manjunath</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Diff match patch library is useful to compare the differences between the two texts.It compares the texts and displays what is added, removed or unchanged.</p>
+
+<p>We use <code class="highlighter-rouge">Python</code> in our example below.</p>
+
+<h4 id="let-us-see-a-quick-example">Let us see a quick example</h4>
+
+<p>Firstly, we will install diff match patch</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip install diff-match-patch
+</code></pre></div></div>
+
+<p>Moving forward we will import diff_match_patch</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import diff_match_patch
+</code></pre></div></div>
+
+<p>Let us consider using two strings, we will name it as <code class="highlighter-rouge">old_string</code> and <code class="highlighter-rouge">new_string</code></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import diff_match_patch    
+
+old_string = """I'm selfish, impatient and a little insecure. I make mistakes,
+I am out of control and at times hard to handle. But if you can't handle me at my worst,
+then you sure as hell don't deserve me at my best."""
+
+new_string = """I'm selfish, impatient and a little secure. I don't make mistakes,
+I am out of control and at times hard to handle difficult things. But if you can't handle me at my worst,
+then you sure as hell don't deserve me at my best."""
+</code></pre></div></div>
+
+<p>Now, we will create an object of <code class="highlighter-rouge">diff_match_patch</code> and call <code class="highlighter-rouge">diff_main(old_string, new_string)</code></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import diff_match_patch    
+
+old_string = """I'm selfish, impatient and a little insecure. I make mistakes,
+I am out of control and at times hard to handle. But if you can't handle me at my worst,
+then you sure as hell don't deserve me at my best."""
+
+new_string = """I'm selfish, impatient and a little secure. I don't make mistakes,
+I am out of control and at times hard to handle difficult things. But if you can't handle me at my worst,
+then you sure as hell don't deserve me at my best."""
+
+diff_obj = diff_match_patch.diff_match_patch()
+diffs = diff_obj.diff_main(old_string, new_string)
+</code></pre></div></div>
+
+<h4 id="what-diff_maintext1-text2-does">What <code class="highlighter-rouge">diff_main(text1, text2)</code> does?</h4>
+
+<p>It computes an array of differences to describe the transformation of text1 into text2.
+For Example in the above code <code class="highlighter-rouge">diffs</code> contains an array of tuples.</p>
+
+<p>We will see what this tuple contains, before that let us make this array Human readable.</p>
+
+<p><code class="highlighter-rouge">diff_match_patch</code> has a method <code class="highlighter-rouge">diff_cleanupSemantic(diffs)</code> which does the job for us.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>diff_obj.diff_cleanupSemantic(diffs)
+</code></pre></div></div>
+
+<p>Now variable <code class="highlighter-rouge">diffs</code> contains</p>
+
+<p><code class="highlighter-rouge">[(0, "I'm selfish, impatient and a little "),
+ (-1, 'in'),
+ (0, 'secure. I '),
+ (1, "don't "),
+ (0, 'make mistakes,\nI am out of control and at times hard to handle'),
+ (1, ' difficult things'),
+ (0, ". But if you can't handle me at my worst,\nthen you sure as hell don't deserve me at my best.")]</code></p>
+
+<p>Now it looks better, let us see what these tuples contains:</p>
+
+<ul>
+  <li>The first element specifies if it is an insertion (1), a deletion (-1) or an equality (0).</li>
+  <li>The second element specifies the affected text.</li>
+</ul>
+
+<p>To convert these array of tuples to HTML.We use <code class="highlighter-rouge">diff_prettyHtml(diffs)</code>.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>html = diff_obj.diff_prettyHtml(diffs) 
+</code></pre></div></div>
+
+<p>There you are, we can now see the differences in old and new text.</p>
+
+<p>** <span>I'm selfish, impatient and a little </span><del style="background:#ffe6e6;">in</del><span>secure. I </span><ins style="background:#e6ffe6;">don't </ins> <br />
+<span>make mistakes,¶<br />I am out of control and at times hard to handle</span><ins style="background:#e6ffe6;"> difficult things</ins><span>. But if you can't
+handle me at my worst,¶<br />then you sure as hell don't deserve me at my best.</span> **</p>
+
+<p>But the above html is not so clear to understand what is added and removed right?</p>
+
+<p>We will write a method to see these changes side by side.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import diff_match_patch
+
+old_string = """I'm selfish, impatient and a little insecure. I make mistakes,
+I am out of control and at times hard to handle. But if you can't handle me at my worst,
+then you sure as hell don't deserve me at my best."""
+
+new_string = """I'm selfish, impatient and a little secure. I don't make mistakes,
+I am out of control and at times hard to handle difficult things. But if you can't handle me at my worst,
+then you sure as hell don't deserve me at my best."""
+
+class SideBySideDiff(diff_match_patch.diff_match_patch):
+
+    def old_content(self, diffs):
+        """
+        Returns HTML representation of 'deletions'
+        """
+        html = []
+        for (flag, data) in diffs:
+            text = (data.replace("&amp;", "&amp;amp;")
+                    .replace("&lt;", "&amp;lt;")
+                    .replace("&gt;", "&amp;gt;")
+                    .replace("\n", "&lt;br&gt;"))
+
+            if flag == self.DIFF_DELETE:
+                html.append("""&lt;del style=\"background:#ffe6e6;
+                    \"&gt;%s&lt;/del&gt;""" % text)
+            elif flag == self.DIFF_EQUAL:
+                html.append("&lt;span&gt;%s&lt;/span&gt;" % text)
+        return "".join(html)
+
+    def new_content(self, diffs):
+        """
+        Returns HTML representation of 'insertions'
+        """
+        html = []
+        for (flag, data) in diffs:
+            text = (data.replace("&amp;", "&amp;amp;")
+                    .replace("&lt;", "&amp;lt;")
+                    .replace("&gt;", "&amp;gt;")
+                    .replace("\n", "&lt;br&gt;"))
+            if flag == self.DIFF_INSERT:
+                html.append("""&lt;ins style=\"background:#e6ffe6;
+                    \"&gt;%s&lt;/ins&gt;""" % text)
+            elif flag == self.DIFF_EQUAL:
+                html.append("&lt;span&gt;%s&lt;/span&gt;" % text)
+        return "".join(html)
+
+
+diff_obj = SideBySideDiff()
+result = diff_obj.diff_main(old_string, new_string)
+diff_obj.diff_cleanupSemantic(result)
+
+old_record = diff_obj.old_content(result) 
+new_record = diff_obj.new_content(result) 
+</code></pre></div></div>
+
+<p>Here is the output for the above code:</p>
+
+<div style="margin-left: 5%; float: left; width: 45%; overflow: auto; display: block; background-color: #fff;&lt;br /&gt;}">
+<p>
+<h2>Old record</h2>
+
+<span>I'm selfish, impatient and a little </span><del style="background:#ffe6e6;">in</del><span>secure. I </span><span>make mistakes,<br />I am out of control and at times hard to handle</span><span>. But if you can't handle me at my worst,<br />then you sure as hell don't deserve me at my best.</span>
+
+</p>
+
+</div>
+
+<div style="margin-left: 5%; float: left; width: 45%; overflow: auto; display: block; background-color: #fff;&lt;br /&gt;}">
+<p>
+<h2>New record</h2>
+<span>I'm selfish, impatient and a little </span><span>secure. I </span><ins style="background:#e6ffe6;">don't </ins><span>make mistakes,<br />I am out of control and at times hard to handle</span><ins style="background:#e6ffe6;"> difficult things</ins><span>. But if you can't handle me at my worst,<br />then you sure as hell don't deserve me at my best.</span>
+
+</p>
+</div>
+
+<p>For reference and some more methods see <a href="http://code.google.com/p/google-diff-match-patch/wiki/API">API</a></p>
+
+<p>Feedbacks and suggestions are welcome :)</p>
+
+<p>e :)</p>
+
+
+  </div><a class="u-url" href="/google/2014/05/09/google-diff-match-patch-library.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

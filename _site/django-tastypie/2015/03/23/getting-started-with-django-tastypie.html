@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Getting started with Django tastypie | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Getting started with Django tastypie" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Django tastypie is a library to write RESTful apis in Django. Why use REST You have a database backed web application. This application tracks expenses. The application allows the capability to enter your expenses, view all your expenses, delete an expense etc. Essentially this application provides CRUD functionality. Django application has access to database credentials, but they are never seen by the users of the web application. Django application decides what to show to which user. Django application ensures that a particular user only sees the expenses entered by him and not somebody else’s expenses. Now you want to provide a mobile application (Android or iOS) corresponding to this web application. Android application should allow the user to view his expenses, create an expense as well as any other CRUD functionality. But database credentials could not be put in Android code as it is not too hard to decompile an apk and get the db credentials. And we never want a user to get the db credentials else he will be in a position to see everyone’s expenses and the entire database. So there has to be another way to allow mobile applications to get things from the database. This is where REST comes into picture. With REST, we have three components. A database, a Django application and a mobile application. Mobile application never accesses the database directly. It makes a REST api call to Django application. Mobile application also sends a api_key specific to the mobile user. Based on api_key, Django application determines what data to make visible to this particular api_key owner and sends the corresponding data in response. Resource REST stands for Representational State Transfer. It is a standard for transferring the state of a Resource, from web to mobile. What do I mean by state of a Resource? An expense could be a resource. A Person could be a resource. A blog post could be a resource. Basically any object or instance your program deals with could be a resource. And a resource’s state is maintained in it’s attributes. eg: You could have a model called Expense. The state of a expense instance is represented by its attributes. Any REST library should be able to create and return a representation of such resource, which simply stated means that REST library should be able to tell us the attributes and their values for different model instances. And tastypie is adept at doing this. Setting up the application I am using Django 1.7. Some things might be different for you if you are using different version of Django. As with all projects, I want to keep things in a virtual environment $ mkvirtualenv tastier $ workon tastier Install Django $ pip install Django Start a Django project (tastier) $ django-admin.py startproject tastier (tastier) $ cd tastier/ Start an app (tastier) $ python manage.py startapp expenses Add this app to INSTALLED_APPS Run migration (tastier)~ $ python manage.py migrate Runserver (tastier)~ $ python manage.py runserver Check that your are able to access http://localhost:8000/admin/login/ I have pushed the code for this project to Github. You will be able to checkout at different commits in the project to see specific things. Getting started Install django-tastypie. (tastier) $ pip install django-tastypie Create a file called expenses/api.py where you will keep all the tastypie related things. Suppose your program deals with a resource called Expense. Let’s create a model Expense in expenses/models.py class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() Run migrations python manage.py makemigrations python manage.py migrate We will later add a ForeignKey(User) to Expense to associate an expense with User. Don’t worry about it for now, we will come back to it. Let’s add few Expense instances in the database. Expense.objects.create(description=&#39;Ate pizza&#39;, amount=100) Expense.objects.create(description=&#39;Went to Cinema&#39;, amount=200) Handling GET You want the ability to get the representation of all expenses in your program at url “http://localhost:8000/api/expenses/”. To deal with a resource, tastypie requires a class which overrides ModelResource. Let’s call our class ExpenseResource. Add following to expenses/api.py from tastypie.resources import ModelResource from .models import Expense class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; And you need to add the following to tastier/urls.py from expenses.api import ExpenseResource expense_resource = ExpenseResource() urlpatterns = patterns(&#39;&#39;, url(r&#39;^admin/&#39;, include(admin.site.urls)), url(r&#39;^api/&#39;, include(expense_resource.urls)), ) GET all expenses After this you should be able to hit http://localhost:8000/api/expense/?format=json and you will see all the expenses from database in the response. The response would be: {&quot;meta&quot;: {&quot;limit&quot;: 20, &quot;next&quot;: null, &quot;offset&quot;: 0, &quot;previous&quot;: null, &quot;total_count&quot;: 2}, &quot;objects&quot;: [{&quot;amount&quot;: 100, &quot;description&quot;: &quot;Ate pizza&quot;, &quot;id&quot;: 1, &quot;resource_uri&quot;: &quot;/api/expense/1/&quot;}, {&quot;amount&quot;: 200, &quot;description&quot;: &quot;Went to Cinema&quot;, &quot;id&quot;: 2, &quot;resource_uri&quot;: &quot;/api/expense/2/&quot;}]} You will find the representation of expense instances in objects key of response. Get a particular expense You can get the representation of expense with id 1 at http://localhost:8000/api/expense/1/?format=json See how you are able to hit these two urls without adding them in urlpatterns. These urlpatterns are added by tastypie internally. How these endpoints help and ties with mobile application example? If the mobile app wants to show all the expenses it could use the url http://localhost:8000/api/expense/?format=json, get the response, parse the response and show the result on app. Right now every user will see all the expenses. As we move forward we will see how only a user’s expenses will be returned when a REST call is made from his/her mobile device. Serialization You must have realized that REST returns you serialized data. You might be wondering why use django-tastypie to achieve it, and not just use json.dumps. You can undoubtedly use json.dumps and not use django-tastypie to provide REST endpoints. But django-tastypie allows the ability to do many more things very easily as you will soon agree. Just hang on. Changing Meta.resource_name You can change ExpenseResource.Meta.resource_name from expense to expenditure. class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; And then the old urls will stop working. Your new GET urls in that case will be http://localhost:8000/api/expenditure/?format=json http://localhost:8000/api/expenditure/1/?format=json Changing the resource_name changes the urls tastypie makes available to you. Now change the resource_name back to expense. We have our first commit at this point. You can checkout to this commit to see the code till this point. git checkout b6a9c6 Meta.fields Suppose you only want description in expense representation, but don’t want amount. So you can add a fields attribute on ExpenseResource.Meta class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; fields = [&#39;description&#39;] Try http://localhost:8000/api/expense/?format=json So if you don’t have fields attribute on Meta, all the attributes of Model will be sent in response. If you have fields, only attributes listed in fields will be sent in response. Let’s add amount also to fields. Though this gives us the same behaviour as not having ExpenseResource.Meta.fields at all. class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; fields = [&#39;description&#39;, &#39;amount&#39;] We have our second commit at this point. You can checkout till this point by doing: git checkout 61194c Filtering Suppose you only want the Expenses where amount exceeds 150. If we had to do this with Django model we would say: Expense.objects.filter(amount__gt=150) amount__gt is the key thing here. This could be appended to our url pattern to get the expenses where amount exceeds 150. This could be achieved at url http://localhost:8000/api/expense/?amount__gt=150&amp;format=json Try this. You will get an error because we haven’t asked tastypie to allow filtering yet. Add filtering attribute to ExpenseResource.Meta class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;] } You should be able to use http://localhost:8000/api/expense/?amount__gt=150&amp;format=json This will only return the expenses where amount exceeds 150. Now we want to get all the expenses on Pizza. We could get pizza expenses in following way from shell. Expense.objects.filter(description__icontains=&#39;pizza&#39;) So to achieve this thing in api, we need to make following changes to ExpenseResource.Meta.filtering: class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } And then following url would give us the pizza expenses http://localhost:8000/api/expense/?description__icontains=pizza&amp;format=json With GET endpoints we were able to do the Read operations. With POST we will be able to do Create operations, as we will see in next section. Handling POST It’s hard to do POST from the browser. So we will use requests library to achieve this. Check expense count before doing POST. &gt;&gt;&gt; Expense.objects.count() 2 Tastypie by default doesn’t authorize a person to do POST request. The default authorization class is ReadOnlyAuthorization which allows GET calls but doesn’t allow POST calls. So you will have to disallow authorization checks for the time being. Add the following to ExpenseResource.Meta authorization = Authorization() You’ll need to import Authorization class for it. from tastypie.authorization import Authorization After this, ExpenseResource would look like: class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } authorization = Authorization() Don’t get into detail of Authorization for now, I will come back to it. Let’s make a POST request to our rest endpoint which will create an Expense object in the database. post_url = &#39;http://localhost:8000/api/expense/&#39; post_data = {&#39;description&#39;: &#39;Bought first Disworld book&#39;, &#39;amount&#39;: 399} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} import requests import json r = requests.post(post_url, json.dumps(post_data), headers=headers) &gt;&gt;&gt; print r.status_code 201 status_code 201 means that your Expense object was properly created. You can also verify it by checking that Expense count increased by 1. &gt;&gt;&gt; Expense.objects.count() 3 If you hit the GET endpoint from your browser, you will see this new Expense object too in the response. Try http://localhost:8000/api/expense/?format=json We have third commit at this point. git checkout 749cf3 Explanation of POST You need to POST at the same url where you get all the expenses. Compare the two urls. One way of posting is to POST json encoded data. So we used json.dumps If you are sending json encoded data, you need to send appopriate Content-type header too. How this ties in with mobile Android or iOS has a way to make POST request at a given url with headers. So you tell mobile app about the endpoint where they need to post and the data to post. They will call this rest endpoint, and the posted data will be handled by Django tastypie and proper row will be created in the database table. Adding authentication Currently GET and POST endpoints respond to every request. So even users who aren’t registered with the site will be able to see the expenses. Our first step is ensuring that only registered users are able to use the GET endpoints. Api tokens and sessions In a web application, a user logs in once and then she is able to make any number of web requests without being asked to login every time. eg: User logs in once and then can see her expense list page. After first request she can refresh the page, and can still get response without being asked for her login credentials again. This works because Django uses sessions and cookies to store user state. So browser sends a cookie to Django everytime the user makes a request, and Django app can associate the cookie with a user and shows the data for this particular user. With mobile apps, there is no concept of sessions, unless the mobile is working with a WebView. The session corresponding thing in a mobile app is Api key. So an api key is associated with a user. Every REST call should include this api key, and then tastypie can use this key to verify whether a logged in user is making the request. Creating user and api token Let’s create an user in our system and a corresponding api token for her. On a shell u = User.objects.create_user(username=&#39;sheryl&#39;, password=&#39;abc&#39;, email=&#39;sheryl@abc.com&#39;) Tastypie provides a model called ApiKey which allows storing tokens for users. Let’s create a token for Sheryl. from tastypie.models import ApiKey ApiKey.objects.create(key=&#39;1a23&#39;, user=u) We are setting the api token for sheryl as ‘1a23’ You need to ensure tastypie is in INSTALLED_APPS and you have migrated before you could create ApiKey instance. The default authentication class provided by tastypie is Authentication which allows anyone to make GET requests. We need to set ExpenseResource.Meta.authentication to ensure that only users who provide valid api key are able to get response from GET endpoints. Add the following on ExpensesResource.Meta. authentication = ApiKeyAuthentication() You need to import ApiKeyAuthentication. from tastypie.authentication import ApiKeyAuthentication Try the GET endpoint to get the list of expenses http://localhost:8000/api/expense/?format=json You will not see anything in response. If you see your runserver terminal, you’ll notice that status code 401 is raised. Api key should be sent in the request to get proper response. Try the following url http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 With this Sheryl will be able to get proper api response. Try sending wrong api_key for sheryl and you will not see proper response. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a2 With these we ensure that only registered users of the system with proper api key will be able to make GET requests. Fourth commit at this point git checkout 48725f How this ties in with mobile app When user installs the app, he logs in using his username and password for first time. These credentials are sent to Django server using a REST call. Django server returns the api key corresponding to this user to the mobile app. Mobile app stores this api token on mobile end and then uses this token for every subsequent REST call. User doesn’t have to provide the credentials anymore. Making unauthenticated POST requests Unauthenticated POST requests will not work anymore Try creating an Expense without passing any api key. post_data = {&#39;description&#39;: &#39;Bought Two scoops of Django&#39;, &#39;amount&#39;: 399} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} r = requests.post(&quot;http://localhost:8000/api/expense/&quot;, data=json.dumps(post_data), headers=headers) print r.status_code #This will give 401 Check that Expense count isn’t increased Making authenticated POST requests You only need to change the url to include username and api_key in the url. This will make the request authenticated. r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) This should have worked and Expense count should have increased. Try with wrong api_key and it will fail. Getting only User’s expense Till now we aren’t associating Expense to User. Let’s add a ForeignKey to User from Expense. Expense model becomes: from django.db import models from django.contrib.auth.models import User class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() user = models.ForeignKey(User, null=True) Since we already have some Expenses in db which aren’t associated with a User, so we kept User as a nullable field. Make and run migrations python manage.py makemigrations python manage.py migrate Right now our authorization class is set to Authorization. With this every user is authorized to see every expense. We will have to add a custom authorization class to enforce that users see only their expenses. Add the following to expenses/api.py class ExpenseAuthorization(Authorization): def read_list(self, object_list, bundle): return object_list.filter(user=bundle.request.user) And change authorization on ExpenseResource.Meta so it becomes: class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } authorization = ExpenseAuthorization() authentication = ApiKeyAuthentication() Explanation of ExpenseAuthorization When GET endpoint is called for expense list, object_list is created which gives all the expenses. After this, authorization is checked where further filtering could be done. In case of GET on list endpoint, authorization class’ read_list() method is called. object_list is passed to read_list. In tastypie there is a variable called bundle. And bundle has access to request using bundle.request When authentication is used properly, bundle.request.user is populated with correct user. Try expense list endpoint for Sheryl http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 You will not get any expense after adding ExpenseAuthorization {&quot;meta&quot;: {&quot;limit&quot;: 20, &quot;next&quot;: null, &quot;offset&quot;: 0, &quot;previous&quot;: null, &quot;total_count&quot;: 0}, &quot;objects&quot;: []} This happenned because at this point no expense is associated with Sheryl. Create an expense for Sheryl and try the GET endpoint On the shell u = User.objects.get(username=&#39;sheryl&#39;) Expense.objects.create(description=&#39;Paid for the servers&#39;, amount=1000, user=u) Expense.objects.create(description=&#39;Paid for CI server&#39;, amount=500, user=u) Try expense list endpoint for Sheryl again http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 You should be able to see all of Sheryl’s expenses. Fifth commit here. git checkout 26f7c1 How mobile app will use it. When Sheryl installs the app, she will be asked to login for the first time. There will be a REST endpoint which takes the username and password for a user and if the credentials are right, returns the api key for the user. Sheryl’s api key will be returned to the mobile app which will store it in local storage. And when Sheryl wants to see her expenses, this REST call will be made to Django server. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 This will only return Sheryl’s expenses. POST and create Sheryl’s expense Till now if a POST request is made, even if with Sheryl’s api key, expense is created in db but is not associated with Sheryl. We want to add functionality where if POST request is made from Sheryl’s device then expense is associated with Sheryl. If POST request is made from Mark’s device then expense should be associated with Mark. Tastypie provides several hookpoints. We will use one such hookpoint. ModelResource provides a method called hydrate which we need to override. Add the following method to ExpenseResource. def hydrate(self, bundle): bundle.obj.user = bundle.request.user return bundle This method is called during POST/PUT calls. bundle.obj is an Expense instance about to be saved in the database. So we set user on bundle.obj by reading it from bundle.request. We have already discussed how bundle.request is populated during authentication flow. Make a POST request now with Sheryl’s api_key. post_data = {&#39;description&#39;: &#39;Paid for iDoneThis&#39;, &#39;amount&#39;: 700} r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) Verify that the latest expense instance gets associated with Sheryl. You can also verify it by seeing that this object gets returned in GET expense list endpoint. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 Sixth commit at this point git checkout 17b932 Try on your own Create one more user in database, from shell. Create api key for this user. POST to REST endpoint with this new user’s api_key and username and verify that the expense gets associated with this new user. Check GET expense list for this new user and verify that only expense created for this user is in the response. Now is a good time to dig deeper into django-tastypie and understand about following: Dehydrate cycle. It is used during GET calls. Hydrate cycle. It is used during POST/PUT calls. Once you read about hydrate cycle, you will understand when method hydrate() is called. More about authorization and different methods available on Authorization which could be overridden by you. Want more? I am still trying few things with tastypie. Hereafter I will not have much explanation, but I will point to the commit where I attain certain functionality change. Authorization on detail endpoint. Expense with id 1 is not associated with any user. But Sheryl is still able to see it at: http://localhost:8000/api/expense/1/?format=json&amp;username=sheryl&amp;api_key=1a23 She shouldn’t be able to see it as it is not her expense. So add the following to ExpenseAuthorization def read_detail(self, object_list, bundle): obj = object_list[0] return obj.user == bundle.request.user After this Sheryl will not be able to see detail endpoint of any expense which doesn’t belong to her. Try it http://localhost:8000/api/expense/1/?format=json&amp;username=sheryl&amp;api_key=1a23 Commit id for this: e650f3 git show e650f3 PUT endpoint Expense with id 5 belongs to Sheryl. She wants to update this expense, she essentially want to change the description. Current thing is: http://localhost:8000/api/expense/5/?format=json&amp;username=sheryl&amp;api_key=1a23 Make PUT request put_url = &quot;http://localhost:8000/api/expense/5/?username=sheryl&amp;api_key=1a23&quot; put_data = {&#39;description&#39;: &#39;Paid for Travis&#39;} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} r = requests.put(put_url, data=json.dumps(put_data), headers=headers) Description of Expense 5 is updated as you can verify by trying the detail endpoint again. http://localhost:8000/api/expense/5/?format=json&amp;username=sheryl&amp;api_key=1a23 Notice that amount remains unchanged. So PUT changes whatever data you provide in the api call and lets everything else remain as it is. DELETE endpoint First check all of Sheryl’s expenses http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 Sheryl wants to delete her expense with id 5. After this is done she will have one less expense in db. delete_url = &quot;http://localhost:8000/api/expense/5/?username=sheryl&amp;api_key=1a23&quot; r = requests.delete(delete_url) Verify that this expense got deleted. So we were able to do Create, Read, Update and Delete with REST api calls. Restrict POST request to certain users only Suppose we want the users to be able to create expenses from web end but don’t want to allow creating expense from mobile using the api. Yeah, weird requiremtn. Also we don’t want to disallow POST for all users. We still want Sheryl to be able to POST. To try this we first need a new user with api key in our system. Create it from Django shell. u = User.objects.create_user(username=&#39;mark&#39;, password=&#39;def&#39;, email=&#39;mark@abc.com&#39;) ApiKey.objects.create(key=&#39;2b34&#39;, user=u) Restricting POST for everyone except Sheryl Add following method to ExpenseAuthorization def create_detail(self, object_list, bundle): user = bundle.request.user # Return True if current user is Sheryl else return False return user.username == &quot;sheryl&quot; Try making POST request as Mark and see you will not be able to do it. If you want you can see the expense count at this point. post_data = {&#39;description&#39;: &#39;Petty expense&#39;, &#39;amount&#39;: 3000} r = requests.post(&quot;http://localhost:8000/api/expense/?username=mark&amp;api_key=2b34&quot;, data=json.dumps(post_data), headers=headers) print r.status_code #Should have got 401 Also you can check the expense count again to verify that expense isn’t created. Status code 401 tells that you aren’t authorized to do this operation. Verify that Sheryl is still able to create expense Try posting the same post_data as Sheryl r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) print r.status_code Status code must be 201 in this case which means expense is created. You will be able to see this expense at Sheryl’s GET expense list endpoint. Verify that Mark is still able to do GET Mark or any other user should still be able to make GET request even if he isn’t able to make POST request. http://localhost:8000/api/expense/?username=mark&amp;api_key=2b34&amp;format=json Since Mark doesn’t have any expense in db, so no object is there is objects key of response. Try creating an expense for this user from shell and then try the GET endpoint again. Explicitly defining fields and customising them ModelResource.Meta.fields can be dealt with in a similar way to ModelForm.Meta.fields. If you add the field to ModelResource.Meta.fields then it gets sane default behavriour. But it can be customised by adding the field explicitly on the ModelResource. Let’s try customising description field. Add it explicitly on ExpenseResource description = fields.CharField() You will need to import the following for it to work. from tastypie import fields Try the GET endpoint http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json You will see description as null for every expense. Because we committed a mistake. While explicitly defining a field, we also need to tell the expense attribute that needs to be used for this particular field. So we need to say description = fields.CharField(attribute=&#39;description&#39;) Now GET endpoint will work as it used to work earlier. But we did not achieve anything by explicitly adding the field. So what’s the point of explicitly adding it. Suppose you want the description in the detail endpoint but don’t want it on list endpoint. This can be achieved in following way description = fields.CharField(attribute=&#39;description&#39;, use_in=&#39;detail&#39;) Try the list and detail endpoint now and notice the difference. http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json http://localhost:8000/api/expense/8/?username=sheryl&amp;api_key=1a23&amp;format=json use_in is documented here" />
+<meta property="og:description" content="Django tastypie is a library to write RESTful apis in Django. Why use REST You have a database backed web application. This application tracks expenses. The application allows the capability to enter your expenses, view all your expenses, delete an expense etc. Essentially this application provides CRUD functionality. Django application has access to database credentials, but they are never seen by the users of the web application. Django application decides what to show to which user. Django application ensures that a particular user only sees the expenses entered by him and not somebody else’s expenses. Now you want to provide a mobile application (Android or iOS) corresponding to this web application. Android application should allow the user to view his expenses, create an expense as well as any other CRUD functionality. But database credentials could not be put in Android code as it is not too hard to decompile an apk and get the db credentials. And we never want a user to get the db credentials else he will be in a position to see everyone’s expenses and the entire database. So there has to be another way to allow mobile applications to get things from the database. This is where REST comes into picture. With REST, we have three components. A database, a Django application and a mobile application. Mobile application never accesses the database directly. It makes a REST api call to Django application. Mobile application also sends a api_key specific to the mobile user. Based on api_key, Django application determines what data to make visible to this particular api_key owner and sends the corresponding data in response. Resource REST stands for Representational State Transfer. It is a standard for transferring the state of a Resource, from web to mobile. What do I mean by state of a Resource? An expense could be a resource. A Person could be a resource. A blog post could be a resource. Basically any object or instance your program deals with could be a resource. And a resource’s state is maintained in it’s attributes. eg: You could have a model called Expense. The state of a expense instance is represented by its attributes. Any REST library should be able to create and return a representation of such resource, which simply stated means that REST library should be able to tell us the attributes and their values for different model instances. And tastypie is adept at doing this. Setting up the application I am using Django 1.7. Some things might be different for you if you are using different version of Django. As with all projects, I want to keep things in a virtual environment $ mkvirtualenv tastier $ workon tastier Install Django $ pip install Django Start a Django project (tastier) $ django-admin.py startproject tastier (tastier) $ cd tastier/ Start an app (tastier) $ python manage.py startapp expenses Add this app to INSTALLED_APPS Run migration (tastier)~ $ python manage.py migrate Runserver (tastier)~ $ python manage.py runserver Check that your are able to access http://localhost:8000/admin/login/ I have pushed the code for this project to Github. You will be able to checkout at different commits in the project to see specific things. Getting started Install django-tastypie. (tastier) $ pip install django-tastypie Create a file called expenses/api.py where you will keep all the tastypie related things. Suppose your program deals with a resource called Expense. Let’s create a model Expense in expenses/models.py class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() Run migrations python manage.py makemigrations python manage.py migrate We will later add a ForeignKey(User) to Expense to associate an expense with User. Don’t worry about it for now, we will come back to it. Let’s add few Expense instances in the database. Expense.objects.create(description=&#39;Ate pizza&#39;, amount=100) Expense.objects.create(description=&#39;Went to Cinema&#39;, amount=200) Handling GET You want the ability to get the representation of all expenses in your program at url “http://localhost:8000/api/expenses/”. To deal with a resource, tastypie requires a class which overrides ModelResource. Let’s call our class ExpenseResource. Add following to expenses/api.py from tastypie.resources import ModelResource from .models import Expense class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; And you need to add the following to tastier/urls.py from expenses.api import ExpenseResource expense_resource = ExpenseResource() urlpatterns = patterns(&#39;&#39;, url(r&#39;^admin/&#39;, include(admin.site.urls)), url(r&#39;^api/&#39;, include(expense_resource.urls)), ) GET all expenses After this you should be able to hit http://localhost:8000/api/expense/?format=json and you will see all the expenses from database in the response. The response would be: {&quot;meta&quot;: {&quot;limit&quot;: 20, &quot;next&quot;: null, &quot;offset&quot;: 0, &quot;previous&quot;: null, &quot;total_count&quot;: 2}, &quot;objects&quot;: [{&quot;amount&quot;: 100, &quot;description&quot;: &quot;Ate pizza&quot;, &quot;id&quot;: 1, &quot;resource_uri&quot;: &quot;/api/expense/1/&quot;}, {&quot;amount&quot;: 200, &quot;description&quot;: &quot;Went to Cinema&quot;, &quot;id&quot;: 2, &quot;resource_uri&quot;: &quot;/api/expense/2/&quot;}]} You will find the representation of expense instances in objects key of response. Get a particular expense You can get the representation of expense with id 1 at http://localhost:8000/api/expense/1/?format=json See how you are able to hit these two urls without adding them in urlpatterns. These urlpatterns are added by tastypie internally. How these endpoints help and ties with mobile application example? If the mobile app wants to show all the expenses it could use the url http://localhost:8000/api/expense/?format=json, get the response, parse the response and show the result on app. Right now every user will see all the expenses. As we move forward we will see how only a user’s expenses will be returned when a REST call is made from his/her mobile device. Serialization You must have realized that REST returns you serialized data. You might be wondering why use django-tastypie to achieve it, and not just use json.dumps. You can undoubtedly use json.dumps and not use django-tastypie to provide REST endpoints. But django-tastypie allows the ability to do many more things very easily as you will soon agree. Just hang on. Changing Meta.resource_name You can change ExpenseResource.Meta.resource_name from expense to expenditure. class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; And then the old urls will stop working. Your new GET urls in that case will be http://localhost:8000/api/expenditure/?format=json http://localhost:8000/api/expenditure/1/?format=json Changing the resource_name changes the urls tastypie makes available to you. Now change the resource_name back to expense. We have our first commit at this point. You can checkout to this commit to see the code till this point. git checkout b6a9c6 Meta.fields Suppose you only want description in expense representation, but don’t want amount. So you can add a fields attribute on ExpenseResource.Meta class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; fields = [&#39;description&#39;] Try http://localhost:8000/api/expense/?format=json So if you don’t have fields attribute on Meta, all the attributes of Model will be sent in response. If you have fields, only attributes listed in fields will be sent in response. Let’s add amount also to fields. Though this gives us the same behaviour as not having ExpenseResource.Meta.fields at all. class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; fields = [&#39;description&#39;, &#39;amount&#39;] We have our second commit at this point. You can checkout till this point by doing: git checkout 61194c Filtering Suppose you only want the Expenses where amount exceeds 150. If we had to do this with Django model we would say: Expense.objects.filter(amount__gt=150) amount__gt is the key thing here. This could be appended to our url pattern to get the expenses where amount exceeds 150. This could be achieved at url http://localhost:8000/api/expense/?amount__gt=150&amp;format=json Try this. You will get an error because we haven’t asked tastypie to allow filtering yet. Add filtering attribute to ExpenseResource.Meta class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;] } You should be able to use http://localhost:8000/api/expense/?amount__gt=150&amp;format=json This will only return the expenses where amount exceeds 150. Now we want to get all the expenses on Pizza. We could get pizza expenses in following way from shell. Expense.objects.filter(description__icontains=&#39;pizza&#39;) So to achieve this thing in api, we need to make following changes to ExpenseResource.Meta.filtering: class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } And then following url would give us the pizza expenses http://localhost:8000/api/expense/?description__icontains=pizza&amp;format=json With GET endpoints we were able to do the Read operations. With POST we will be able to do Create operations, as we will see in next section. Handling POST It’s hard to do POST from the browser. So we will use requests library to achieve this. Check expense count before doing POST. &gt;&gt;&gt; Expense.objects.count() 2 Tastypie by default doesn’t authorize a person to do POST request. The default authorization class is ReadOnlyAuthorization which allows GET calls but doesn’t allow POST calls. So you will have to disallow authorization checks for the time being. Add the following to ExpenseResource.Meta authorization = Authorization() You’ll need to import Authorization class for it. from tastypie.authorization import Authorization After this, ExpenseResource would look like: class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } authorization = Authorization() Don’t get into detail of Authorization for now, I will come back to it. Let’s make a POST request to our rest endpoint which will create an Expense object in the database. post_url = &#39;http://localhost:8000/api/expense/&#39; post_data = {&#39;description&#39;: &#39;Bought first Disworld book&#39;, &#39;amount&#39;: 399} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} import requests import json r = requests.post(post_url, json.dumps(post_data), headers=headers) &gt;&gt;&gt; print r.status_code 201 status_code 201 means that your Expense object was properly created. You can also verify it by checking that Expense count increased by 1. &gt;&gt;&gt; Expense.objects.count() 3 If you hit the GET endpoint from your browser, you will see this new Expense object too in the response. Try http://localhost:8000/api/expense/?format=json We have third commit at this point. git checkout 749cf3 Explanation of POST You need to POST at the same url where you get all the expenses. Compare the two urls. One way of posting is to POST json encoded data. So we used json.dumps If you are sending json encoded data, you need to send appopriate Content-type header too. How this ties in with mobile Android or iOS has a way to make POST request at a given url with headers. So you tell mobile app about the endpoint where they need to post and the data to post. They will call this rest endpoint, and the posted data will be handled by Django tastypie and proper row will be created in the database table. Adding authentication Currently GET and POST endpoints respond to every request. So even users who aren’t registered with the site will be able to see the expenses. Our first step is ensuring that only registered users are able to use the GET endpoints. Api tokens and sessions In a web application, a user logs in once and then she is able to make any number of web requests without being asked to login every time. eg: User logs in once and then can see her expense list page. After first request she can refresh the page, and can still get response without being asked for her login credentials again. This works because Django uses sessions and cookies to store user state. So browser sends a cookie to Django everytime the user makes a request, and Django app can associate the cookie with a user and shows the data for this particular user. With mobile apps, there is no concept of sessions, unless the mobile is working with a WebView. The session corresponding thing in a mobile app is Api key. So an api key is associated with a user. Every REST call should include this api key, and then tastypie can use this key to verify whether a logged in user is making the request. Creating user and api token Let’s create an user in our system and a corresponding api token for her. On a shell u = User.objects.create_user(username=&#39;sheryl&#39;, password=&#39;abc&#39;, email=&#39;sheryl@abc.com&#39;) Tastypie provides a model called ApiKey which allows storing tokens for users. Let’s create a token for Sheryl. from tastypie.models import ApiKey ApiKey.objects.create(key=&#39;1a23&#39;, user=u) We are setting the api token for sheryl as ‘1a23’ You need to ensure tastypie is in INSTALLED_APPS and you have migrated before you could create ApiKey instance. The default authentication class provided by tastypie is Authentication which allows anyone to make GET requests. We need to set ExpenseResource.Meta.authentication to ensure that only users who provide valid api key are able to get response from GET endpoints. Add the following on ExpensesResource.Meta. authentication = ApiKeyAuthentication() You need to import ApiKeyAuthentication. from tastypie.authentication import ApiKeyAuthentication Try the GET endpoint to get the list of expenses http://localhost:8000/api/expense/?format=json You will not see anything in response. If you see your runserver terminal, you’ll notice that status code 401 is raised. Api key should be sent in the request to get proper response. Try the following url http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 With this Sheryl will be able to get proper api response. Try sending wrong api_key for sheryl and you will not see proper response. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a2 With these we ensure that only registered users of the system with proper api key will be able to make GET requests. Fourth commit at this point git checkout 48725f How this ties in with mobile app When user installs the app, he logs in using his username and password for first time. These credentials are sent to Django server using a REST call. Django server returns the api key corresponding to this user to the mobile app. Mobile app stores this api token on mobile end and then uses this token for every subsequent REST call. User doesn’t have to provide the credentials anymore. Making unauthenticated POST requests Unauthenticated POST requests will not work anymore Try creating an Expense without passing any api key. post_data = {&#39;description&#39;: &#39;Bought Two scoops of Django&#39;, &#39;amount&#39;: 399} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} r = requests.post(&quot;http://localhost:8000/api/expense/&quot;, data=json.dumps(post_data), headers=headers) print r.status_code #This will give 401 Check that Expense count isn’t increased Making authenticated POST requests You only need to change the url to include username and api_key in the url. This will make the request authenticated. r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) This should have worked and Expense count should have increased. Try with wrong api_key and it will fail. Getting only User’s expense Till now we aren’t associating Expense to User. Let’s add a ForeignKey to User from Expense. Expense model becomes: from django.db import models from django.contrib.auth.models import User class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() user = models.ForeignKey(User, null=True) Since we already have some Expenses in db which aren’t associated with a User, so we kept User as a nullable field. Make and run migrations python manage.py makemigrations python manage.py migrate Right now our authorization class is set to Authorization. With this every user is authorized to see every expense. We will have to add a custom authorization class to enforce that users see only their expenses. Add the following to expenses/api.py class ExpenseAuthorization(Authorization): def read_list(self, object_list, bundle): return object_list.filter(user=bundle.request.user) And change authorization on ExpenseResource.Meta so it becomes: class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } authorization = ExpenseAuthorization() authentication = ApiKeyAuthentication() Explanation of ExpenseAuthorization When GET endpoint is called for expense list, object_list is created which gives all the expenses. After this, authorization is checked where further filtering could be done. In case of GET on list endpoint, authorization class’ read_list() method is called. object_list is passed to read_list. In tastypie there is a variable called bundle. And bundle has access to request using bundle.request When authentication is used properly, bundle.request.user is populated with correct user. Try expense list endpoint for Sheryl http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 You will not get any expense after adding ExpenseAuthorization {&quot;meta&quot;: {&quot;limit&quot;: 20, &quot;next&quot;: null, &quot;offset&quot;: 0, &quot;previous&quot;: null, &quot;total_count&quot;: 0}, &quot;objects&quot;: []} This happenned because at this point no expense is associated with Sheryl. Create an expense for Sheryl and try the GET endpoint On the shell u = User.objects.get(username=&#39;sheryl&#39;) Expense.objects.create(description=&#39;Paid for the servers&#39;, amount=1000, user=u) Expense.objects.create(description=&#39;Paid for CI server&#39;, amount=500, user=u) Try expense list endpoint for Sheryl again http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 You should be able to see all of Sheryl’s expenses. Fifth commit here. git checkout 26f7c1 How mobile app will use it. When Sheryl installs the app, she will be asked to login for the first time. There will be a REST endpoint which takes the username and password for a user and if the credentials are right, returns the api key for the user. Sheryl’s api key will be returned to the mobile app which will store it in local storage. And when Sheryl wants to see her expenses, this REST call will be made to Django server. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 This will only return Sheryl’s expenses. POST and create Sheryl’s expense Till now if a POST request is made, even if with Sheryl’s api key, expense is created in db but is not associated with Sheryl. We want to add functionality where if POST request is made from Sheryl’s device then expense is associated with Sheryl. If POST request is made from Mark’s device then expense should be associated with Mark. Tastypie provides several hookpoints. We will use one such hookpoint. ModelResource provides a method called hydrate which we need to override. Add the following method to ExpenseResource. def hydrate(self, bundle): bundle.obj.user = bundle.request.user return bundle This method is called during POST/PUT calls. bundle.obj is an Expense instance about to be saved in the database. So we set user on bundle.obj by reading it from bundle.request. We have already discussed how bundle.request is populated during authentication flow. Make a POST request now with Sheryl’s api_key. post_data = {&#39;description&#39;: &#39;Paid for iDoneThis&#39;, &#39;amount&#39;: 700} r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) Verify that the latest expense instance gets associated with Sheryl. You can also verify it by seeing that this object gets returned in GET expense list endpoint. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 Sixth commit at this point git checkout 17b932 Try on your own Create one more user in database, from shell. Create api key for this user. POST to REST endpoint with this new user’s api_key and username and verify that the expense gets associated with this new user. Check GET expense list for this new user and verify that only expense created for this user is in the response. Now is a good time to dig deeper into django-tastypie and understand about following: Dehydrate cycle. It is used during GET calls. Hydrate cycle. It is used during POST/PUT calls. Once you read about hydrate cycle, you will understand when method hydrate() is called. More about authorization and different methods available on Authorization which could be overridden by you. Want more? I am still trying few things with tastypie. Hereafter I will not have much explanation, but I will point to the commit where I attain certain functionality change. Authorization on detail endpoint. Expense with id 1 is not associated with any user. But Sheryl is still able to see it at: http://localhost:8000/api/expense/1/?format=json&amp;username=sheryl&amp;api_key=1a23 She shouldn’t be able to see it as it is not her expense. So add the following to ExpenseAuthorization def read_detail(self, object_list, bundle): obj = object_list[0] return obj.user == bundle.request.user After this Sheryl will not be able to see detail endpoint of any expense which doesn’t belong to her. Try it http://localhost:8000/api/expense/1/?format=json&amp;username=sheryl&amp;api_key=1a23 Commit id for this: e650f3 git show e650f3 PUT endpoint Expense with id 5 belongs to Sheryl. She wants to update this expense, she essentially want to change the description. Current thing is: http://localhost:8000/api/expense/5/?format=json&amp;username=sheryl&amp;api_key=1a23 Make PUT request put_url = &quot;http://localhost:8000/api/expense/5/?username=sheryl&amp;api_key=1a23&quot; put_data = {&#39;description&#39;: &#39;Paid for Travis&#39;} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} r = requests.put(put_url, data=json.dumps(put_data), headers=headers) Description of Expense 5 is updated as you can verify by trying the detail endpoint again. http://localhost:8000/api/expense/5/?format=json&amp;username=sheryl&amp;api_key=1a23 Notice that amount remains unchanged. So PUT changes whatever data you provide in the api call and lets everything else remain as it is. DELETE endpoint First check all of Sheryl’s expenses http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 Sheryl wants to delete her expense with id 5. After this is done she will have one less expense in db. delete_url = &quot;http://localhost:8000/api/expense/5/?username=sheryl&amp;api_key=1a23&quot; r = requests.delete(delete_url) Verify that this expense got deleted. So we were able to do Create, Read, Update and Delete with REST api calls. Restrict POST request to certain users only Suppose we want the users to be able to create expenses from web end but don’t want to allow creating expense from mobile using the api. Yeah, weird requiremtn. Also we don’t want to disallow POST for all users. We still want Sheryl to be able to POST. To try this we first need a new user with api key in our system. Create it from Django shell. u = User.objects.create_user(username=&#39;mark&#39;, password=&#39;def&#39;, email=&#39;mark@abc.com&#39;) ApiKey.objects.create(key=&#39;2b34&#39;, user=u) Restricting POST for everyone except Sheryl Add following method to ExpenseAuthorization def create_detail(self, object_list, bundle): user = bundle.request.user # Return True if current user is Sheryl else return False return user.username == &quot;sheryl&quot; Try making POST request as Mark and see you will not be able to do it. If you want you can see the expense count at this point. post_data = {&#39;description&#39;: &#39;Petty expense&#39;, &#39;amount&#39;: 3000} r = requests.post(&quot;http://localhost:8000/api/expense/?username=mark&amp;api_key=2b34&quot;, data=json.dumps(post_data), headers=headers) print r.status_code #Should have got 401 Also you can check the expense count again to verify that expense isn’t created. Status code 401 tells that you aren’t authorized to do this operation. Verify that Sheryl is still able to create expense Try posting the same post_data as Sheryl r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) print r.status_code Status code must be 201 in this case which means expense is created. You will be able to see this expense at Sheryl’s GET expense list endpoint. Verify that Mark is still able to do GET Mark or any other user should still be able to make GET request even if he isn’t able to make POST request. http://localhost:8000/api/expense/?username=mark&amp;api_key=2b34&amp;format=json Since Mark doesn’t have any expense in db, so no object is there is objects key of response. Try creating an expense for this user from shell and then try the GET endpoint again. Explicitly defining fields and customising them ModelResource.Meta.fields can be dealt with in a similar way to ModelForm.Meta.fields. If you add the field to ModelResource.Meta.fields then it gets sane default behavriour. But it can be customised by adding the field explicitly on the ModelResource. Let’s try customising description field. Add it explicitly on ExpenseResource description = fields.CharField() You will need to import the following for it to work. from tastypie import fields Try the GET endpoint http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json You will see description as null for every expense. Because we committed a mistake. While explicitly defining a field, we also need to tell the expense attribute that needs to be used for this particular field. So we need to say description = fields.CharField(attribute=&#39;description&#39;) Now GET endpoint will work as it used to work earlier. But we did not achieve anything by explicitly adding the field. So what’s the point of explicitly adding it. Suppose you want the description in the detail endpoint but don’t want it on list endpoint. This can be achieved in following way description = fields.CharField(attribute=&#39;description&#39;, use_in=&#39;detail&#39;) Try the list and detail endpoint now and notice the difference. http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json http://localhost:8000/api/expense/8/?username=sheryl&amp;api_key=1a23&amp;format=json use_in is documented here" />
+<link rel="canonical" href="http://localhost:4000/django-tastypie/2015/03/23/getting-started-with-django-tastypie.html" />
+<meta property="og:url" content="http://localhost:4000/django-tastypie/2015/03/23/getting-started-with-django-tastypie.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2015-03-23T17:40:53+05:30" />
+<script type="application/ld+json">
+{"description":"Django tastypie is a library to write RESTful apis in Django. Why use REST You have a database backed web application. This application tracks expenses. The application allows the capability to enter your expenses, view all your expenses, delete an expense etc. Essentially this application provides CRUD functionality. Django application has access to database credentials, but they are never seen by the users of the web application. Django application decides what to show to which user. Django application ensures that a particular user only sees the expenses entered by him and not somebody else’s expenses. Now you want to provide a mobile application (Android or iOS) corresponding to this web application. Android application should allow the user to view his expenses, create an expense as well as any other CRUD functionality. But database credentials could not be put in Android code as it is not too hard to decompile an apk and get the db credentials. And we never want a user to get the db credentials else he will be in a position to see everyone’s expenses and the entire database. So there has to be another way to allow mobile applications to get things from the database. This is where REST comes into picture. With REST, we have three components. A database, a Django application and a mobile application. Mobile application never accesses the database directly. It makes a REST api call to Django application. Mobile application also sends a api_key specific to the mobile user. Based on api_key, Django application determines what data to make visible to this particular api_key owner and sends the corresponding data in response. Resource REST stands for Representational State Transfer. It is a standard for transferring the state of a Resource, from web to mobile. What do I mean by state of a Resource? An expense could be a resource. A Person could be a resource. A blog post could be a resource. Basically any object or instance your program deals with could be a resource. And a resource’s state is maintained in it’s attributes. eg: You could have a model called Expense. The state of a expense instance is represented by its attributes. Any REST library should be able to create and return a representation of such resource, which simply stated means that REST library should be able to tell us the attributes and their values for different model instances. And tastypie is adept at doing this. Setting up the application I am using Django 1.7. Some things might be different for you if you are using different version of Django. As with all projects, I want to keep things in a virtual environment $ mkvirtualenv tastier $ workon tastier Install Django $ pip install Django Start a Django project (tastier) $ django-admin.py startproject tastier (tastier) $ cd tastier/ Start an app (tastier) $ python manage.py startapp expenses Add this app to INSTALLED_APPS Run migration (tastier)~ $ python manage.py migrate Runserver (tastier)~ $ python manage.py runserver Check that your are able to access http://localhost:8000/admin/login/ I have pushed the code for this project to Github. You will be able to checkout at different commits in the project to see specific things. Getting started Install django-tastypie. (tastier) $ pip install django-tastypie Create a file called expenses/api.py where you will keep all the tastypie related things. Suppose your program deals with a resource called Expense. Let’s create a model Expense in expenses/models.py class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() Run migrations python manage.py makemigrations python manage.py migrate We will later add a ForeignKey(User) to Expense to associate an expense with User. Don’t worry about it for now, we will come back to it. Let’s add few Expense instances in the database. Expense.objects.create(description=&#39;Ate pizza&#39;, amount=100) Expense.objects.create(description=&#39;Went to Cinema&#39;, amount=200) Handling GET You want the ability to get the representation of all expenses in your program at url “http://localhost:8000/api/expenses/”. To deal with a resource, tastypie requires a class which overrides ModelResource. Let’s call our class ExpenseResource. Add following to expenses/api.py from tastypie.resources import ModelResource from .models import Expense class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; And you need to add the following to tastier/urls.py from expenses.api import ExpenseResource expense_resource = ExpenseResource() urlpatterns = patterns(&#39;&#39;, url(r&#39;^admin/&#39;, include(admin.site.urls)), url(r&#39;^api/&#39;, include(expense_resource.urls)), ) GET all expenses After this you should be able to hit http://localhost:8000/api/expense/?format=json and you will see all the expenses from database in the response. The response would be: {&quot;meta&quot;: {&quot;limit&quot;: 20, &quot;next&quot;: null, &quot;offset&quot;: 0, &quot;previous&quot;: null, &quot;total_count&quot;: 2}, &quot;objects&quot;: [{&quot;amount&quot;: 100, &quot;description&quot;: &quot;Ate pizza&quot;, &quot;id&quot;: 1, &quot;resource_uri&quot;: &quot;/api/expense/1/&quot;}, {&quot;amount&quot;: 200, &quot;description&quot;: &quot;Went to Cinema&quot;, &quot;id&quot;: 2, &quot;resource_uri&quot;: &quot;/api/expense/2/&quot;}]} You will find the representation of expense instances in objects key of response. Get a particular expense You can get the representation of expense with id 1 at http://localhost:8000/api/expense/1/?format=json See how you are able to hit these two urls without adding them in urlpatterns. These urlpatterns are added by tastypie internally. How these endpoints help and ties with mobile application example? If the mobile app wants to show all the expenses it could use the url http://localhost:8000/api/expense/?format=json, get the response, parse the response and show the result on app. Right now every user will see all the expenses. As we move forward we will see how only a user’s expenses will be returned when a REST call is made from his/her mobile device. Serialization You must have realized that REST returns you serialized data. You might be wondering why use django-tastypie to achieve it, and not just use json.dumps. You can undoubtedly use json.dumps and not use django-tastypie to provide REST endpoints. But django-tastypie allows the ability to do many more things very easily as you will soon agree. Just hang on. Changing Meta.resource_name You can change ExpenseResource.Meta.resource_name from expense to expenditure. class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; And then the old urls will stop working. Your new GET urls in that case will be http://localhost:8000/api/expenditure/?format=json http://localhost:8000/api/expenditure/1/?format=json Changing the resource_name changes the urls tastypie makes available to you. Now change the resource_name back to expense. We have our first commit at this point. You can checkout to this commit to see the code till this point. git checkout b6a9c6 Meta.fields Suppose you only want description in expense representation, but don’t want amount. So you can add a fields attribute on ExpenseResource.Meta class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; fields = [&#39;description&#39;] Try http://localhost:8000/api/expense/?format=json So if you don’t have fields attribute on Meta, all the attributes of Model will be sent in response. If you have fields, only attributes listed in fields will be sent in response. Let’s add amount also to fields. Though this gives us the same behaviour as not having ExpenseResource.Meta.fields at all. class Meta: queryset = Expense.objects.all() resource_name = &#39;expenditure&#39; fields = [&#39;description&#39;, &#39;amount&#39;] We have our second commit at this point. You can checkout till this point by doing: git checkout 61194c Filtering Suppose you only want the Expenses where amount exceeds 150. If we had to do this with Django model we would say: Expense.objects.filter(amount__gt=150) amount__gt is the key thing here. This could be appended to our url pattern to get the expenses where amount exceeds 150. This could be achieved at url http://localhost:8000/api/expense/?amount__gt=150&amp;format=json Try this. You will get an error because we haven’t asked tastypie to allow filtering yet. Add filtering attribute to ExpenseResource.Meta class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;] } You should be able to use http://localhost:8000/api/expense/?amount__gt=150&amp;format=json This will only return the expenses where amount exceeds 150. Now we want to get all the expenses on Pizza. We could get pizza expenses in following way from shell. Expense.objects.filter(description__icontains=&#39;pizza&#39;) So to achieve this thing in api, we need to make following changes to ExpenseResource.Meta.filtering: class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } And then following url would give us the pizza expenses http://localhost:8000/api/expense/?description__icontains=pizza&amp;format=json With GET endpoints we were able to do the Read operations. With POST we will be able to do Create operations, as we will see in next section. Handling POST It’s hard to do POST from the browser. So we will use requests library to achieve this. Check expense count before doing POST. &gt;&gt;&gt; Expense.objects.count() 2 Tastypie by default doesn’t authorize a person to do POST request. The default authorization class is ReadOnlyAuthorization which allows GET calls but doesn’t allow POST calls. So you will have to disallow authorization checks for the time being. Add the following to ExpenseResource.Meta authorization = Authorization() You’ll need to import Authorization class for it. from tastypie.authorization import Authorization After this, ExpenseResource would look like: class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } authorization = Authorization() Don’t get into detail of Authorization for now, I will come back to it. Let’s make a POST request to our rest endpoint which will create an Expense object in the database. post_url = &#39;http://localhost:8000/api/expense/&#39; post_data = {&#39;description&#39;: &#39;Bought first Disworld book&#39;, &#39;amount&#39;: 399} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} import requests import json r = requests.post(post_url, json.dumps(post_data), headers=headers) &gt;&gt;&gt; print r.status_code 201 status_code 201 means that your Expense object was properly created. You can also verify it by checking that Expense count increased by 1. &gt;&gt;&gt; Expense.objects.count() 3 If you hit the GET endpoint from your browser, you will see this new Expense object too in the response. Try http://localhost:8000/api/expense/?format=json We have third commit at this point. git checkout 749cf3 Explanation of POST You need to POST at the same url where you get all the expenses. Compare the two urls. One way of posting is to POST json encoded data. So we used json.dumps If you are sending json encoded data, you need to send appopriate Content-type header too. How this ties in with mobile Android or iOS has a way to make POST request at a given url with headers. So you tell mobile app about the endpoint where they need to post and the data to post. They will call this rest endpoint, and the posted data will be handled by Django tastypie and proper row will be created in the database table. Adding authentication Currently GET and POST endpoints respond to every request. So even users who aren’t registered with the site will be able to see the expenses. Our first step is ensuring that only registered users are able to use the GET endpoints. Api tokens and sessions In a web application, a user logs in once and then she is able to make any number of web requests without being asked to login every time. eg: User logs in once and then can see her expense list page. After first request she can refresh the page, and can still get response without being asked for her login credentials again. This works because Django uses sessions and cookies to store user state. So browser sends a cookie to Django everytime the user makes a request, and Django app can associate the cookie with a user and shows the data for this particular user. With mobile apps, there is no concept of sessions, unless the mobile is working with a WebView. The session corresponding thing in a mobile app is Api key. So an api key is associated with a user. Every REST call should include this api key, and then tastypie can use this key to verify whether a logged in user is making the request. Creating user and api token Let’s create an user in our system and a corresponding api token for her. On a shell u = User.objects.create_user(username=&#39;sheryl&#39;, password=&#39;abc&#39;, email=&#39;sheryl@abc.com&#39;) Tastypie provides a model called ApiKey which allows storing tokens for users. Let’s create a token for Sheryl. from tastypie.models import ApiKey ApiKey.objects.create(key=&#39;1a23&#39;, user=u) We are setting the api token for sheryl as ‘1a23’ You need to ensure tastypie is in INSTALLED_APPS and you have migrated before you could create ApiKey instance. The default authentication class provided by tastypie is Authentication which allows anyone to make GET requests. We need to set ExpenseResource.Meta.authentication to ensure that only users who provide valid api key are able to get response from GET endpoints. Add the following on ExpensesResource.Meta. authentication = ApiKeyAuthentication() You need to import ApiKeyAuthentication. from tastypie.authentication import ApiKeyAuthentication Try the GET endpoint to get the list of expenses http://localhost:8000/api/expense/?format=json You will not see anything in response. If you see your runserver terminal, you’ll notice that status code 401 is raised. Api key should be sent in the request to get proper response. Try the following url http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 With this Sheryl will be able to get proper api response. Try sending wrong api_key for sheryl and you will not see proper response. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a2 With these we ensure that only registered users of the system with proper api key will be able to make GET requests. Fourth commit at this point git checkout 48725f How this ties in with mobile app When user installs the app, he logs in using his username and password for first time. These credentials are sent to Django server using a REST call. Django server returns the api key corresponding to this user to the mobile app. Mobile app stores this api token on mobile end and then uses this token for every subsequent REST call. User doesn’t have to provide the credentials anymore. Making unauthenticated POST requests Unauthenticated POST requests will not work anymore Try creating an Expense without passing any api key. post_data = {&#39;description&#39;: &#39;Bought Two scoops of Django&#39;, &#39;amount&#39;: 399} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} r = requests.post(&quot;http://localhost:8000/api/expense/&quot;, data=json.dumps(post_data), headers=headers) print r.status_code #This will give 401 Check that Expense count isn’t increased Making authenticated POST requests You only need to change the url to include username and api_key in the url. This will make the request authenticated. r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) This should have worked and Expense count should have increased. Try with wrong api_key and it will fail. Getting only User’s expense Till now we aren’t associating Expense to User. Let’s add a ForeignKey to User from Expense. Expense model becomes: from django.db import models from django.contrib.auth.models import User class Expense(models.Model): description = models.CharField(max_length=100) amount = models.IntegerField() user = models.ForeignKey(User, null=True) Since we already have some Expenses in db which aren’t associated with a User, so we kept User as a nullable field. Make and run migrations python manage.py makemigrations python manage.py migrate Right now our authorization class is set to Authorization. With this every user is authorized to see every expense. We will have to add a custom authorization class to enforce that users see only their expenses. Add the following to expenses/api.py class ExpenseAuthorization(Authorization): def read_list(self, object_list, bundle): return object_list.filter(user=bundle.request.user) And change authorization on ExpenseResource.Meta so it becomes: class ExpenseResource(ModelResource): class Meta: queryset = Expense.objects.all() resource_name = &#39;expense&#39; fields = [&#39;description&#39;, &#39;amount&#39;] filtering = { &#39;amount&#39;: [&#39;gt&#39;], &#39;description&#39;: [&#39;icontains&#39;] } authorization = ExpenseAuthorization() authentication = ApiKeyAuthentication() Explanation of ExpenseAuthorization When GET endpoint is called for expense list, object_list is created which gives all the expenses. After this, authorization is checked where further filtering could be done. In case of GET on list endpoint, authorization class’ read_list() method is called. object_list is passed to read_list. In tastypie there is a variable called bundle. And bundle has access to request using bundle.request When authentication is used properly, bundle.request.user is populated with correct user. Try expense list endpoint for Sheryl http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 You will not get any expense after adding ExpenseAuthorization {&quot;meta&quot;: {&quot;limit&quot;: 20, &quot;next&quot;: null, &quot;offset&quot;: 0, &quot;previous&quot;: null, &quot;total_count&quot;: 0}, &quot;objects&quot;: []} This happenned because at this point no expense is associated with Sheryl. Create an expense for Sheryl and try the GET endpoint On the shell u = User.objects.get(username=&#39;sheryl&#39;) Expense.objects.create(description=&#39;Paid for the servers&#39;, amount=1000, user=u) Expense.objects.create(description=&#39;Paid for CI server&#39;, amount=500, user=u) Try expense list endpoint for Sheryl again http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 You should be able to see all of Sheryl’s expenses. Fifth commit here. git checkout 26f7c1 How mobile app will use it. When Sheryl installs the app, she will be asked to login for the first time. There will be a REST endpoint which takes the username and password for a user and if the credentials are right, returns the api key for the user. Sheryl’s api key will be returned to the mobile app which will store it in local storage. And when Sheryl wants to see her expenses, this REST call will be made to Django server. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 This will only return Sheryl’s expenses. POST and create Sheryl’s expense Till now if a POST request is made, even if with Sheryl’s api key, expense is created in db but is not associated with Sheryl. We want to add functionality where if POST request is made from Sheryl’s device then expense is associated with Sheryl. If POST request is made from Mark’s device then expense should be associated with Mark. Tastypie provides several hookpoints. We will use one such hookpoint. ModelResource provides a method called hydrate which we need to override. Add the following method to ExpenseResource. def hydrate(self, bundle): bundle.obj.user = bundle.request.user return bundle This method is called during POST/PUT calls. bundle.obj is an Expense instance about to be saved in the database. So we set user on bundle.obj by reading it from bundle.request. We have already discussed how bundle.request is populated during authentication flow. Make a POST request now with Sheryl’s api_key. post_data = {&#39;description&#39;: &#39;Paid for iDoneThis&#39;, &#39;amount&#39;: 700} r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) Verify that the latest expense instance gets associated with Sheryl. You can also verify it by seeing that this object gets returned in GET expense list endpoint. http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 Sixth commit at this point git checkout 17b932 Try on your own Create one more user in database, from shell. Create api key for this user. POST to REST endpoint with this new user’s api_key and username and verify that the expense gets associated with this new user. Check GET expense list for this new user and verify that only expense created for this user is in the response. Now is a good time to dig deeper into django-tastypie and understand about following: Dehydrate cycle. It is used during GET calls. Hydrate cycle. It is used during POST/PUT calls. Once you read about hydrate cycle, you will understand when method hydrate() is called. More about authorization and different methods available on Authorization which could be overridden by you. Want more? I am still trying few things with tastypie. Hereafter I will not have much explanation, but I will point to the commit where I attain certain functionality change. Authorization on detail endpoint. Expense with id 1 is not associated with any user. But Sheryl is still able to see it at: http://localhost:8000/api/expense/1/?format=json&amp;username=sheryl&amp;api_key=1a23 She shouldn’t be able to see it as it is not her expense. So add the following to ExpenseAuthorization def read_detail(self, object_list, bundle): obj = object_list[0] return obj.user == bundle.request.user After this Sheryl will not be able to see detail endpoint of any expense which doesn’t belong to her. Try it http://localhost:8000/api/expense/1/?format=json&amp;username=sheryl&amp;api_key=1a23 Commit id for this: e650f3 git show e650f3 PUT endpoint Expense with id 5 belongs to Sheryl. She wants to update this expense, she essentially want to change the description. Current thing is: http://localhost:8000/api/expense/5/?format=json&amp;username=sheryl&amp;api_key=1a23 Make PUT request put_url = &quot;http://localhost:8000/api/expense/5/?username=sheryl&amp;api_key=1a23&quot; put_data = {&#39;description&#39;: &#39;Paid for Travis&#39;} headers = {&#39;Content-type&#39;: &#39;application/json&#39;} r = requests.put(put_url, data=json.dumps(put_data), headers=headers) Description of Expense 5 is updated as you can verify by trying the detail endpoint again. http://localhost:8000/api/expense/5/?format=json&amp;username=sheryl&amp;api_key=1a23 Notice that amount remains unchanged. So PUT changes whatever data you provide in the api call and lets everything else remain as it is. DELETE endpoint First check all of Sheryl’s expenses http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23 Sheryl wants to delete her expense with id 5. After this is done she will have one less expense in db. delete_url = &quot;http://localhost:8000/api/expense/5/?username=sheryl&amp;api_key=1a23&quot; r = requests.delete(delete_url) Verify that this expense got deleted. So we were able to do Create, Read, Update and Delete with REST api calls. Restrict POST request to certain users only Suppose we want the users to be able to create expenses from web end but don’t want to allow creating expense from mobile using the api. Yeah, weird requiremtn. Also we don’t want to disallow POST for all users. We still want Sheryl to be able to POST. To try this we first need a new user with api key in our system. Create it from Django shell. u = User.objects.create_user(username=&#39;mark&#39;, password=&#39;def&#39;, email=&#39;mark@abc.com&#39;) ApiKey.objects.create(key=&#39;2b34&#39;, user=u) Restricting POST for everyone except Sheryl Add following method to ExpenseAuthorization def create_detail(self, object_list, bundle): user = bundle.request.user # Return True if current user is Sheryl else return False return user.username == &quot;sheryl&quot; Try making POST request as Mark and see you will not be able to do it. If you want you can see the expense count at this point. post_data = {&#39;description&#39;: &#39;Petty expense&#39;, &#39;amount&#39;: 3000} r = requests.post(&quot;http://localhost:8000/api/expense/?username=mark&amp;api_key=2b34&quot;, data=json.dumps(post_data), headers=headers) print r.status_code #Should have got 401 Also you can check the expense count again to verify that expense isn’t created. Status code 401 tells that you aren’t authorized to do this operation. Verify that Sheryl is still able to create expense Try posting the same post_data as Sheryl r = requests.post(&quot;http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&quot;, data=json.dumps(post_data), headers=headers) print r.status_code Status code must be 201 in this case which means expense is created. You will be able to see this expense at Sheryl’s GET expense list endpoint. Verify that Mark is still able to do GET Mark or any other user should still be able to make GET request even if he isn’t able to make POST request. http://localhost:8000/api/expense/?username=mark&amp;api_key=2b34&amp;format=json Since Mark doesn’t have any expense in db, so no object is there is objects key of response. Try creating an expense for this user from shell and then try the GET endpoint again. Explicitly defining fields and customising them ModelResource.Meta.fields can be dealt with in a similar way to ModelForm.Meta.fields. If you add the field to ModelResource.Meta.fields then it gets sane default behavriour. But it can be customised by adding the field explicitly on the ModelResource. Let’s try customising description field. Add it explicitly on ExpenseResource description = fields.CharField() You will need to import the following for it to work. from tastypie import fields Try the GET endpoint http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json You will see description as null for every expense. Because we committed a mistake. While explicitly defining a field, we also need to tell the expense attribute that needs to be used for this particular field. So we need to say description = fields.CharField(attribute=&#39;description&#39;) Now GET endpoint will work as it used to work earlier. But we did not achieve anything by explicitly adding the field. So what’s the point of explicitly adding it. Suppose you want the description in the detail endpoint but don’t want it on list endpoint. This can be achieved in following way description = fields.CharField(attribute=&#39;description&#39;, use_in=&#39;detail&#39;) Try the list and detail endpoint now and notice the difference. http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json http://localhost:8000/api/expense/8/?username=sheryl&amp;api_key=1a23&amp;format=json use_in is documented here","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/django-tastypie/2015/03/23/getting-started-with-django-tastypie.html","headline":"Getting started with Django tastypie","dateModified":"2015-03-23T17:40:53+05:30","datePublished":"2015-03-23T17:40:53+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/django-tastypie/2015/03/23/getting-started-with-django-tastypie.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Getting started with Django tastypie</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2015-03-23T17:40:53+05:30" itemprop="datePublished">Mar 23, 2015
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Django tastypie is a library to write RESTful apis in Django.</p>
+
+<h3 id="why-use-rest">Why use REST</h3>
+
+<p>You have a database backed web application. This application tracks expenses. The application allows the capability to enter your expenses, view all your expenses, delete an expense etc. Essentially this application provides CRUD functionality. Django application has access to database credentials, but they are never seen by the users of the web application. Django application decides what to show to which user. Django application ensures that a particular user only sees the expenses entered by him and not somebody else’s expenses.</p>
+
+<p>Now you want to provide a mobile application (Android or iOS) corresponding to this web application. Android application should allow the user to view his expenses, create an expense as well as any other CRUD functionality. But database credentials could not be put in Android code as it is not too hard to decompile an apk and get the db credentials. And we never want a user to get the db credentials else he will be in a position to see everyone’s expenses and the entire database. So there has to be another way to allow mobile applications to get things from the database. This is where REST comes into picture.</p>
+
+<p>With REST, we have three components. A database, a Django application and a mobile application. Mobile application never accesses the database directly. It makes a REST api call to Django application. Mobile application also sends a api_key specific to the mobile user. Based on api_key, Django application determines what data to make visible to this particular api_key owner and sends the corresponding data in response.</p>
+
+<h3 id="resource">Resource</h3>
+
+<p>REST stands for Representational State Transfer. It is a standard for transferring the state of a <strong>Resource</strong>, from web to mobile.</p>
+
+<h4 id="what-do-i-mean-by-state-of-a-resource">What do I mean by <strong>state of a Resource</strong>?</h4>
+
+<p>An expense could be a resource. A Person could be a resource. A blog post could be a resource. Basically any object or instance your program deals with could be a resource. And a resource’s state is maintained in it’s attributes. eg: You could have a model called Expense. The state of a expense instance is represented by its attributes.</p>
+
+<p>Any REST library should be able to create and return a representation of such resource, which simply stated means that REST library should be able to tell us the attributes and their values for different model instances. And tastypie is adept at doing this.</p>
+
+<h3 id="setting-up-the-application">Setting up the application</h3>
+
+<p>I am using Django 1.7. Some things might be different for you if you are using different version of Django.</p>
+
+<p>As with all projects, I want to keep things in a virtual environment</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ mkvirtualenv tastier
+$ workon tastier
+</code></pre></div></div>
+
+<p>Install Django</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ pip install Django
+</code></pre></div></div>
+
+<p>Start a Django project</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(tastier) $ django-admin.py startproject tastier
+
+(tastier) $ cd tastier/
+</code></pre></div></div>
+
+<p>Start an app</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(tastier) $ python manage.py startapp expenses
+</code></pre></div></div>
+
+<p>Add this app to INSTALLED_APPS</p>
+
+<p>Run migration</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(tastier)~ $ python manage.py migrate
+</code></pre></div></div>
+
+<p>Runserver</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(tastier)~ $ python manage.py runserver
+</code></pre></div></div>
+
+<p>Check that your are able to access http://localhost:8000/admin/login/</p>
+
+<p>I have pushed the code for this project to <a href="https://github.com/akshar-raaj/tastier" target="_blank">Github</a>. You will be able to checkout at different commits in the project to see specific things.</p>
+
+<h3 id="getting-started">Getting started</h3>
+
+<p>Install django-tastypie.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(tastier) $ pip install django-tastypie
+</code></pre></div></div>
+
+<p>Create a file called <code class="highlighter-rouge">expenses/api.py</code> where you will keep all the tastypie related things.</p>
+
+<p>Suppose your program deals with a resource called Expense. Let’s create a model Expense in expenses/models.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Expense(models.Model):
+	description = models.CharField(max_length=100)
+	amount = models.IntegerField()
+</code></pre></div></div>
+
+<p>Run migrations</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python manage.py makemigrations
+python manage.py migrate
+</code></pre></div></div>
+
+<p>We will later add a ForeignKey(User) to Expense to associate an expense with User. Don’t worry about it for now, we will come back to it.</p>
+
+<p>Let’s add few Expense instances in the database.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Expense.objects.create(description='Ate pizza', amount=100)
+Expense.objects.create(description='Went to Cinema', amount=200)
+</code></pre></div></div>
+
+<h3 id="handling-get">Handling GET</h3>
+
+<p>You want the ability to get the representation of all expenses in your program at url “http://localhost:8000/api/expenses/”.</p>
+
+<p>To deal with a resource, tastypie requires a class which overrides <strong>ModelResource</strong>. Let’s call our class <strong>ExpenseResource</strong>. Add following to expenses/api.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from tastypie.resources import ModelResource
+
+from .models import Expense
+
+class ExpenseResource(ModelResource):
+
+	class Meta:
+		queryset = Expense.objects.all()
+		resource_name = 'expense'
+</code></pre></div></div>
+
+<p>And you need to add the following to tastier/urls.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from expenses.api import ExpenseResource
+
+expense_resource = ExpenseResource()
+
+urlpatterns = patterns('',
+	url(r'^admin/', include(admin.site.urls)),
+	url(r'^api/', include(expense_resource.urls)),
+)
+</code></pre></div></div>
+
+<h4 id="get-all-expenses">GET all expenses</h4>
+
+<p>After this you should be able to hit</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json
+</code></pre></div></div>
+
+<p>and you will see all the expenses from database in the response.</p>
+
+<p>The response would be:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 2}, "objects": [{"amount": 100, "description": "Ate pizza", "id": 1, "resource_uri": "/api/expense/1/"}, {"amount": 200, "description": "Went to Cinema", "id": 2, "resource_uri": "/api/expense/2/"}]}
+</code></pre></div></div>
+
+<p>You will find the representation of <code class="highlighter-rouge">expense</code> instances in <strong>objects</strong> key of response.</p>
+
+<h4 id="get-a-particular-expense">Get a particular expense</h4>
+
+<p>You can get the representation of expense with id 1 at</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/1/?format=json
+</code></pre></div></div>
+
+<p>See how you are able to hit these two urls without adding them in urlpatterns. These urlpatterns are added by tastypie internally.</p>
+
+<h4 id="how-these-endpoints-help-and-ties-with-mobile-application-example">How these endpoints help and ties with mobile application example?</h4>
+
+<p>If the mobile app wants to show all the expenses it could use the url <strong>http://localhost:8000/api/expense/?format=json</strong>, get the response, parse the response and show the result on app.</p>
+
+<p>Right now every user will see all the expenses. As we move forward we will see how only a user’s expenses will be returned when a REST call is made from his/her mobile device.</p>
+
+<h4 id="serialization">Serialization</h4>
+
+<p>You must have realized that REST returns you serialized data. You might be wondering why use django-tastypie to achieve it, and not just use json.dumps. You can undoubtedly use json.dumps and not use django-tastypie to provide REST endpoints. But django-tastypie allows the ability to do many more things very easily as you will soon agree. Just hang on.</p>
+
+<h4 id="changing-metaresource_name">Changing Meta.resource_name</h4>
+
+<p>You can change ExpenseResource.Meta.resource_name from <code class="highlighter-rouge">expense</code> to <code class="highlighter-rouge">expenditure</code>.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class ExpenseResource(ModelResource):
+
+	class Meta:
+		queryset = Expense.objects.all()
+		resource_name = 'expenditure'
+</code></pre></div></div>
+
+<p>And then the old urls will stop working. Your new GET urls in that case will be</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expenditure/?format=json
+http://localhost:8000/api/expenditure/1/?format=json
+</code></pre></div></div>
+
+<p>Changing the resource_name changes the urls tastypie makes available to you.</p>
+
+<p>Now change the resource_name back to <code class="highlighter-rouge">expense</code>.</p>
+
+<p>We have our first commit at this point. You can checkout to this commit to see the code till this point.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git checkout b6a9c6
+</code></pre></div></div>
+
+<h4 id="metafields">Meta.fields</h4>
+
+<p>Suppose you only want <code class="highlighter-rouge">description</code> in expense representation, but don’t want <code class="highlighter-rouge">amount</code>. So you can add a fields attribute on ExpenseResource.Meta</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Meta:
+	queryset = Expense.objects.all()
+	resource_name = 'expenditure'
+	fields = ['description']
+</code></pre></div></div>
+
+<p>Try</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json
+</code></pre></div></div>
+
+<p>So if you don’t have <strong>fields</strong> attribute on Meta, all the attributes of Model will be sent in response. If you have <strong>fields</strong>, only attributes listed in fields will be sent in response.</p>
+
+<p>Let’s add <code class="highlighter-rouge">amount</code> also to <code class="highlighter-rouge">fields</code>. Though this gives us the same behaviour as not having ExpenseResource.Meta.fields at all.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Meta:
+	queryset = Expense.objects.all()
+	resource_name = 'expenditure'
+	fields = ['description', 'amount']
+</code></pre></div></div>
+
+<p>We have our second commit at this point. You can checkout till this point by doing:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git checkout 61194c
+</code></pre></div></div>
+
+<h4 id="filtering">Filtering</h4>
+
+<p>Suppose you only want the Expenses where amount exceeds 150.</p>
+
+<p>If we had to do this with Django model we would say:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Expense.objects.filter(amount__gt=150)
+</code></pre></div></div>
+
+<p><strong>amount__gt</strong> is the key thing here. This could be appended to our url pattern to get the expenses where amount exceeds 150.</p>
+
+<p>This could be achieved at url</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?amount__gt=150&amp;format=json
+</code></pre></div></div>
+
+<p>Try this. You will get an error because we haven’t asked tastypie to allow filtering yet.</p>
+
+<p>Add <strong>filtering</strong> attribute to ExpenseResource.Meta</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Meta:
+    queryset = Expense.objects.all()
+    resource_name = 'expense'
+    fields = ['description', 'amount']
+    filtering = {
+        'amount': ['gt']
+    }
+</code></pre></div></div>
+
+<p>You should be able to use</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?amount__gt=150&amp;format=json
+</code></pre></div></div>
+
+<p>This will only return the expenses where amount exceeds 150.</p>
+
+<p>Now we want to get all the expenses on Pizza. We could get pizza expenses in following way from shell.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Expense.objects.filter(description__icontains='pizza')
+</code></pre></div></div>
+
+<p>So to achieve this thing in api, we need to make following changes to ExpenseResource.Meta.filtering:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class Meta:
+    queryset = Expense.objects.all()
+    resource_name = 'expense'
+    fields = ['description', 'amount']
+    filtering = {
+        'amount': ['gt'],
+        'description': ['icontains']
+    }
+</code></pre></div></div>
+
+<p>And then following url would give us the pizza expenses</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?description__icontains=pizza&amp;format=json
+</code></pre></div></div>
+
+<p>With GET endpoints we were able to do the Read operations. With POST we will be able to do Create operations, as we will see in next section.</p>
+
+<h3 id="handling-post">Handling POST</h3>
+
+<p>It’s hard to do POST from the browser. So we will use <strong>requests</strong> library to achieve this.</p>
+
+<p>Check expense count before doing POST.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; Expense.objects.count()
+2
+</code></pre></div></div>
+
+<p>Tastypie by default doesn’t authorize a person to do POST request. The default authorization class is <strong>ReadOnlyAuthorization</strong> which allows GET calls but doesn’t allow POST calls. So you will have to disallow authorization checks for the time being. Add the following to ExpenseResource.Meta</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>authorization = Authorization()
+</code></pre></div></div>
+
+<p>You’ll need to import <code class="highlighter-rouge">Authorization</code> class for it.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from tastypie.authorization import Authorization
+</code></pre></div></div>
+
+<p>After this, ExpenseResource would look like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class ExpenseResource(ModelResource):
+
+	class Meta:
+		queryset = Expense.objects.all()
+		resource_name = 'expense'
+		fields = ['description', 'amount']
+		filtering = {
+			'amount': ['gt'],
+			'description': ['icontains']
+		}
+		authorization = Authorization()
+</code></pre></div></div>
+
+<p>Don’t get into detail of Authorization for now, I will come back to it.</p>
+
+<p>Let’s make a POST request to our rest endpoint which will create an Expense object in the database.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>post_url = 'http://localhost:8000/api/expense/'
+post_data = {'description': 'Bought first Disworld book', 'amount': 399}
+headers = {'Content-type': 'application/json'}
+import requests
+import json
+r = requests.post(post_url, json.dumps(post_data), headers=headers)
+&gt;&gt;&gt; print r.status_code
+201
+</code></pre></div></div>
+
+<p>status_code 201 means that your Expense object was properly created. You can also verify it by checking that Expense count increased by 1.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; Expense.objects.count()
+3
+</code></pre></div></div>
+
+<p>If you hit the GET endpoint from your browser, you will see this new Expense object too in the response. Try</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json
+</code></pre></div></div>
+
+<p>We have third commit at this point.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git checkout 749cf3
+</code></pre></div></div>
+
+<h4 id="explanation-of-post">Explanation of POST</h4>
+
+<ul>
+  <li>You need to POST at the same url where you get all the expenses. Compare the two urls.</li>
+  <li>One way of posting is to POST json encoded data. So we used json.dumps</li>
+  <li>If you are sending json encoded data, you need to send appopriate Content-type header too.</li>
+</ul>
+
+<p><br /></p>
+
+<h4 id="how-this-ties-in-with-mobile">How this ties in with mobile</h4>
+
+<p>Android or iOS has a way to make POST request at a given url with headers. So you tell mobile app about the endpoint where they need to post and the data to post. They will call this rest endpoint, and the posted data will be handled by Django tastypie and proper row will be created in the database table.</p>
+
+<h3 id="adding-authentication">Adding authentication</h3>
+
+<p>Currently GET and POST endpoints respond to every request. So even users who aren’t registered with the site will be able to see the expenses. Our first step is ensuring that only registered users are able to use the GET endpoints.</p>
+
+<h4 id="api-tokens-and-sessions">Api tokens and sessions</h4>
+
+<p>In a web application, a user logs in once and then she is able to make any number of web requests without being asked to login every time. eg: User logs in once and then can see her expense list page. After first request she can refresh the page, and can still get response without being asked for her login credentials again. This works because Django uses sessions and cookies to store user state. So browser sends a cookie to Django everytime the user makes a request, and Django app can associate the cookie with a user and shows the data for this particular user.</p>
+
+<p>With mobile apps, there is no concept of sessions, unless the mobile is working with a WebView. The session corresponding thing in a mobile app is Api key. So an api key is associated with a user. Every REST call should include this api key, and then tastypie can use this key to verify whether a logged in user is making the request.</p>
+
+<h4 id="creating-user-and-api-token">Creating user and api token</h4>
+
+<p>Let’s create an user in our system and a corresponding api token for her.</p>
+
+<p>On a shell</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>u = User.objects.create_user(username='sheryl', password='abc', email='sheryl@abc.com')
+</code></pre></div></div>
+
+<p>Tastypie provides a model called ApiKey which allows storing tokens for users. Let’s create a token for Sheryl.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from tastypie.models import ApiKey
+ApiKey.objects.create(key='1a23', user=u)
+</code></pre></div></div>
+
+<p>We are setting the api token for sheryl as ‘1a23’</p>
+
+<p>You need to ensure tastypie is in INSTALLED_APPS and you have migrated before you could create ApiKey instance.</p>
+
+<p>The default authentication class provided by tastypie is <strong>Authentication</strong> which allows anyone to make GET requests. We need to set ExpenseResource.Meta.authentication to ensure that only users who provide valid api key are able to get response from GET endpoints.</p>
+
+<p>Add the following on ExpensesResource.Meta.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>authentication = ApiKeyAuthentication()
+</code></pre></div></div>
+
+<p>You need to import ApiKeyAuthentication.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from tastypie.authentication import ApiKeyAuthentication
+</code></pre></div></div>
+
+<p>Try the GET endpoint to get the list of expenses</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json
+</code></pre></div></div>
+
+<p>You will not see anything in response. If you see your runserver terminal, you’ll notice that status code 401 is raised.</p>
+
+<p>Api key should be sent in the request to get proper response.</p>
+
+<p>Try the following url</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>With this Sheryl will be able to get proper api response.</p>
+
+<p>Try sending wrong api_key for sheryl and you will not see proper response.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a2
+</code></pre></div></div>
+
+<p>With these we ensure that only registered users of the system with proper api key will be able to make GET requests.</p>
+
+<p>Fourth commit at this point</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git checkout 48725f
+</code></pre></div></div>
+
+<h4 id="how-this-ties-in-with-mobile-app">How this ties in with mobile app</h4>
+
+<p>When user installs the app, he logs in using his username and password for first time. These credentials are sent to Django server using a REST call. Django server returns the api key corresponding to this user to the mobile app. Mobile app stores this api token on mobile end and then uses this token for every subsequent REST call. User doesn’t have to provide the credentials anymore.</p>
+
+<h4 id="making-unauthenticated-post-requests">Making unauthenticated POST requests</h4>
+
+<p>Unauthenticated POST requests will not work anymore</p>
+
+<p>Try creating an Expense without passing any api key.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>post_data = {'description': 'Bought Two scoops of Django', 'amount': 399}
+headers = {'Content-type': 'application/json'}
+r = requests.post("http://localhost:8000/api/expense/", data=json.dumps(post_data), headers=headers)
+print r.status_code       #This will give 401
+</code></pre></div></div>
+
+<p>Check that Expense count isn’t increased</p>
+
+<h4 id="making-authenticated-post-requests">Making authenticated POST requests</h4>
+
+<p>You only need to change the url to include username and api_key in the url. This will make the request authenticated.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r = requests.post("http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23", data=json.dumps(post_data), headers=headers)
+</code></pre></div></div>
+
+<p>This should have worked and Expense count should have increased.</p>
+
+<p>Try with wrong api_key and it will fail.</p>
+
+<h3 id="getting-only-users-expense">Getting only User’s expense</h3>
+
+<p>Till now we aren’t associating Expense to User. Let’s add a ForeignKey to User from Expense.</p>
+
+<p>Expense model becomes:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.db import models
+from django.contrib.auth.models import User
+
+
+class Expense(models.Model):
+	description = models.CharField(max_length=100)
+	amount = models.IntegerField()
+	user = models.ForeignKey(User, null=True)
+</code></pre></div></div>
+
+<p>Since we already have some Expenses in db which aren’t associated with a User, so we kept User as a nullable field.</p>
+
+<p>Make and run migrations</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python manage.py makemigrations
+python manage.py migrate
+</code></pre></div></div>
+
+<p>Right now our <strong>authorization</strong> class is set to <strong>Authorization</strong>. With this every user is <strong>authorized</strong> to see every expense. We will have to add a custom authorization class to enforce that users see only their expenses.</p>
+
+<p>Add the following to expenses/api.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class ExpenseAuthorization(Authorization):
+
+	def read_list(self, object_list, bundle):
+		return object_list.filter(user=bundle.request.user)
+</code></pre></div></div>
+
+<p>And change <strong>authorization</strong> on ExpenseResource.Meta so it becomes:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class ExpenseResource(ModelResource):
+
+	class Meta:
+		queryset = Expense.objects.all()
+		resource_name = 'expense'
+		fields = ['description', 'amount']
+		filtering = {
+			'amount': ['gt'],
+			'description': ['icontains']
+		}
+		authorization = ExpenseAuthorization()
+		authentication = ApiKeyAuthentication()
+</code></pre></div></div>
+
+<h4 id="explanation-of-expenseauthorization">Explanation of ExpenseAuthorization</h4>
+
+<ul>
+  <li>When GET endpoint is called for expense list, object_list is created which gives all the expenses.</li>
+  <li>After this, authorization is checked where further filtering could be done.</li>
+  <li>In case of GET on list endpoint, authorization class’ read_list() method is called. object_list is passed to read_list.</li>
+  <li>In tastypie there is a variable called bundle. And bundle has access to request using bundle.request</li>
+  <li>When authentication is used properly, bundle.request.user is populated with correct user.</li>
+</ul>
+
+<p>Try expense list endpoint for Sheryl</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>You will not get any expense after adding ExpenseAuthorization</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 0}, "objects": []}
+</code></pre></div></div>
+
+<p>This happenned because at this point no expense is associated with Sheryl.</p>
+
+<h4 id="create-an-expense-for-sheryl-and-try-the-get-endpoint">Create an expense for Sheryl and try the GET endpoint</h4>
+
+<p>On the shell</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>u = User.objects.get(username='sheryl')
+Expense.objects.create(description='Paid for the servers', amount=1000, user=u)
+Expense.objects.create(description='Paid for CI server', amount=500, user=u)
+</code></pre></div></div>
+
+<p>Try expense list endpoint for Sheryl again</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>You should be able to see all of Sheryl’s expenses.</p>
+
+<p>Fifth commit here.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git checkout 26f7c1
+</code></pre></div></div>
+
+<h4 id="how-mobile-app-will-use-it">How mobile app will use it.</h4>
+
+<p>When Sheryl installs the app, she will be asked to login for the first time. There will be a REST endpoint which takes the username and password for a user and if the credentials are right, returns the api key for the user. Sheryl’s api key will be returned to the mobile app which will store it in local storage. And when Sheryl wants to see her expenses, this REST call will be made to Django server.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>This will only return Sheryl’s expenses.</p>
+
+<h3 id="post-and-create-sheryls-expense">POST and create Sheryl’s expense</h3>
+
+<p>Till now if a POST request is made, even if with Sheryl’s api key, expense is created in db but is not associated with Sheryl.</p>
+
+<p>We want to add functionality where if POST request is made from Sheryl’s device then expense is associated with Sheryl. If POST request is made from Mark’s device then expense should be associated with Mark.</p>
+
+<p>Tastypie provides several hookpoints. We will use one such hookpoint. ModelResource provides a method called <strong>hydrate</strong> which we need to override. Add the following method to ExpenseResource.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def hydrate(self, bundle):
+    bundle.obj.user = bundle.request.user
+    return bundle
+</code></pre></div></div>
+
+<ul>
+  <li>This method is called during POST/PUT calls.</li>
+  <li>bundle.obj is an Expense instance about to be saved in the database.</li>
+  <li>So we set <strong>user</strong> on bundle.obj by reading it from bundle.request. We have already discussed how bundle.request is populated during authentication flow.</li>
+</ul>
+
+<p>Make a POST request now with Sheryl’s api_key.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>post_data = {'description': 'Paid for iDoneThis', 'amount': 700}
+r = requests.post("http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23", data=json.dumps(post_data), headers=headers)
+</code></pre></div></div>
+
+<p>Verify that the latest expense instance gets associated with Sheryl. You can also verify it by seeing that this object gets returned in GET expense list endpoint.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>Sixth commit at this point</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git checkout 17b932
+</code></pre></div></div>
+
+<h4 id="try-on-your-own">Try on your own</h4>
+
+<ul>
+  <li>Create one more user in database, from shell.</li>
+  <li>Create api key for this user.</li>
+  <li>POST to REST endpoint with this new user’s api_key and username and verify that the expense gets associated with this new user.</li>
+  <li>Check GET expense list for this new user and verify that only expense created for this user is in the response.</li>
+</ul>
+
+<p>Now is a good time to dig deeper into django-tastypie and understand about following:</p>
+
+<ul>
+  <li>Dehydrate cycle. It is used during GET calls.</li>
+  <li>Hydrate cycle. It is used during POST/PUT calls. Once you read about hydrate cycle, you will understand when method <strong>hydrate()</strong> is called.</li>
+  <li>More about authorization and different methods available on <strong>Authorization</strong> which could be overridden by you.</li>
+</ul>
+
+<h3 id="want-more">Want more?</h3>
+
+<p>I am still trying few things with tastypie. Hereafter I will not have much explanation, but I will point to the commit where I attain certain functionality change.</p>
+
+<h3 id="authorization-on-detail-endpoint">Authorization on detail endpoint.</h3>
+
+<p>Expense with id 1 is not associated with any user. But Sheryl is still able to see it at:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/1/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>She shouldn’t be able to see it as it is not her expense.</p>
+
+<p>So add the following to ExpenseAuthorization</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def read_detail(self, object_list, bundle):
+    obj = object_list[0]
+    return obj.user == bundle.request.user
+</code></pre></div></div>
+
+<p>After this Sheryl will not be able to see detail endpoint of any expense which doesn’t belong to her. Try it</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/1/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>Commit id for this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>e650f3
+git show e650f3
+</code></pre></div></div>
+
+<h3 id="put-endpoint">PUT endpoint</h3>
+
+<p>Expense with id 5 belongs to Sheryl. She wants to <strong>update</strong> this expense, she essentially want to change the description.</p>
+
+<p>Current thing is:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/5/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>Make PUT request</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>put_url = "http://localhost:8000/api/expense/5/?username=sheryl&amp;api_key=1a23"
+put_data = {'description': 'Paid for Travis'}
+headers = {'Content-type': 'application/json'}
+r = requests.put(put_url, data=json.dumps(put_data), headers=headers)
+</code></pre></div></div>
+
+<p>Description of Expense 5 is updated as you can verify by trying the detail endpoint again.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/5/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>Notice that amount remains unchanged. So PUT changes whatever data you provide in the api call and lets everything else remain as it is.</p>
+
+<h3 id="delete-endpoint">DELETE endpoint</h3>
+
+<p>First check all of Sheryl’s expenses</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?format=json&amp;username=sheryl&amp;api_key=1a23
+</code></pre></div></div>
+
+<p>Sheryl wants to delete her expense with id 5. After this is done she will have one less expense in db.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>delete_url = "http://localhost:8000/api/expense/5/?username=sheryl&amp;api_key=1a23"
+r = requests.delete(delete_url)
+</code></pre></div></div>
+
+<p>Verify that this expense got deleted.</p>
+
+<p>So we were able to do Create, Read, Update and Delete with REST api calls.</p>
+
+<h3 id="restrict-post-request-to-certain-users-only">Restrict POST request to certain users only</h3>
+
+<p>Suppose we want the users to be able to create expenses from web end but don’t want to allow creating expense from mobile using the api. Yeah, weird requiremtn.</p>
+
+<p>Also we don’t want to disallow POST for all users. We still want Sheryl to be able to POST.</p>
+
+<p>To try this we first need a new user with api key in our system. Create it from Django shell.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>u = User.objects.create_user(username='mark', password='def', email='mark@abc.com')
+ApiKey.objects.create(key='2b34', user=u)
+</code></pre></div></div>
+
+<h4 id="restricting-post-for-everyone-except-sheryl">Restricting POST for everyone except Sheryl</h4>
+
+<p>Add following method to ExpenseAuthorization</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def create_detail(self, object_list, bundle):
+    user = bundle.request.user
+    # Return True if current user is Sheryl else return False
+    return user.username == "sheryl"
+</code></pre></div></div>
+
+<p>Try making POST request as Mark and see you will not be able to do it. If you want you can see the expense count at this point.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>post_data = {'description': 'Petty expense', 'amount': 3000}
+r = requests.post("http://localhost:8000/api/expense/?username=mark&amp;api_key=2b34", data=json.dumps(post_data), headers=headers)
+print r.status_code #Should have got 401
+</code></pre></div></div>
+
+<p>Also you can check the expense count again to verify that expense isn’t created.</p>
+
+<p>Status code 401 tells that you aren’t authorized to do this operation.</p>
+
+<h4 id="verify-that-sheryl-is-still-able-to-create-expense">Verify that Sheryl is still able to create expense</h4>
+
+<p>Try posting the same post_data as Sheryl</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>r = requests.post("http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23", data=json.dumps(post_data), headers=headers)
+print r.status_code
+</code></pre></div></div>
+
+<p>Status code must be 201 in this case which means expense is created. You will be able to see this expense at Sheryl’s GET expense list endpoint.</p>
+
+<h4 id="verify-that-mark-is-still-able-to-do-get">Verify that Mark is still able to do GET</h4>
+
+<p>Mark or any other user should still be able to make GET request even if he isn’t able to make POST request.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?username=mark&amp;api_key=2b34&amp;format=json
+</code></pre></div></div>
+
+<p>Since Mark doesn’t have any expense in db, so no object is there is <strong>objects</strong> key of response. Try creating an expense for this user from shell and then try the GET endpoint again.</p>
+
+<h3 id="explicitly-defining-fields-and-customising-them">Explicitly defining fields and customising them</h3>
+
+<p>ModelResource.Meta.fields can be dealt with in a similar way to ModelForm.Meta.fields. If you add the field to ModelResource.Meta.fields then it gets sane default behavriour. But it can be customised by adding the field explicitly on the ModelResource.</p>
+
+<p>Let’s try customising <strong>description</strong> field.</p>
+
+<p>Add it explicitly on ExpenseResource</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>description = fields.CharField()
+</code></pre></div></div>
+
+<p>You will need to import the following for it to work.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from tastypie import fields
+</code></pre></div></div>
+
+<p>Try the GET endpoint</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json
+</code></pre></div></div>
+
+<p>You will see description as null for every expense. Because we committed a mistake.</p>
+
+<p>While explicitly defining a field, we also need to tell the expense attribute that needs to be used for this particular field.</p>
+
+<p>So we need to say</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>description = fields.CharField(attribute='description')
+</code></pre></div></div>
+
+<p>Now GET endpoint will work as it used to work earlier.</p>
+
+<p>But we did not achieve anything by explicitly adding the field. So what’s the point of explicitly adding it.</p>
+
+<p>Suppose you want the description in the detail endpoint but don’t want it on list endpoint. This can be achieved in following way</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>description = fields.CharField(attribute='description', use_in='detail')
+</code></pre></div></div>
+
+<p>Try the list and detail endpoint now and notice the difference.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://localhost:8000/api/expense/?username=sheryl&amp;api_key=1a23&amp;format=json
+http://localhost:8000/api/expense/8/?username=sheryl&amp;api_key=1a23&amp;format=json
+</code></pre></div></div>
+
+<p><strong>use_in</strong> is documented <a href="http://django-tastypie.readthedocs.org/en/latest/fields.html#use-in" target="_blank">here</a></p>
+
+
+  </div><a class="u-url" href="/django-tastypie/2015/03/23/getting-started-with-django-tastypie.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

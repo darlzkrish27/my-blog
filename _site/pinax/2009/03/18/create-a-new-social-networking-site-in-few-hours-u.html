@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Create a new social networking site in few hours using pinax platform (django). | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Create a new social networking site in few hours using pinax platform (django)." />
+<meta name="author" content="rama" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="if you are excited to see how such a social networking site would like.Just follow the below link http://www.xfgx.info/ We made the above site on pinax platform (Please note pinax has done most of things we have done very little).A platform for rapidly developing websites. In this blogpost we will try to understand what pinax is? How it helps a developer to do things quickly? How to install &amp; deploy? and various other things related to pinax. What is Pinax? In the present day world every website require components like regisration,openid support,some kind groups/ tribes,user profiles etc…..Almost every site has to code logic for these components. As they are reusable across many sites what if we have a platform (means a django project) which provides all these reusable components outof box and asks the developer to built on top of it.Such a platform help the developers to rapidly build the websites , it helps them to focus on core aspects of their site. Pinax is such a (django) platform which provides a collection of integrated reusable django apps.Out of box pinax provides several reusable components/apps like openid support contact import (from vCard, Google or Yahoo) notification framework etc… More details at http://pinaxproject.com/ If you still haven’t understood please look at the talks given by James Tauber (creator of piinax) at &lt;/param&gt;&lt;/param&gt;&lt;/param&gt;&lt;/embed&gt; http://thisweekindjango.com/twid/episode/24/this-week-in-django-24/ Let us dig into more details like how to install and deploy pinax, How to install pinax? Get the latest version of pinax 1.svn checkout http://svn.pinaxproject.com/pinax/trunk/ pinax 2.cp pinax/projects/complete_project ../../complete_project 3.mv compete_project myprojectname First check out the latest version of pinax. Then get into the pinax/projects directory where you will find several projects like complete_project , basic_project. Complete_project : provides all reusable apps listed on pinaxproject website.You need to build on top of this project if the application which you are going to develop requires all or many of these. basic_project : it provides only very basic reusable apps like registration,login,openid support etc.You need to build on top of this project if you just requires only registrationa and login support. etc…. 3.Take out the project on which you want to built (it can be complete project or basic project or others depending on your needs) to the another directory where your django projects are there. Note : After step 3 if you are installing stable version pinax0.5.1 instead of latest version at trunk , then you should follow the installation instructions given at the bottom of this blog. 4.sudo easy_install pip 5.sudo easy_install virtualenv 6.sudo apt-get install git-core 7.sudo apt-get install bzr 8.sudo pip install -r pinax/requirements/external_apps.txt In previous versions pinax is using svn:externals to bring third party apps which merge into the pinax source code.But now pinax team has moved from svn:externals to pip. More details : http://code.google.com/p/django-hotclub/wiki/MovingToDistutils What is pip? pip is similar to easy_install.easy_install allows you to install several python pakages.Similarly pip allows you to install third party apps and also python packages. 4.First install pip,virtualevn (isolated Python environments) Please refer this url http://blog.ianbicking.org/2008/12/14/a-few-corrections-to-on-packaging/ for more info on pip and virtualenv 5,6,7.You also need to install git and bzr repositories. Please refer this url for more info http://iraniweb.com/blog/?cat=17 8.using pip install all the third party external apps which are listed in pinax/requirements/external_apps.txt file. 10 cd myprojectname (which you created in step 3) 11.change PINAX_ROOT &amp; ROOT_URLCONF in setting.py 12 python manage.py syncdb 13.python manage.py runserver 11.change myprojectname.settings.py as follows PINAX_ROOT = “path to pinax directory which was created in step 1”. For ROOT_URLCONF please change it from complete_project.urls to urls. Now type http://localhost:8000/ you will see pinax project screens, lots of common functionality is being provided out of box by pinax platform. How to remove an application from pinax? Apps are independent of one another.It is the project which integrates all this django reusable applications.You can remove an app by first removing the respective app urls in urls.py and changing several templates to reflect this. How to add another application to pinax? Just put it on the python path and add in settings.INSTALLED_APPS tuple. More details about installation,deployment at http://pinaxproject.com/docs/0.5.1/deployment.html How to deploy? Deploying a pinax application is also very easy if you are using mod_python just add the following to your httpd.conf file &lt;Location &quot;/&quot;&gt;; SetHandler python-program PythonHandler myprojectname.deploy.modpython SetEnv DJANGO_SETTINGS_MODULE complete_project.settings PythonDebug On PythonPath &quot;[&#39;path to directory which contains your project (created in step3)&#39;,&#39;path to pinax project which you made in step 3&quot;] + sys.path&quot; &lt;Location&gt; Note that PthyonHandler is myprojectname.deploy.modpython instead of django.core.handlers.modpython Please note that portions of media is being served from myprojectname (created in step 3) and from the pinax directory(Created in step 1, myprojectname has reference to that).Please take a note of this while creating symlinks for the media. Have you every used pinax? if yes then please let us know your experience on pinax in comments.And also point me out if there are any corrections or mistakes in the above article. Update (Installation of pinax 0.5.1 stable version) After 3rd step you should do the following 4.cd myprojectname 5.change PINAX_ROOT in manage.py PINAX_ROOT = &#39;â€œpath to pinax directory which was created in step 1&#39; 6.change ROOT_URLCONF in settings.py ROOT_URLCONF = &#39;For ROOTURLCONF please change it from completeproject.urls to urls&#39;. 7. continue from step 12 of above installation (whch is for trunk). As this stable version is using svn:externals there is no need to install third party applications via pip." />
+<meta property="og:description" content="if you are excited to see how such a social networking site would like.Just follow the below link http://www.xfgx.info/ We made the above site on pinax platform (Please note pinax has done most of things we have done very little).A platform for rapidly developing websites. In this blogpost we will try to understand what pinax is? How it helps a developer to do things quickly? How to install &amp; deploy? and various other things related to pinax. What is Pinax? In the present day world every website require components like regisration,openid support,some kind groups/ tribes,user profiles etc…..Almost every site has to code logic for these components. As they are reusable across many sites what if we have a platform (means a django project) which provides all these reusable components outof box and asks the developer to built on top of it.Such a platform help the developers to rapidly build the websites , it helps them to focus on core aspects of their site. Pinax is such a (django) platform which provides a collection of integrated reusable django apps.Out of box pinax provides several reusable components/apps like openid support contact import (from vCard, Google or Yahoo) notification framework etc… More details at http://pinaxproject.com/ If you still haven’t understood please look at the talks given by James Tauber (creator of piinax) at &lt;/param&gt;&lt;/param&gt;&lt;/param&gt;&lt;/embed&gt; http://thisweekindjango.com/twid/episode/24/this-week-in-django-24/ Let us dig into more details like how to install and deploy pinax, How to install pinax? Get the latest version of pinax 1.svn checkout http://svn.pinaxproject.com/pinax/trunk/ pinax 2.cp pinax/projects/complete_project ../../complete_project 3.mv compete_project myprojectname First check out the latest version of pinax. Then get into the pinax/projects directory where you will find several projects like complete_project , basic_project. Complete_project : provides all reusable apps listed on pinaxproject website.You need to build on top of this project if the application which you are going to develop requires all or many of these. basic_project : it provides only very basic reusable apps like registration,login,openid support etc.You need to build on top of this project if you just requires only registrationa and login support. etc…. 3.Take out the project on which you want to built (it can be complete project or basic project or others depending on your needs) to the another directory where your django projects are there. Note : After step 3 if you are installing stable version pinax0.5.1 instead of latest version at trunk , then you should follow the installation instructions given at the bottom of this blog. 4.sudo easy_install pip 5.sudo easy_install virtualenv 6.sudo apt-get install git-core 7.sudo apt-get install bzr 8.sudo pip install -r pinax/requirements/external_apps.txt In previous versions pinax is using svn:externals to bring third party apps which merge into the pinax source code.But now pinax team has moved from svn:externals to pip. More details : http://code.google.com/p/django-hotclub/wiki/MovingToDistutils What is pip? pip is similar to easy_install.easy_install allows you to install several python pakages.Similarly pip allows you to install third party apps and also python packages. 4.First install pip,virtualevn (isolated Python environments) Please refer this url http://blog.ianbicking.org/2008/12/14/a-few-corrections-to-on-packaging/ for more info on pip and virtualenv 5,6,7.You also need to install git and bzr repositories. Please refer this url for more info http://iraniweb.com/blog/?cat=17 8.using pip install all the third party external apps which are listed in pinax/requirements/external_apps.txt file. 10 cd myprojectname (which you created in step 3) 11.change PINAX_ROOT &amp; ROOT_URLCONF in setting.py 12 python manage.py syncdb 13.python manage.py runserver 11.change myprojectname.settings.py as follows PINAX_ROOT = “path to pinax directory which was created in step 1”. For ROOT_URLCONF please change it from complete_project.urls to urls. Now type http://localhost:8000/ you will see pinax project screens, lots of common functionality is being provided out of box by pinax platform. How to remove an application from pinax? Apps are independent of one another.It is the project which integrates all this django reusable applications.You can remove an app by first removing the respective app urls in urls.py and changing several templates to reflect this. How to add another application to pinax? Just put it on the python path and add in settings.INSTALLED_APPS tuple. More details about installation,deployment at http://pinaxproject.com/docs/0.5.1/deployment.html How to deploy? Deploying a pinax application is also very easy if you are using mod_python just add the following to your httpd.conf file &lt;Location &quot;/&quot;&gt;; SetHandler python-program PythonHandler myprojectname.deploy.modpython SetEnv DJANGO_SETTINGS_MODULE complete_project.settings PythonDebug On PythonPath &quot;[&#39;path to directory which contains your project (created in step3)&#39;,&#39;path to pinax project which you made in step 3&quot;] + sys.path&quot; &lt;Location&gt; Note that PthyonHandler is myprojectname.deploy.modpython instead of django.core.handlers.modpython Please note that portions of media is being served from myprojectname (created in step 3) and from the pinax directory(Created in step 1, myprojectname has reference to that).Please take a note of this while creating symlinks for the media. Have you every used pinax? if yes then please let us know your experience on pinax in comments.And also point me out if there are any corrections or mistakes in the above article. Update (Installation of pinax 0.5.1 stable version) After 3rd step you should do the following 4.cd myprojectname 5.change PINAX_ROOT in manage.py PINAX_ROOT = &#39;â€œpath to pinax directory which was created in step 1&#39; 6.change ROOT_URLCONF in settings.py ROOT_URLCONF = &#39;For ROOTURLCONF please change it from completeproject.urls to urls&#39;. 7. continue from step 12 of above installation (whch is for trunk). As this stable version is using svn:externals there is no need to install third party applications via pip." />
+<link rel="canonical" href="http://localhost:4000/pinax/2009/03/18/create-a-new-social-networking-site-in-few-hours-u.html" />
+<meta property="og:url" content="http://localhost:4000/pinax/2009/03/18/create-a-new-social-networking-site-in-few-hours-u.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-03-18T17:03:20+05:30" />
+<script type="application/ld+json">
+{"description":"if you are excited to see how such a social networking site would like.Just follow the below link http://www.xfgx.info/ We made the above site on pinax platform (Please note pinax has done most of things we have done very little).A platform for rapidly developing websites. In this blogpost we will try to understand what pinax is? How it helps a developer to do things quickly? How to install &amp; deploy? and various other things related to pinax. What is Pinax? In the present day world every website require components like regisration,openid support,some kind groups/ tribes,user profiles etc…..Almost every site has to code logic for these components. As they are reusable across many sites what if we have a platform (means a django project) which provides all these reusable components outof box and asks the developer to built on top of it.Such a platform help the developers to rapidly build the websites , it helps them to focus on core aspects of their site. Pinax is such a (django) platform which provides a collection of integrated reusable django apps.Out of box pinax provides several reusable components/apps like openid support contact import (from vCard, Google or Yahoo) notification framework etc… More details at http://pinaxproject.com/ If you still haven’t understood please look at the talks given by James Tauber (creator of piinax) at &lt;/param&gt;&lt;/param&gt;&lt;/param&gt;&lt;/embed&gt; http://thisweekindjango.com/twid/episode/24/this-week-in-django-24/ Let us dig into more details like how to install and deploy pinax, How to install pinax? Get the latest version of pinax 1.svn checkout http://svn.pinaxproject.com/pinax/trunk/ pinax 2.cp pinax/projects/complete_project ../../complete_project 3.mv compete_project myprojectname First check out the latest version of pinax. Then get into the pinax/projects directory where you will find several projects like complete_project , basic_project. Complete_project : provides all reusable apps listed on pinaxproject website.You need to build on top of this project if the application which you are going to develop requires all or many of these. basic_project : it provides only very basic reusable apps like registration,login,openid support etc.You need to build on top of this project if you just requires only registrationa and login support. etc…. 3.Take out the project on which you want to built (it can be complete project or basic project or others depending on your needs) to the another directory where your django projects are there. Note : After step 3 if you are installing stable version pinax0.5.1 instead of latest version at trunk , then you should follow the installation instructions given at the bottom of this blog. 4.sudo easy_install pip 5.sudo easy_install virtualenv 6.sudo apt-get install git-core 7.sudo apt-get install bzr 8.sudo pip install -r pinax/requirements/external_apps.txt In previous versions pinax is using svn:externals to bring third party apps which merge into the pinax source code.But now pinax team has moved from svn:externals to pip. More details : http://code.google.com/p/django-hotclub/wiki/MovingToDistutils What is pip? pip is similar to easy_install.easy_install allows you to install several python pakages.Similarly pip allows you to install third party apps and also python packages. 4.First install pip,virtualevn (isolated Python environments) Please refer this url http://blog.ianbicking.org/2008/12/14/a-few-corrections-to-on-packaging/ for more info on pip and virtualenv 5,6,7.You also need to install git and bzr repositories. Please refer this url for more info http://iraniweb.com/blog/?cat=17 8.using pip install all the third party external apps which are listed in pinax/requirements/external_apps.txt file. 10 cd myprojectname (which you created in step 3) 11.change PINAX_ROOT &amp; ROOT_URLCONF in setting.py 12 python manage.py syncdb 13.python manage.py runserver 11.change myprojectname.settings.py as follows PINAX_ROOT = “path to pinax directory which was created in step 1”. For ROOT_URLCONF please change it from complete_project.urls to urls. Now type http://localhost:8000/ you will see pinax project screens, lots of common functionality is being provided out of box by pinax platform. How to remove an application from pinax? Apps are independent of one another.It is the project which integrates all this django reusable applications.You can remove an app by first removing the respective app urls in urls.py and changing several templates to reflect this. How to add another application to pinax? Just put it on the python path and add in settings.INSTALLED_APPS tuple. More details about installation,deployment at http://pinaxproject.com/docs/0.5.1/deployment.html How to deploy? Deploying a pinax application is also very easy if you are using mod_python just add the following to your httpd.conf file &lt;Location &quot;/&quot;&gt;; SetHandler python-program PythonHandler myprojectname.deploy.modpython SetEnv DJANGO_SETTINGS_MODULE complete_project.settings PythonDebug On PythonPath &quot;[&#39;path to directory which contains your project (created in step3)&#39;,&#39;path to pinax project which you made in step 3&quot;] + sys.path&quot; &lt;Location&gt; Note that PthyonHandler is myprojectname.deploy.modpython instead of django.core.handlers.modpython Please note that portions of media is being served from myprojectname (created in step 3) and from the pinax directory(Created in step 1, myprojectname has reference to that).Please take a note of this while creating symlinks for the media. Have you every used pinax? if yes then please let us know your experience on pinax in comments.And also point me out if there are any corrections or mistakes in the above article. Update (Installation of pinax 0.5.1 stable version) After 3rd step you should do the following 4.cd myprojectname 5.change PINAX_ROOT in manage.py PINAX_ROOT = &#39;â€œpath to pinax directory which was created in step 1&#39; 6.change ROOT_URLCONF in settings.py ROOT_URLCONF = &#39;For ROOTURLCONF please change it from completeproject.urls to urls&#39;. 7. continue from step 12 of above installation (whch is for trunk). As this stable version is using svn:externals there is no need to install third party applications via pip.","author":{"@type":"Person","name":"rama"},"@type":"BlogPosting","url":"http://localhost:4000/pinax/2009/03/18/create-a-new-social-networking-site-in-few-hours-u.html","headline":"Create a new social networking site in few hours using pinax platform (django).","dateModified":"2009-03-18T17:03:20+05:30","datePublished":"2009-03-18T17:03:20+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/pinax/2009/03/18/create-a-new-social-networking-site-in-few-hours-u.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Create a new social networking site in few hours using pinax platform (django).</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-03-18T17:03:20+05:30" itemprop="datePublished">Mar 18, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">rama</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>if you are excited to see how such a social networking site would like.Just follow the below link</p>
+
+<p><a href="http://www.xfgx.info/">http://www.xfgx.info/</a></p>
+
+<p>We made the above site on pinax platform (Please note pinax has done most of things we have done very little).A platform for rapidly developing websites.</p>
+
+<p>In this blogpost we will try to understand what pinax is? How it helps a developer to do things quickly? How to install &amp; deploy?  and various other things related to pinax.</p>
+
+<h2 id="what-is-pinax">What is Pinax?</h2>
+
+<p>In the present day world every website require  components  like regisration,openid support,some kind groups/ tribes,user profiles etc…..Almost every site has to code logic for these components. As they are reusable across many sites what if we have a platform (means a django project) which provides all these reusable components outof box and asks the developer to built on top of it.Such a platform  help the developers to rapidly build the websites , it helps them to focus on core aspects of their site.</p>
+
+<p>Pinax is such a (django) platform which provides a collection of integrated reusable django apps.Out of box pinax provides several reusable components/apps  like</p>
+
+<ol>
+  <li>
+    <p>openid support</p>
+  </li>
+  <li>
+    <p>contact import (from vCard, Google or Yahoo)</p>
+  </li>
+  <li>
+    <p>notification framework etc…</p>
+  </li>
+</ol>
+
+<p>More details at <a href="http://pinaxproject.com/">http://pinaxproject.com/</a></p>
+
+<p>If you still haven’t understood please look at the talks given by James Tauber (creator of piinax) at</p>
+
+<ol>
+  <li>
+    <object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/1J91Ownq-7g&amp;hl=en&amp;fs=1" />&lt;/param&gt;<param name="allowFullScreen" value="true" />&lt;/param&gt;<param name="allowscriptaccess" value="always" />&lt;/param&gt;<embed src="http://www.youtube.com/v/1J91Ownq-7g&amp;hl=en&amp;fs=1" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="425" height="344" />&lt;/embed&gt;</object>
+  </li>
+  <li><a href="http://thisweekindjango.com/twid/episode/24/this-week-in-django-24/">http://thisweekindjango.com/twid/episode/24/this-week-in-django-24/</a></li>
+</ol>
+
+<p>Let us dig into more details like how to install and deploy pinax,</p>
+
+<h2 id="how-to-install-pinax">How to install pinax?</h2>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> Get the latest version of pinax
+ 1.svn checkout http://svn.pinaxproject.com/pinax/trunk/   pinax
+ 2.cp pinax/projects/complete_project    ../../complete_project
+ 3.mv compete_project myprojectname
+</code></pre></div></div>
+
+<ol>
+  <li>First check out the latest version of pinax.</li>
+  <li>Then get into the pinax/projects directory where you will find several projects like
+complete_project , basic_project.</li>
+</ol>
+
+<ul>
+  <li>
+    <p>Complete_project : provides all reusable apps listed on pinaxproject website.You need to build on top of this project if the application which you are going to develop requires all or many of these.</p>
+  </li>
+  <li>
+    <p>basic_project : it provides only very basic reusable apps  like registration,login,openid support etc.You need to build on top of this project if you just requires
+only registrationa and login support.</p>
+  </li>
+</ul>
+
+<p>etc….</p>
+
+<p>3.Take out the project on which you want to built (it can be complete project or basic project or others depending on your needs) to the another directory where your  django projects are there.</p>
+
+<h4 id="note--after-step-3-if-you-are-installing-stable-version--pinax051-instead-of-latest-version-at-trunk--then-you-should-follow-the-installation-instructions-given-at-the-bottom-of-this-blog">Note : After step 3 if you are installing stable version  <a href="http://downloads.pinaxproject.com/pinax-0.5.1.tar.gz">pinax0.5.1</a> instead of latest version at trunk , then you should follow the installation instructions given at the bottom of this blog.</h4>
+<p><br /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>4.sudo easy_install pip
+5.sudo easy_install virtualenv
+6.sudo apt-get install git-core
+7.sudo apt-get install bzr
+8.sudo pip install -r pinax/requirements/external_apps.txt
+</code></pre></div></div>
+
+<p>In previous versions pinax is using svn:externals to bring third party apps which  merge into the pinax source code.But now pinax team has moved from svn:externals to pip.</p>
+
+<p>More details : <a href="http://code.google.com/p/django-hotclub/wiki/MovingToDistutils">http://code.google.com/p/django-hotclub/wiki/MovingToDistutils</a></p>
+
+<h3 id="what-is-pip">What is pip?</h3>
+<p>pip is similar to easy_install.easy_install allows you to install several python pakages.Similarly pip allows you to install third party apps and also python packages.</p>
+
+<p>4.First install pip,virtualevn (isolated Python environments)</p>
+
+<p>Please refer this url <a href="http://blog.ianbicking.org/2008/12/14/a-few-corrections-to-on-packaging/">http://blog.ianbicking.org/2008/12/14/a-few-corrections-to-on-packaging/</a>  for more info on pip and virtualenv</p>
+
+<p>5,6,7.You also need to install git and bzr repositories.</p>
+
+<p>Please refer this url for more info <a href="http://iraniweb.com/blog/?cat=17">http://iraniweb.com/blog/?cat=17</a></p>
+
+<p>8.using pip install all the third party external apps which are listed in pinax/requirements/external_apps.txt file.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>10 cd myprojectname (which you created in step 3)
+11.change PINAX_ROOT &amp; ROOT_URLCONF in setting.py
+12 python manage.py syncdb
+13.python manage.py runserver
+</code></pre></div></div>
+
+<p>11.change myprojectname.settings.py as follows</p>
+
+<ol>
+  <li>PINAX_ROOT = “path to pinax directory which was created in step 1”.</li>
+  <li>For ROOT_URLCONF please change it from complete_project.urls to urls.</li>
+</ol>
+
+<p>Now type http://localhost:8000/ you will see pinax project screens, lots of common functionality is being provided out of box by pinax platform.</p>
+
+<h2 id="how-to-remove-an-application-from-pinax">How to remove an application from pinax?</h2>
+<p>Apps are independent of one another.It is the project which integrates all this django reusable applications.You can remove an app
+by first removing the respective app urls in  urls.py and changing several templates to reflect this.</p>
+
+<h2 id="how-to-add-another-application-to-pinax">How to add another application to pinax?</h2>
+<p>Just put it on the python path and add in  settings.INSTALLED_APPS tuple.</p>
+
+<p>More details about installation,deployment at
+<a href="http://pinaxproject.com/docs/0.5.1/deployment.html">http://pinaxproject.com/docs/0.5.1/deployment.html</a></p>
+
+<h2 id="how-to-deploy">How to deploy?</h2>
+<p>Deploying a pinax application  is also very easy if you are using mod_python just add the following to your httpd.conf file</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;Location "/"&gt;;
+SetHandler python-program
+PythonHandler myprojectname.deploy.modpython
+SetEnv DJANGO_SETTINGS_MODULE complete_project.settings
+PythonDebug On
+PythonPath "['path to directory which contains your project (created in step3)','path to pinax project which     you   
+made in step 3"] + sys.path"
+&lt;Location&gt;
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>Note that  PthyonHandler is myprojectname.deploy.modpython instead of django.core.handlers.modpython</p>
+  </li>
+  <li>
+    <p>Please note that portions of media is being served from  myprojectname (created in step 3) and from the pinax directory(Created in step 1, myprojectname has reference to that).Please take a note of this while creating symlinks for the media.</p>
+  </li>
+</ul>
+
+<p>Have you every used pinax? if yes then please let us know your experience on pinax in comments.And also point me out if there are any corrections or mistakes in the above article.</p>
+
+<h3 id="update-installation-of-pinax-051-stable-version">Update (Installation of pinax 0.5.1 stable version)</h3>
+<p>After 3rd step you should do the following</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>4.cd myprojectname 
+5.change PINAX_ROOT in manage.py 
+PINAX_ROOT =  'â€œpath to pinax directory which was created in step 1'   
+6.change ROOT_URLCONF in settings.py     
+ ROOT_URLCONF = 'For ROOTURLCONF please change it from completeproject.urls to urls'.
+7. continue from  step 12  of above installation (whch is for trunk).
+</code></pre></div></div>
+
+<h4 id="as-this-stable-version-is-using-svnexternals-there-is-no-need-to-install-third-party-applications-via-pip">As this stable version is using svn:externals there is no need to install third party applications via pip.</h4>
+
+
+  </div><a class="u-url" href="/pinax/2009/03/18/create-a-new-social-networking-site-in-few-hours-u.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

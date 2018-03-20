@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Heroku Django S3 for serving Media files | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Heroku Django S3 for serving Media files" />
+<meta name="author" content="manjunath" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Why should i store my media files on AWS S3? Heroku dynos have limited life span, and when they die and get replaced, the files within them are lost. So you should set up Django media handler to put the files somewhere permanent. Let’s begin: 1) Install dependencies: $ pip install django-storages boto (Update your requirements.txt using `pip freeze &gt; requirements.txt`) 2) Update INSTALLED_APPS in your settings.py: INSTALLED_APPS += (&#39;storages&#39;,) 3) Sign in to AWS Console, select S3 under Storage &amp; Content Delivery and create a bucket. 4) Don’t forget to generate AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY. 5) Add the below to your settings file: AWS_QUERYSTRING_AUTH = False AWS_ACCESS_KEY_ID = os.environ[&#39;AWS_ACCESS_KEY_ID&#39;] AWS_SECRET_ACCESS_KEY = os.environ[&#39;AWS_SECRET_ACCESS_KEY&#39;] AWS_STORAGE_BUCKET_NAME = os.environ[&#39;S3_BUCKET_NAME&#39;] MEDIA_URL = &#39;http://%s.s3.amazonaws.com/your-folder/&#39; % AWS_STORAGE_BUCKET_NAME DEFAULT_FILE_STORAGE = &quot;storages.backends.s3boto.S3BotoStorage&quot; Note: You should never expose your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY there is some reason why they are called SECRET. 6) Install AWS CLI on your machine. 7) Its time to move your files to AWS S3 bucket. $ aws s3 cp myfolder s3://mybucket/myfolder --recursive 8) After the previous step you can use the following command to view the contents of your bucket. $ aws s3 ls s3://mybucket 9) Grant public-read permission to everyone, add the below to your S3 bucket policy. { &quot;Version&quot;:&quot;2008-10-17&quot;, &quot;Statement&quot;:[{ &quot;Sid&quot;:&quot;AllowPublicRead&quot;, &quot;Effect&quot;:&quot;Allow&quot;, &quot;Principal&quot;: { &quot;AWS&quot;: &quot;*&quot; }, &quot;Action&quot;:[&quot;s3:GetObject&quot;], &quot;Resource&quot;:[&quot;arn:aws:s3:::bucket/*&quot; ] } ] } You can also grant full access to specific IP addresses check this Bucket Policies Thats it now your django app should be able to serve your media files.If not please check your bucket policy, you can check the url link under S3 Management Console-&gt;Properties. Any problem or feedback? feel free to leave your comments below." />
+<meta property="og:description" content="Why should i store my media files on AWS S3? Heroku dynos have limited life span, and when they die and get replaced, the files within them are lost. So you should set up Django media handler to put the files somewhere permanent. Let’s begin: 1) Install dependencies: $ pip install django-storages boto (Update your requirements.txt using `pip freeze &gt; requirements.txt`) 2) Update INSTALLED_APPS in your settings.py: INSTALLED_APPS += (&#39;storages&#39;,) 3) Sign in to AWS Console, select S3 under Storage &amp; Content Delivery and create a bucket. 4) Don’t forget to generate AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY. 5) Add the below to your settings file: AWS_QUERYSTRING_AUTH = False AWS_ACCESS_KEY_ID = os.environ[&#39;AWS_ACCESS_KEY_ID&#39;] AWS_SECRET_ACCESS_KEY = os.environ[&#39;AWS_SECRET_ACCESS_KEY&#39;] AWS_STORAGE_BUCKET_NAME = os.environ[&#39;S3_BUCKET_NAME&#39;] MEDIA_URL = &#39;http://%s.s3.amazonaws.com/your-folder/&#39; % AWS_STORAGE_BUCKET_NAME DEFAULT_FILE_STORAGE = &quot;storages.backends.s3boto.S3BotoStorage&quot; Note: You should never expose your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY there is some reason why they are called SECRET. 6) Install AWS CLI on your machine. 7) Its time to move your files to AWS S3 bucket. $ aws s3 cp myfolder s3://mybucket/myfolder --recursive 8) After the previous step you can use the following command to view the contents of your bucket. $ aws s3 ls s3://mybucket 9) Grant public-read permission to everyone, add the below to your S3 bucket policy. { &quot;Version&quot;:&quot;2008-10-17&quot;, &quot;Statement&quot;:[{ &quot;Sid&quot;:&quot;AllowPublicRead&quot;, &quot;Effect&quot;:&quot;Allow&quot;, &quot;Principal&quot;: { &quot;AWS&quot;: &quot;*&quot; }, &quot;Action&quot;:[&quot;s3:GetObject&quot;], &quot;Resource&quot;:[&quot;arn:aws:s3:::bucket/*&quot; ] } ] } You can also grant full access to specific IP addresses check this Bucket Policies Thats it now your django app should be able to serve your media files.If not please check your bucket policy, you can check the url link under S3 Management Console-&gt;Properties. Any problem or feedback? feel free to leave your comments below." />
+<link rel="canonical" href="http://localhost:4000/heroku/2014/06/05/heroku-django-s3-for-serving-media-files.html" />
+<meta property="og:url" content="http://localhost:4000/heroku/2014/06/05/heroku-django-s3-for-serving-media-files.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-06-05T08:17:35+05:30" />
+<script type="application/ld+json">
+{"description":"Why should i store my media files on AWS S3? Heroku dynos have limited life span, and when they die and get replaced, the files within them are lost. So you should set up Django media handler to put the files somewhere permanent. Let’s begin: 1) Install dependencies: $ pip install django-storages boto (Update your requirements.txt using `pip freeze &gt; requirements.txt`) 2) Update INSTALLED_APPS in your settings.py: INSTALLED_APPS += (&#39;storages&#39;,) 3) Sign in to AWS Console, select S3 under Storage &amp; Content Delivery and create a bucket. 4) Don’t forget to generate AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY. 5) Add the below to your settings file: AWS_QUERYSTRING_AUTH = False AWS_ACCESS_KEY_ID = os.environ[&#39;AWS_ACCESS_KEY_ID&#39;] AWS_SECRET_ACCESS_KEY = os.environ[&#39;AWS_SECRET_ACCESS_KEY&#39;] AWS_STORAGE_BUCKET_NAME = os.environ[&#39;S3_BUCKET_NAME&#39;] MEDIA_URL = &#39;http://%s.s3.amazonaws.com/your-folder/&#39; % AWS_STORAGE_BUCKET_NAME DEFAULT_FILE_STORAGE = &quot;storages.backends.s3boto.S3BotoStorage&quot; Note: You should never expose your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY there is some reason why they are called SECRET. 6) Install AWS CLI on your machine. 7) Its time to move your files to AWS S3 bucket. $ aws s3 cp myfolder s3://mybucket/myfolder --recursive 8) After the previous step you can use the following command to view the contents of your bucket. $ aws s3 ls s3://mybucket 9) Grant public-read permission to everyone, add the below to your S3 bucket policy. { &quot;Version&quot;:&quot;2008-10-17&quot;, &quot;Statement&quot;:[{ &quot;Sid&quot;:&quot;AllowPublicRead&quot;, &quot;Effect&quot;:&quot;Allow&quot;, &quot;Principal&quot;: { &quot;AWS&quot;: &quot;*&quot; }, &quot;Action&quot;:[&quot;s3:GetObject&quot;], &quot;Resource&quot;:[&quot;arn:aws:s3:::bucket/*&quot; ] } ] } You can also grant full access to specific IP addresses check this Bucket Policies Thats it now your django app should be able to serve your media files.If not please check your bucket policy, you can check the url link under S3 Management Console-&gt;Properties. Any problem or feedback? feel free to leave your comments below.","author":{"@type":"Person","name":"manjunath"},"@type":"BlogPosting","url":"http://localhost:4000/heroku/2014/06/05/heroku-django-s3-for-serving-media-files.html","headline":"Heroku Django S3 for serving Media files","dateModified":"2014-06-05T08:17:35+05:30","datePublished":"2014-06-05T08:17:35+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/heroku/2014/06/05/heroku-django-s3-for-serving-media-files.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Heroku Django S3 for serving Media files</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-06-05T08:17:35+05:30" itemprop="datePublished">Jun 5, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">manjunath</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h3 id="why-should-i-store-my-media-files-on-aws-s3">Why should i store my media files on AWS S3?</h3>
+
+<p>Heroku dynos have limited life span, and when they die and get replaced, the files within them are lost. So you should set up Django media handler to put the files somewhere permanent.</p>
+
+<h3 id="lets-begin">Let’s begin:</h3>
+
+<p>1) Install dependencies:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ pip install django-storages boto
+</code></pre></div></div>
+
+<p>(Update your <code>requirements.txt using `pip freeze &gt; requirements.txt`)</code></p>
+
+<p>2) Update <code class="highlighter-rouge">INSTALLED_APPS</code> in your settings.py:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>INSTALLED_APPS += ('storages',)
+</code></pre></div></div>
+
+<p>3) Sign in to <a href="http://aws.amazon.com/console/">AWS Console</a>, select <code class="highlighter-rouge">S3</code> under <code class="highlighter-rouge">Storage &amp; Content Delivery</code> and create a bucket.</p>
+
+<p>4) Don’t forget to generate <code class="highlighter-rouge">AWS_ACCESS_KEY_ID</code> and <code class="highlighter-rouge">AWS_SECRET_ACCESS_KEY</code>.</p>
+
+<p>5) Add the below to your settings file:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AWS_QUERYSTRING_AUTH = False
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+AWS_STORAGE_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
+MEDIA_URL = 'http://%s.s3.amazonaws.com/your-folder/' % AWS_STORAGE_BUCKET_NAME
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto.S3BotoStorage"
+</code></pre></div></div>
+
+<p>Note: You should never expose your <code class="highlighter-rouge">AWS_ACCESS_KEY_ID</code> and <code class="highlighter-rouge">AWS_SECRET_ACCESS_KEY</code> there is some reason why they are called SECRET.</p>
+
+<p>6) Install <a href="http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html">AWS CLI</a> on your machine.</p>
+
+<p>7) Its time to move your files to AWS S3 bucket.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ aws s3 cp myfolder s3://mybucket/myfolder --recursive
+</code></pre></div></div>
+
+<p>8) After the previous step you can use the following command to view the contents of your bucket.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ aws s3 ls s3://mybucket
+</code></pre></div></div>
+
+<p>9) Grant public-read permission to everyone, add the below to your S3 bucket policy.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  "Version":"2008-10-17",
+  "Statement":[{
+    "Sid":"AllowPublicRead",
+        "Effect":"Allow",
+      "Principal": {
+            "AWS": "*"
+         },
+      "Action":["s3:GetObject"],
+      "Resource":["arn:aws:s3:::bucket/*"
+      ]
+    }
+  ]
+}
+</code></pre></div></div>
+
+<p>You can also grant full access to specific IP addresses check this <a href="http://s3browser.com/working-with-amazon-s3-bucket-policies.php">Bucket Policies</a></p>
+
+<p>Thats it now your django app should be able to serve your media files.If not please check your bucket policy, you can check the url link under S3 Management Console-&gt;Properties.</p>
+
+<p>Any problem or feedback? feel free to leave your comments below.</p>
+
+
+  </div><a class="u-url" href="/heroku/2014/06/05/heroku-django-s3-for-serving-media-files.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

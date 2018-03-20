@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>State pattern with UI Code | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="State pattern with UI Code" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This blog tells how I used state pattern in my UI code, and explains state pattern with JavaScript and jQuery. Disclaimer: This blog will not talk much about benefits of State pattern as there is already a lot written about it. It only gives a practical example of using state pattern with UI code. I am not much confident about difference between State pattern and Strategy pattern. Let’s discuss if I misunderstood State pattern. ###Use case: I have a page with two input fields. Page initially has one title field and one body field. There is a ‘+Add’ button under title and body: The page can be in two states which are the two radio buttons at top i.e ‘Add one’ and ‘Add both’. Functionality of ‘+Add’ differs based on what state(radio button) is selected. ###Different scenarios: Our assumption at start of each scenarios is that page has only one title and one body. ####’Add one’ is selected and user clicks on ‘+Add’ of title The page starts looking like: If he clicks on ‘+Add’ of title again, it starts looking like: ####’Add one’ is selected and user clicks on ‘+Add’ of body The page starts looking like: ####’Add both’ is selected and user clicks on ‘+Add’ of title Page starts looking like: In ‘Add both’ both title and body field should be added irrespective of which ‘+Add’ button is clicked. If the user clicks any of the ‘+Add’ button again, one more combination of title and body will be added. So, it will start looking like: So, you got the idea of how ‘+Add’ buttons will behave depending on which radio button is selected at that instant. User can switch between the different radio buttons and ‘+Add’ will behave differently. ###Let’s deal with code now. Code for initial page. &lt;html&gt; &lt;head&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div style=&quot;width:100%;&quot;&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; checked=&quot;checked&quot; value=&quot;one&quot;&gt;Add one&lt;/input&gt; &lt;/div&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; value=&quot;both&quot;&gt;Add both&lt;/input&gt; &lt;/div&gt; &lt;/div&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;title&quot; placeholder=&quot;Title&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;br/&gt; &lt;br/&gt; &lt;br/&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;body&quot; placeholder=&quot;Body&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Let’s add the javascript for ‘+Add’ buttons. &lt;script type=&quot;text/javascript&quot;&gt; $(document).ready(function () { $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); var state = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (state==&quot;one&quot;) { var lastInput = $(this).prev().prev(); var newInput = lastInput.clone(); $(this).before(newInput); $(this).before(&quot;&lt;br/&gt;&quot;); } else if(state==&quot;both&quot;){ var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); } }); }); &lt;/script&gt; Add this script in &lt;head&gt; of the page. Switch between two radio buttons at top and notice the difference in behaviour of ‘+Add’ buttons. Two states required two conditions in the ‘+Add’ button handler. The number of conditions in handler will increase as number of state increases. Also, we only concerned ourselves with ‘+Add’ field functionality. There can be a use case with ‘-Delete’ field functionality. So handler for ‘-Delete’ will have as many conditions as number of states too. So the delete handler would look like: $(&quot;.some_class_on_delete_buttons&quot;).click(function () { if (state==&quot;one&quot;) { //do something } else if (state=&quot;both&quot;) { //do something else } //And in case there are more state //there will be more conditionals }); With more states and more functionalities this approach becomes unmaintainable. I want two things: I want to get rid of conditionals. I want to keep all the functionality for a particular state at a single place. eg: For state ‘Add one’, I want both add and delete in a single class. For state ‘Add both’, I want add and delete in a separate class. It needs to be accomplished in following way: I will keep separate classes for different states. All the state specific classes need to extend from a super class. Super class will define the abstract methods and subclasses should provide the actual implementation for those methods. In case you are in hurry, see the final code at github. Superclass State looks like: var State = function () {}; State.prototype.add = function (addButton) { throw new Error(&quot;It needs to be implemented by subclasses&quot;); }; Subclasses AddOneState and AddBothState correspond to states ‘Add One’ and ‘Add Both’: var AddOneState = function () {}; AddOneState.prototype = Object.create(State.prototype); AddOneState.prototype.add = function (addButton) { var lastInput = addButton.prev().prev(); var newInput = lastInput.clone(); addButton.before(newInput); addButton.before(&quot;&lt;br/&gt;&quot;); }; var AddBothState = function () {}; AddBothState.prototype = Object.create(State.prototype); AddBothState.prototype.add = function (addButton) { var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); }; Notice that I just moved the conditional statements to add() of proper class. I need another class. Let’s call it Page. This class will represent the web page we are looking at. This class will have an instance variable called state that keeps track of current state of Page i.e whether ‘Add One’ or ‘Add Both’ is selected. var Page = function (state) { this.state = state; }; Page.prototype.add = function (addButton) { this.state.add(addButton); }; The above three lines are the core of state pattern. Page has an add which delegates to add of current state. Initially the page has ‘Add One’ selected, so we need to keep the initial state as an instance of AddOneState. var page = new Page(new AddOneState()); And finally, let’s add the handlers: $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); page.add($(this)); }); $(&quot;input[name=&#39;state&#39;]&quot;).change(function () { var stateVal = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (stateVal == &quot;one&quot;) { page.state = new AddOneState(); } else { page.state = new AddBothState(); } }); So, final script and html looks like: &lt;html&gt; &lt;head&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;script type=&quot;text/javascript&quot;&gt; $(document).ready(function () { var State = function () {}; State.prototype.add = function (addButton) { throw new Error(&quot;It needs to be implemented by subclasses&quot;); }; var AddOneState = function () {}; AddOneState.prototype = Object.create(State.prototype); AddOneState.prototype.add = function (addButton) { var lastInput = addButton.prev().prev(); var newInput = lastInput.clone(); addButton.before(newInput); addButton.before(&quot;&lt;br/&gt;&quot;); }; var AddBothState = function () {}; AddBothState.prototype = Object.create(State.prototype); AddBothState.prototype.add = function (addButton) { var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); }; var Page = function (state) { this.state = state; }; Page.prototype.add = function (addButton) { this.state.add(addButton); }; var page = new Page(new AddOneState()); $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); page.add($(this)); }); $(&quot;input[name=&#39;state&#39;]&quot;).change(function () { var stateVal = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (stateVal == &quot;one&quot;) { page.state = new AddOneState(); } else { page.state = new AddBothState(); } }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div style=&quot;width:100%;&quot;&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; checked=&quot;checked&quot; value=&quot;one&quot;&gt;Add one&lt;/input&gt; &lt;/div&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; value=&quot;both&quot;&gt;Add locked combination&lt;/input&gt; &lt;/div&gt; &lt;/div&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;title&quot; placeholder=&quot;Title&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;br/&gt; &lt;br/&gt; &lt;br/&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;body&quot; placeholder=&quot;Body&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Though the script becomes huge compared to the initial script which contained conditionals, it is much easier to maintian and scale. Say we need to handle one more state, we will create another class corresponding to that state and write an appropriate add() method on that class. But we wouldn’t need any change in Page to accomodate a new state and our script will keep working fine. Say we want to add delete functionality, we can add a delete() method on all the states and define a delete() on Page. delete of Page will delegate to delete of current state. You should read more about State Pattern to make sense of this example. References: I came across State pattern while reading “Refactoring” by Martin Fowler." />
+<meta property="og:description" content="This blog tells how I used state pattern in my UI code, and explains state pattern with JavaScript and jQuery. Disclaimer: This blog will not talk much about benefits of State pattern as there is already a lot written about it. It only gives a practical example of using state pattern with UI code. I am not much confident about difference between State pattern and Strategy pattern. Let’s discuss if I misunderstood State pattern. ###Use case: I have a page with two input fields. Page initially has one title field and one body field. There is a ‘+Add’ button under title and body: The page can be in two states which are the two radio buttons at top i.e ‘Add one’ and ‘Add both’. Functionality of ‘+Add’ differs based on what state(radio button) is selected. ###Different scenarios: Our assumption at start of each scenarios is that page has only one title and one body. ####’Add one’ is selected and user clicks on ‘+Add’ of title The page starts looking like: If he clicks on ‘+Add’ of title again, it starts looking like: ####’Add one’ is selected and user clicks on ‘+Add’ of body The page starts looking like: ####’Add both’ is selected and user clicks on ‘+Add’ of title Page starts looking like: In ‘Add both’ both title and body field should be added irrespective of which ‘+Add’ button is clicked. If the user clicks any of the ‘+Add’ button again, one more combination of title and body will be added. So, it will start looking like: So, you got the idea of how ‘+Add’ buttons will behave depending on which radio button is selected at that instant. User can switch between the different radio buttons and ‘+Add’ will behave differently. ###Let’s deal with code now. Code for initial page. &lt;html&gt; &lt;head&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div style=&quot;width:100%;&quot;&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; checked=&quot;checked&quot; value=&quot;one&quot;&gt;Add one&lt;/input&gt; &lt;/div&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; value=&quot;both&quot;&gt;Add both&lt;/input&gt; &lt;/div&gt; &lt;/div&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;title&quot; placeholder=&quot;Title&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;br/&gt; &lt;br/&gt; &lt;br/&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;body&quot; placeholder=&quot;Body&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Let’s add the javascript for ‘+Add’ buttons. &lt;script type=&quot;text/javascript&quot;&gt; $(document).ready(function () { $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); var state = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (state==&quot;one&quot;) { var lastInput = $(this).prev().prev(); var newInput = lastInput.clone(); $(this).before(newInput); $(this).before(&quot;&lt;br/&gt;&quot;); } else if(state==&quot;both&quot;){ var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); } }); }); &lt;/script&gt; Add this script in &lt;head&gt; of the page. Switch between two radio buttons at top and notice the difference in behaviour of ‘+Add’ buttons. Two states required two conditions in the ‘+Add’ button handler. The number of conditions in handler will increase as number of state increases. Also, we only concerned ourselves with ‘+Add’ field functionality. There can be a use case with ‘-Delete’ field functionality. So handler for ‘-Delete’ will have as many conditions as number of states too. So the delete handler would look like: $(&quot;.some_class_on_delete_buttons&quot;).click(function () { if (state==&quot;one&quot;) { //do something } else if (state=&quot;both&quot;) { //do something else } //And in case there are more state //there will be more conditionals }); With more states and more functionalities this approach becomes unmaintainable. I want two things: I want to get rid of conditionals. I want to keep all the functionality for a particular state at a single place. eg: For state ‘Add one’, I want both add and delete in a single class. For state ‘Add both’, I want add and delete in a separate class. It needs to be accomplished in following way: I will keep separate classes for different states. All the state specific classes need to extend from a super class. Super class will define the abstract methods and subclasses should provide the actual implementation for those methods. In case you are in hurry, see the final code at github. Superclass State looks like: var State = function () {}; State.prototype.add = function (addButton) { throw new Error(&quot;It needs to be implemented by subclasses&quot;); }; Subclasses AddOneState and AddBothState correspond to states ‘Add One’ and ‘Add Both’: var AddOneState = function () {}; AddOneState.prototype = Object.create(State.prototype); AddOneState.prototype.add = function (addButton) { var lastInput = addButton.prev().prev(); var newInput = lastInput.clone(); addButton.before(newInput); addButton.before(&quot;&lt;br/&gt;&quot;); }; var AddBothState = function () {}; AddBothState.prototype = Object.create(State.prototype); AddBothState.prototype.add = function (addButton) { var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); }; Notice that I just moved the conditional statements to add() of proper class. I need another class. Let’s call it Page. This class will represent the web page we are looking at. This class will have an instance variable called state that keeps track of current state of Page i.e whether ‘Add One’ or ‘Add Both’ is selected. var Page = function (state) { this.state = state; }; Page.prototype.add = function (addButton) { this.state.add(addButton); }; The above three lines are the core of state pattern. Page has an add which delegates to add of current state. Initially the page has ‘Add One’ selected, so we need to keep the initial state as an instance of AddOneState. var page = new Page(new AddOneState()); And finally, let’s add the handlers: $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); page.add($(this)); }); $(&quot;input[name=&#39;state&#39;]&quot;).change(function () { var stateVal = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (stateVal == &quot;one&quot;) { page.state = new AddOneState(); } else { page.state = new AddBothState(); } }); So, final script and html looks like: &lt;html&gt; &lt;head&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;script type=&quot;text/javascript&quot;&gt; $(document).ready(function () { var State = function () {}; State.prototype.add = function (addButton) { throw new Error(&quot;It needs to be implemented by subclasses&quot;); }; var AddOneState = function () {}; AddOneState.prototype = Object.create(State.prototype); AddOneState.prototype.add = function (addButton) { var lastInput = addButton.prev().prev(); var newInput = lastInput.clone(); addButton.before(newInput); addButton.before(&quot;&lt;br/&gt;&quot;); }; var AddBothState = function () {}; AddBothState.prototype = Object.create(State.prototype); AddBothState.prototype.add = function (addButton) { var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); }; var Page = function (state) { this.state = state; }; Page.prototype.add = function (addButton) { this.state.add(addButton); }; var page = new Page(new AddOneState()); $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); page.add($(this)); }); $(&quot;input[name=&#39;state&#39;]&quot;).change(function () { var stateVal = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (stateVal == &quot;one&quot;) { page.state = new AddOneState(); } else { page.state = new AddBothState(); } }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div style=&quot;width:100%;&quot;&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; checked=&quot;checked&quot; value=&quot;one&quot;&gt;Add one&lt;/input&gt; &lt;/div&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; value=&quot;both&quot;&gt;Add locked combination&lt;/input&gt; &lt;/div&gt; &lt;/div&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;title&quot; placeholder=&quot;Title&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;br/&gt; &lt;br/&gt; &lt;br/&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;body&quot; placeholder=&quot;Body&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Though the script becomes huge compared to the initial script which contained conditionals, it is much easier to maintian and scale. Say we need to handle one more state, we will create another class corresponding to that state and write an appropriate add() method on that class. But we wouldn’t need any change in Page to accomodate a new state and our script will keep working fine. Say we want to add delete functionality, we can add a delete() method on all the states and define a delete() on Page. delete of Page will delegate to delete of current state. You should read more about State Pattern to make sense of this example. References: I came across State pattern while reading “Refactoring” by Martin Fowler." />
+<link rel="canonical" href="http://localhost:4000/design/pattern/2013/10/14/state-pattern-with-ui-code.html" />
+<meta property="og:url" content="http://localhost:4000/design/pattern/2013/10/14/state-pattern-with-ui-code.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2013-10-14T16:39:27+05:30" />
+<script type="application/ld+json">
+{"description":"This blog tells how I used state pattern in my UI code, and explains state pattern with JavaScript and jQuery. Disclaimer: This blog will not talk much about benefits of State pattern as there is already a lot written about it. It only gives a practical example of using state pattern with UI code. I am not much confident about difference between State pattern and Strategy pattern. Let’s discuss if I misunderstood State pattern. ###Use case: I have a page with two input fields. Page initially has one title field and one body field. There is a ‘+Add’ button under title and body: The page can be in two states which are the two radio buttons at top i.e ‘Add one’ and ‘Add both’. Functionality of ‘+Add’ differs based on what state(radio button) is selected. ###Different scenarios: Our assumption at start of each scenarios is that page has only one title and one body. ####’Add one’ is selected and user clicks on ‘+Add’ of title The page starts looking like: If he clicks on ‘+Add’ of title again, it starts looking like: ####’Add one’ is selected and user clicks on ‘+Add’ of body The page starts looking like: ####’Add both’ is selected and user clicks on ‘+Add’ of title Page starts looking like: In ‘Add both’ both title and body field should be added irrespective of which ‘+Add’ button is clicked. If the user clicks any of the ‘+Add’ button again, one more combination of title and body will be added. So, it will start looking like: So, you got the idea of how ‘+Add’ buttons will behave depending on which radio button is selected at that instant. User can switch between the different radio buttons and ‘+Add’ will behave differently. ###Let’s deal with code now. Code for initial page. &lt;html&gt; &lt;head&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div style=&quot;width:100%;&quot;&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; checked=&quot;checked&quot; value=&quot;one&quot;&gt;Add one&lt;/input&gt; &lt;/div&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; value=&quot;both&quot;&gt;Add both&lt;/input&gt; &lt;/div&gt; &lt;/div&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;title&quot; placeholder=&quot;Title&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;br/&gt; &lt;br/&gt; &lt;br/&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;body&quot; placeholder=&quot;Body&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Let’s add the javascript for ‘+Add’ buttons. &lt;script type=&quot;text/javascript&quot;&gt; $(document).ready(function () { $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); var state = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (state==&quot;one&quot;) { var lastInput = $(this).prev().prev(); var newInput = lastInput.clone(); $(this).before(newInput); $(this).before(&quot;&lt;br/&gt;&quot;); } else if(state==&quot;both&quot;){ var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); } }); }); &lt;/script&gt; Add this script in &lt;head&gt; of the page. Switch between two radio buttons at top and notice the difference in behaviour of ‘+Add’ buttons. Two states required two conditions in the ‘+Add’ button handler. The number of conditions in handler will increase as number of state increases. Also, we only concerned ourselves with ‘+Add’ field functionality. There can be a use case with ‘-Delete’ field functionality. So handler for ‘-Delete’ will have as many conditions as number of states too. So the delete handler would look like: $(&quot;.some_class_on_delete_buttons&quot;).click(function () { if (state==&quot;one&quot;) { //do something } else if (state=&quot;both&quot;) { //do something else } //And in case there are more state //there will be more conditionals }); With more states and more functionalities this approach becomes unmaintainable. I want two things: I want to get rid of conditionals. I want to keep all the functionality for a particular state at a single place. eg: For state ‘Add one’, I want both add and delete in a single class. For state ‘Add both’, I want add and delete in a separate class. It needs to be accomplished in following way: I will keep separate classes for different states. All the state specific classes need to extend from a super class. Super class will define the abstract methods and subclasses should provide the actual implementation for those methods. In case you are in hurry, see the final code at github. Superclass State looks like: var State = function () {}; State.prototype.add = function (addButton) { throw new Error(&quot;It needs to be implemented by subclasses&quot;); }; Subclasses AddOneState and AddBothState correspond to states ‘Add One’ and ‘Add Both’: var AddOneState = function () {}; AddOneState.prototype = Object.create(State.prototype); AddOneState.prototype.add = function (addButton) { var lastInput = addButton.prev().prev(); var newInput = lastInput.clone(); addButton.before(newInput); addButton.before(&quot;&lt;br/&gt;&quot;); }; var AddBothState = function () {}; AddBothState.prototype = Object.create(State.prototype); AddBothState.prototype.add = function (addButton) { var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); }; Notice that I just moved the conditional statements to add() of proper class. I need another class. Let’s call it Page. This class will represent the web page we are looking at. This class will have an instance variable called state that keeps track of current state of Page i.e whether ‘Add One’ or ‘Add Both’ is selected. var Page = function (state) { this.state = state; }; Page.prototype.add = function (addButton) { this.state.add(addButton); }; The above three lines are the core of state pattern. Page has an add which delegates to add of current state. Initially the page has ‘Add One’ selected, so we need to keep the initial state as an instance of AddOneState. var page = new Page(new AddOneState()); And finally, let’s add the handlers: $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); page.add($(this)); }); $(&quot;input[name=&#39;state&#39;]&quot;).change(function () { var stateVal = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (stateVal == &quot;one&quot;) { page.state = new AddOneState(); } else { page.state = new AddBothState(); } }); So, final script and html looks like: &lt;html&gt; &lt;head&gt; &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js&quot;&gt;&lt;/script&gt; &lt;script type=&quot;text/javascript&quot;&gt; $(document).ready(function () { var State = function () {}; State.prototype.add = function (addButton) { throw new Error(&quot;It needs to be implemented by subclasses&quot;); }; var AddOneState = function () {}; AddOneState.prototype = Object.create(State.prototype); AddOneState.prototype.add = function (addButton) { var lastInput = addButton.prev().prev(); var newInput = lastInput.clone(); addButton.before(newInput); addButton.before(&quot;&lt;br/&gt;&quot;); }; var AddBothState = function () {}; AddBothState.prototype = Object.create(State.prototype); AddBothState.prototype.add = function (addButton) { var inputDivs = $(&quot;.input_div&quot;); inputDivs.each(function (index, inputDiv) { var $inputDiv = $(inputDiv); var addButtton = $inputDiv.find(&quot;a.add&quot;); var lastInput = $inputDiv.find(&quot;input:last&quot;); var newInput = lastInput.clone(); addButtton.before(newInput); addButtton.before(&quot;&lt;br/&gt;&quot;); }); }; var Page = function (state) { this.state = state; }; Page.prototype.add = function (addButton) { this.state.add(addButton); }; var page = new Page(new AddOneState()); $(&quot;a.add&quot;).click(function (e) { e.preventDefault(); page.add($(this)); }); $(&quot;input[name=&#39;state&#39;]&quot;).change(function () { var stateVal = $(&quot;input[name=&#39;state&#39;]:checked&quot;).val(); if (stateVal == &quot;one&quot;) { page.state = new AddOneState(); } else { page.state = new AddBothState(); } }); }); &lt;/script&gt; &lt;/head&gt; &lt;body&gt; &lt;div style=&quot;width:100%;&quot;&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; checked=&quot;checked&quot; value=&quot;one&quot;&gt;Add one&lt;/input&gt; &lt;/div&gt; &lt;div style=&quot;float:left; width:50%&quot;&gt; &lt;input type=&quot;radio&quot; name=&quot;state&quot; value=&quot;both&quot;&gt;Add locked combination&lt;/input&gt; &lt;/div&gt; &lt;/div&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;title&quot; placeholder=&quot;Title&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;br/&gt; &lt;br/&gt; &lt;br/&gt; &lt;div class=&quot;input_div&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;body&quot; placeholder=&quot;Body&quot; /&gt; &lt;br/&gt; &lt;a href=&quot;&quot; class=&quot;add&quot;&gt;+Add&lt;/a&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt; Though the script becomes huge compared to the initial script which contained conditionals, it is much easier to maintian and scale. Say we need to handle one more state, we will create another class corresponding to that state and write an appropriate add() method on that class. But we wouldn’t need any change in Page to accomodate a new state and our script will keep working fine. Say we want to add delete functionality, we can add a delete() method on all the states and define a delete() on Page. delete of Page will delegate to delete of current state. You should read more about State Pattern to make sense of this example. References: I came across State pattern while reading “Refactoring” by Martin Fowler.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/design/pattern/2013/10/14/state-pattern-with-ui-code.html","headline":"State pattern with UI Code","dateModified":"2013-10-14T16:39:27+05:30","datePublished":"2013-10-14T16:39:27+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/design/pattern/2013/10/14/state-pattern-with-ui-code.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">State pattern with UI Code</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2013-10-14T16:39:27+05:30" itemprop="datePublished">Oct 14, 2013
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This blog tells how I used state pattern in my UI code, and explains state pattern with JavaScript and jQuery.</p>
+
+<p>Disclaimer:</p>
+
+<ul>
+  <li>This blog will not talk much about benefits of State pattern as there is already a lot written about it. It only gives a practical example of using state pattern with UI code.</li>
+  <li>I am not much confident about difference between State pattern and Strategy pattern. Let’s discuss if I misunderstood State pattern.</li>
+</ul>
+
+<p>###Use case:</p>
+<ul>
+  <li>I have a page with two input fields.</li>
+  <li>Page initially has one title field and one body field.</li>
+  <li>There is a ‘+Add’ button under title and body:
+<img src="http://agiliq.com/dumps/images/20131014/initial.png" style="width: 443px;" alt="State pattern with javascript" /></li>
+  <li>The page can be in two states which are the two radio buttons at top i.e ‘Add one’ and ‘Add both’.</li>
+  <li>Functionality of ‘+Add’ differs based on what state(radio button) is selected.</li>
+</ul>
+
+<p>###Different scenarios:
+Our assumption at start of each scenarios is that page has only one title and one body.</p>
+
+<p>####’Add one’ is selected and user clicks on ‘+Add’ of title
+The page starts looking like:
+<img src="http://agiliq.com/dumps/images/20131014/add-title.png" style="width: 443px;" alt="State pattern with javascript" /></p>
+
+<p>If he clicks on ‘+Add’ of title again, it starts looking like:
+<img src="http://agiliq.com/dumps/images/20131014/add-two-title.png" style="width: 443px;" alt="State pattern with javascript" /></p>
+
+<p>####’Add one’ is selected and user clicks on ‘+Add’ of body
+The page starts looking like:
+<img src="http://agiliq.com/dumps/images/20131014/add-body.png" style="width: 443px;" alt="State pattern with javascript" /></p>
+
+<p>####’Add both’ is selected and user clicks on ‘+Add’ of title
+Page starts looking like:
+<img src="http://agiliq.com/dumps/images/20131014/locked-add-title.png" style="width: 443px;" alt="State pattern with javascript" /></p>
+
+<p>In ‘Add both’ both title and body field should be added irrespective of which ‘+Add’ button is clicked.</p>
+
+<p>If the user clicks any of the ‘+Add’ button again, one more combination of title and body will be added. So, it will start looking like:
+<img src="http://agiliq.com/dumps/images/20131014/locked-add-twice.png" style="width: 443px;" alt="State pattern with javascript" /></p>
+
+<p>So, you got the idea of how ‘+Add’ buttons will behave depending on which radio button is selected at that instant. User can switch between the different radio buttons and ‘+Add’ will behave differently.</p>
+
+<p>###Let’s deal with code now.</p>
+
+<p>Code for initial page.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">"width:100%;"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">"float:left; width:50%"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"radio"</span> <span class="na">name=</span><span class="s">"state"</span> <span class="na">checked=</span><span class="s">"checked"</span> <span class="na">value=</span><span class="s">"one"</span><span class="nt">&gt;</span>Add one<span class="nt">&lt;/input&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">"float:left; width:50%"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"radio"</span> <span class="na">name=</span><span class="s">"state"</span> <span class="na">value=</span><span class="s">"both"</span><span class="nt">&gt;</span>Add both<span class="nt">&lt;/input&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"input_div"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"title"</span> <span class="na">placeholder=</span><span class="s">"Title"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;br/&gt;</span>
+            <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">class=</span><span class="s">"add"</span><span class="nt">&gt;</span>+Add<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+
+        <span class="nt">&lt;br/&gt;</span>
+        <span class="nt">&lt;br/&gt;</span>
+        <span class="nt">&lt;br/&gt;</span>
+
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"input_div"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"body"</span> <span class="na">placeholder=</span><span class="s">"Body"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;br/&gt;</span>
+            <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">class=</span><span class="s">"add"</span><span class="nt">&gt;</span>+Add<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>Let’s add the javascript for ‘+Add’ buttons.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;script type="text/javascript"&gt;
+    $(document).ready(function () {
+        $("a.add").click(function (e) {
+            e.preventDefault();
+            var state = $("input[name='state']:checked").val();
+            if (state=="one") {
+                var lastInput = $(this).prev().prev();
+                var newInput = lastInput.clone();
+                $(this).before(newInput);
+                $(this).before("&lt;br/&gt;");
+            }
+            else if(state=="both"){
+                var inputDivs = $(".input_div");
+                inputDivs.each(function (index, inputDiv) {
+                    var $inputDiv = $(inputDiv);
+                    var addButtton = $inputDiv.find("a.add");
+                    var lastInput = $inputDiv.find("input:last");
+                    var newInput = lastInput.clone();
+                    addButtton.before(newInput);
+                    addButtton.before("&lt;br/&gt;");
+                });
+            }
+        });
+    });
+&lt;/script&gt;
+</code></pre></div></div>
+
+<p>Add this script in <code class="highlighter-rouge">&lt;head&gt;</code> of the page.</p>
+
+<p>Switch between two radio buttons at top and notice the difference in behaviour of ‘+Add’ buttons.</p>
+
+<p>Two states required two conditions in the ‘+Add’ button handler. The number of conditions in handler will increase as number of state increases.</p>
+
+<p>Also, we only concerned ourselves with ‘+Add’ field functionality. There can be a use case with ‘-Delete’ field functionality. So handler for ‘-Delete’ will have as many conditions as number of states too. So the delete handler would look like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$(".some_class_on_delete_buttons").click(function () {
+    if (state=="one") {
+        //do something
+    }
+    else if (state="both") {
+        //do something else
+    }
+    //And in case there are more state
+    //there will be more conditionals
+});
+</code></pre></div></div>
+
+<p>With more states and more functionalities this approach becomes unmaintainable.</p>
+
+<p>I want two things:</p>
+
+<ul>
+  <li>I want to get rid of conditionals.</li>
+  <li>I want to keep all the functionality for a particular state at a single place. eg: For state ‘Add one’, I want both add and delete in a single class. For state ‘Add both’, I want add and delete in a separate class.</li>
+</ul>
+
+<p>It needs to be accomplished in following way:</p>
+
+<ul>
+  <li>I will keep separate classes for different states.</li>
+  <li>All the state specific classes need to extend from a super class.</li>
+  <li>Super class will define the abstract methods and subclasses should provide the actual implementation for those methods.</li>
+</ul>
+
+<p>In case you are in hurry, see the final code <a href="https://gist.github.com/akshar-raaj/6973560">at github</a>.</p>
+
+<p>Superclass <strong>State</strong> looks like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var State = function () {};
+
+State.prototype.add = function (addButton) {
+    throw new Error("It needs to be implemented by subclasses");
+};
+</code></pre></div></div>
+
+<p>Subclasses <strong>AddOneState</strong> and <strong>AddBothState</strong> correspond to states ‘Add One’ and ‘Add Both’:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var AddOneState = function () {};
+AddOneState.prototype = Object.create(State.prototype);
+AddOneState.prototype.add = function (addButton) {
+    var lastInput = addButton.prev().prev();
+    var newInput = lastInput.clone();
+    addButton.before(newInput);
+    addButton.before("&lt;br/&gt;");
+};
+
+var AddBothState = function () {};
+AddBothState.prototype = Object.create(State.prototype);
+AddBothState.prototype.add = function (addButton) {
+    var inputDivs = $(".input_div");
+    inputDivs.each(function (index, inputDiv) {
+        var $inputDiv = $(inputDiv);
+        var addButtton = $inputDiv.find("a.add");
+        var lastInput = $inputDiv.find("input:last");
+        var newInput = lastInput.clone();
+        addButtton.before(newInput);
+        addButtton.before("&lt;br/&gt;");
+    });
+};
+</code></pre></div></div>
+
+<p>Notice that I just moved the conditional statements to <strong>add()</strong> of proper class.</p>
+
+<p>I need another class. Let’s call it <strong>Page</strong>. This class will represent the web page we are looking at. This class will have an instance variable called <strong>state</strong> that keeps track of current state of Page i.e whether ‘Add One’ or ‘Add Both’ is selected.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var Page = function (state) {
+    this.state = state;
+};
+Page.prototype.add = function (addButton) {
+    this.state.add(addButton);
+};
+</code></pre></div></div>
+
+<p>The above three lines are the core of state pattern. Page has an <strong>add</strong> which delegates to <strong>add</strong> of current state.</p>
+
+<p>Initially the page has ‘Add One’ selected, so we need to keep the initial state as an instance of <strong>AddOneState</strong>.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var page = new Page(new AddOneState());
+</code></pre></div></div>
+
+<p>And finally, let’s add the handlers:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$("a.add").click(function (e) {
+    e.preventDefault();
+    page.add($(this));
+});
+
+$("input[name='state']").change(function () {
+    var stateVal = $("input[name='state']:checked").val();
+    if (stateVal == "one") {
+        page.state = new AddOneState();
+    }
+    else {
+        page.state = new AddBothState();
+    }
+});
+</code></pre></div></div>
+
+<p>So, final script and html looks like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;</span>
+            <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">State</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{};</span>
+
+                <span class="nx">State</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">add</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">addButton</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s2">"It needs to be implemented by subclasses"</span><span class="p">);</span>
+                <span class="p">};</span>
+
+                <span class="kd">var</span> <span class="nx">AddOneState</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{};</span>
+                <span class="nx">AddOneState</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">State</span><span class="p">.</span><span class="nx">prototype</span><span class="p">);</span>
+                <span class="nx">AddOneState</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">add</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">addButton</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">lastInput</span> <span class="o">=</span> <span class="nx">addButton</span><span class="p">.</span><span class="nx">prev</span><span class="p">().</span><span class="nx">prev</span><span class="p">();</span>
+                    <span class="kd">var</span> <span class="nx">newInput</span> <span class="o">=</span> <span class="nx">lastInput</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+                    <span class="nx">addButton</span><span class="p">.</span><span class="nx">before</span><span class="p">(</span><span class="nx">newInput</span><span class="p">);</span>
+                    <span class="nx">addButton</span><span class="p">.</span><span class="nx">before</span><span class="p">(</span><span class="s2">"&lt;br/&gt;"</span><span class="p">);</span>
+                <span class="p">};</span>
+
+                <span class="kd">var</span> <span class="nx">AddBothState</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{};</span>
+                <span class="nx">AddBothState</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">State</span><span class="p">.</span><span class="nx">prototype</span><span class="p">);</span>
+                <span class="nx">AddBothState</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">add</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">addButton</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">inputDivs</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">".input_div"</span><span class="p">);</span>
+                    <span class="nx">inputDivs</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="nx">inputDiv</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="kd">var</span> <span class="nx">$inputDiv</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="nx">inputDiv</span><span class="p">);</span>
+                        <span class="kd">var</span> <span class="nx">addButtton</span> <span class="o">=</span> <span class="nx">$inputDiv</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">"a.add"</span><span class="p">);</span>
+                        <span class="kd">var</span> <span class="nx">lastInput</span> <span class="o">=</span> <span class="nx">$inputDiv</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="s2">"input:last"</span><span class="p">);</span>
+                        <span class="kd">var</span> <span class="nx">newInput</span> <span class="o">=</span> <span class="nx">lastInput</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+                        <span class="nx">addButtton</span><span class="p">.</span><span class="nx">before</span><span class="p">(</span><span class="nx">newInput</span><span class="p">);</span>
+                        <span class="nx">addButtton</span><span class="p">.</span><span class="nx">before</span><span class="p">(</span><span class="s2">"&lt;br/&gt;"</span><span class="p">);</span>
+                    <span class="p">});</span>
+                <span class="p">};</span>
+
+                <span class="kd">var</span> <span class="nx">Page</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">state</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="nx">state</span><span class="p">;</span>
+                <span class="p">};</span>
+                <span class="nx">Page</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">add</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">addButton</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">addButton</span><span class="p">);</span>
+                <span class="p">};</span>
+
+                <span class="kd">var</span> <span class="nx">page</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Page</span><span class="p">(</span><span class="k">new</span> <span class="nx">AddOneState</span><span class="p">());</span>
+
+                <span class="nx">$</span><span class="p">(</span><span class="s2">"a.add"</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
+                    <span class="nx">page</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+                <span class="p">});</span>
+
+                <span class="nx">$</span><span class="p">(</span><span class="s2">"input[name='state']"</span><span class="p">).</span><span class="nx">change</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">stateVal</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">"input[name='state']:checked"</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">stateVal</span> <span class="o">==</span> <span class="s2">"one"</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">page</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AddOneState</span><span class="p">();</span>
+                    <span class="p">}</span>
+                    <span class="k">else</span> <span class="p">{</span>
+                        <span class="nx">page</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AddBothState</span><span class="p">();</span>
+                    <span class="p">}</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+        <span class="nt">&lt;/script&gt;</span>
+    <span class="nt">&lt;/head&gt;</span>
+    <span class="nt">&lt;body&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">"width:100%;"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">"float:left; width:50%"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"radio"</span> <span class="na">name=</span><span class="s">"state"</span> <span class="na">checked=</span><span class="s">"checked"</span> <span class="na">value=</span><span class="s">"one"</span><span class="nt">&gt;</span>Add one<span class="nt">&lt;/input&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">"float:left; width:50%"</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"radio"</span> <span class="na">name=</span><span class="s">"state"</span> <span class="na">value=</span><span class="s">"both"</span><span class="nt">&gt;</span>Add locked combination<span class="nt">&lt;/input&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"input_div"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"title"</span> <span class="na">placeholder=</span><span class="s">"Title"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;br/&gt;</span>
+            <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">class=</span><span class="s">"add"</span><span class="nt">&gt;</span>+Add<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+
+        <span class="nt">&lt;br/&gt;</span>
+        <span class="nt">&lt;br/&gt;</span>
+        <span class="nt">&lt;br/&gt;</span>
+
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"input_div"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">class=</span><span class="s">"body"</span> <span class="na">placeholder=</span><span class="s">"Body"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;br/&gt;</span>
+            <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">class=</span><span class="s">"add"</span><span class="nt">&gt;</span>+Add<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div></div>
+
+<p>Though the script becomes huge compared to the initial script which contained conditionals, it is much easier to maintian and scale.</p>
+
+<p>Say we need to handle one more state, we will create another class corresponding to that state and write an appropriate <strong>add()</strong> method on that class. But we wouldn’t need any change in <strong>Page</strong> to accomodate a new state and our script will keep working fine.</p>
+
+<p>Say we want to add delete functionality, we can add a <strong>delete()</strong> method on all the states and define a <strong>delete()</strong> on Page. <strong>delete</strong> of Page will delegate to <strong>delete</strong> of current state.</p>
+
+<p>You should read more about State Pattern to make sense of this example.</p>
+
+<p>References:</p>
+
+<ul>
+  <li>I came across State pattern while reading “Refactoring” by Martin Fowler.</li>
+</ul>
+
+
+  </div><a class="u-url" href="/design/pattern/2013/10/14/state-pattern-with-ui-code.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

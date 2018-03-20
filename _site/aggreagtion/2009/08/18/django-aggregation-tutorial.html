@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Django aggregation tutorial | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Django aggregation tutorial" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="One of the new and most awaited features with Django 1.1 was aggregation. As usual, Django comes with a very comprehensive documentation for this. Here, I have tried to put this in how-to form. Jump to howtos or Get source on Github. Essentially, aggregations are nothing but a way to perform an operation on group of rows. In databases, they are represented by operators as sum, avg etc. To do these operations Django added two new methods to querysets. aggregate annotate When you are have a queryset you can do two operations on it, Operate over the rowset to get a single value from it. (Such as sum of all salaries in the rowset) Operate over the rowset to get a value for each row in the rowset via some related table. The thing to notice is that option 1, will create one row from rowset, while option 2 will not change the number of rows in the rowset. If you are into analogies, you can think that option 1 is like a reduce and option 2 is like a map. In sql terms, aggregate is a operation(SUM, AVG, MIN, MAX), without a group by, while annotate is a operation with a group by on rowset_table.id. (Unless explicitly overriden). Ok enough talk, on to some actual work. Here is a fictional models.py representing a HRMS application. We will use this to see how to use aggreagtion to solve some common problems. from django.db import models class Department(models.Model): dept_name = models.CharField(max_length = 100) established_on = models.DateField() def __unicode__(self): return self.dept_name class Level(models.Model): level_name = models.CharField(max_length = 100) pay_min = models.PositiveIntegerField() pay_max = models.PositiveIntegerField() def __unicode__(self): return self.level_name class Employee(models.Model): emp_name = models.CharField(max_length = 100) department = models.ForeignKey(Department) level = models.ForeignKey(Level) reports_to = models.ForeignKey(&#39;self&#39;, null=True, blank=True) pay = models.PositiveIntegerField() joined_on = models.DateField() class Leave(models.Model): employee = models.ForeignKey(Employee) leave_day = models.DateField() &quot;&quot;&quot; #Populate DB, so we can do some meaningful queries. #Create Dept, Levels manually. #Get the names file from http://dl.getdropbox.com/u/271935/djaggregations/names.pickle #Or the whole sqlite database from http://dl.getdropbox.com/u/271935/djaggregations/bata.db import random from datetime import timedelta, date import pickle names = pickle.load(file(&#39;/home/shabda/names.pickle&#39;)) for i in range(1000): emp = Employee() emp.name = random.choice(names) emp.department = random.choice(list(Department.objects.all())) emp.level = random.choice(Level.objects.all()) try: emp.reports_to = random.choice(list(Employee.objects.filter(department=emp.department))) except:pass emp.pay = random.randint(emp.level.pay_min, emp.level.pay_max) emp.joined_on = emp.department.established_on + timedelta(days = random.randint(0, 200)) emp.save() &quot;&quot;&quot; &quot;&quot;&quot; employees = list(Employees.objects.all()) for i in range(100): employee = random.choice(employees) leave = Leave(employee = employee) leave.leave_day = date.today() - timedelta(days = random.randint(0, 365)) leave.save() &quot;&quot;&quot; Find the total number of employees. In sql you might want to do something like, select count(id) from hrms_employee Which becomes, Employee.objects.all().aggregate(total=Count(&#39;id&#39;)) If fact doing a connection.queries.pop() shows the exact query. SELECT COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;total&quot; FROM &quot;hrms_employee&quot; But wait, we have a builtin method already for that, Employee.objects.all().count(), so lets try something else. Find the total pay of employees. The CEO wants to find out what is the total salary expediture, this also converts the queryset to a single value, so we want to .aggregate here. Employee.objects.all().aggregate(total_payment=Sum(&#39;pay&#39;)) Gives you the total amount you are paying to your employees. Find the total number of employees, per department. Here we want a value per row in queryset, so we need to use aggregate here. Also, there would be one aggregated value per dpeartment, so we need to annotate Department queryset. Department.objects.all().annotate(Count(&#39;employee&#39;)) If you are only interested in name of department and employee count for it, you can do, Department.objects.values(&#39;dept_name&#39;).annotate(Count(&#39;employee&#39;)) The sql is SELECT &quot;hrms_department&quot;.&quot;dept_name&quot;, COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;employee__count&quot; FROM &quot;hrms_department&quot; LEFT OUTER JOIN &quot;hrms_employee&quot; ON (&quot;hrms_department&quot;.&quot;id&quot; = &quot;hrms_employee&quot;.&quot;department_id&quot;) GROUP BY &quot;hrms_department&quot;.&quot;dept_name&quot; Find the total number of employees, for a specific department. Here you could use either of .annotate or .aggregate, Department.objects.filter(dept_name=&#39;Sales&#39;).values(&#39;dept_name&#39;).annotate(Count(&#39;employee&#39;)) Department.objects.filter(dept_name=&#39;Sales&#39;).aggregate(Count(&#39;employee&#39;)) If you see the SQLs, you will see that .annotate did a group by, while the .aggregate did not, but as there was only one row, group by had no effect. Find the total number of employees, per department, per level This time, we can not annotate either Department model, or the Level model, as we need to group by both department and level. So we will annotate on Employee Employee.objects.values(&#39;department__dept_name&#39;, &#39;level__level_name&#39;).annotate(Count(&#39;id&#39;)) This leads to the sql, SELECT &quot;hrms_department&quot;.&quot;dept_name&quot;, &quot;hrms_level&quot;.&quot;level_name&quot;, COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;id__count&quot; FROM &quot;hrms_employee&quot; INNER JOIN &quot;hrms_department&quot; ON (&quot;hrms_employee&quot;.&quot;department_id&quot; = &quot;hrms_department&quot;.&quot;id&quot;) INNER JOIN &quot;hrms_level&quot; ON (&quot;hrms_employee&quot;.&quot;level_id&quot; = &quot;hrms_level&quot;.&quot;id&quot;) GROUP BY &quot;hrms_department&quot;.&quot;dept_name&quot;, &quot;hrms_level&quot;.&quot;level_name Which combination of Employee and Deparments employes the most people We can order on the annotated fields, so the last query is modified to, Employee.objects.values(&#39;department__dept_name&#39;, &#39;level__level_name&#39;).annotate(employee_count = Count(&#39;id&#39;)).order_by(&#39;-employee_count&#39;)[:1] Which employee name is the most common. We can want to group by emp_name, so emp_name is added to values. After that we order on the annotated field and get the first element, to get the most common name. Employee.objects.values(&#39;emp_name&#39;).annotate(name_count=Count(&#39;id&#39;)).order_by(&#39;-name_count&#39;)[:1] This was a overview of how django annotations work. These remove a whole class of queries for which you had to use custom sql queries in the past. ###Resources Source on Github sqlite file for this model to test Aggregation on Django docs Want to build a Django app? Talk to us" />
+<meta property="og:description" content="One of the new and most awaited features with Django 1.1 was aggregation. As usual, Django comes with a very comprehensive documentation for this. Here, I have tried to put this in how-to form. Jump to howtos or Get source on Github. Essentially, aggregations are nothing but a way to perform an operation on group of rows. In databases, they are represented by operators as sum, avg etc. To do these operations Django added two new methods to querysets. aggregate annotate When you are have a queryset you can do two operations on it, Operate over the rowset to get a single value from it. (Such as sum of all salaries in the rowset) Operate over the rowset to get a value for each row in the rowset via some related table. The thing to notice is that option 1, will create one row from rowset, while option 2 will not change the number of rows in the rowset. If you are into analogies, you can think that option 1 is like a reduce and option 2 is like a map. In sql terms, aggregate is a operation(SUM, AVG, MIN, MAX), without a group by, while annotate is a operation with a group by on rowset_table.id. (Unless explicitly overriden). Ok enough talk, on to some actual work. Here is a fictional models.py representing a HRMS application. We will use this to see how to use aggreagtion to solve some common problems. from django.db import models class Department(models.Model): dept_name = models.CharField(max_length = 100) established_on = models.DateField() def __unicode__(self): return self.dept_name class Level(models.Model): level_name = models.CharField(max_length = 100) pay_min = models.PositiveIntegerField() pay_max = models.PositiveIntegerField() def __unicode__(self): return self.level_name class Employee(models.Model): emp_name = models.CharField(max_length = 100) department = models.ForeignKey(Department) level = models.ForeignKey(Level) reports_to = models.ForeignKey(&#39;self&#39;, null=True, blank=True) pay = models.PositiveIntegerField() joined_on = models.DateField() class Leave(models.Model): employee = models.ForeignKey(Employee) leave_day = models.DateField() &quot;&quot;&quot; #Populate DB, so we can do some meaningful queries. #Create Dept, Levels manually. #Get the names file from http://dl.getdropbox.com/u/271935/djaggregations/names.pickle #Or the whole sqlite database from http://dl.getdropbox.com/u/271935/djaggregations/bata.db import random from datetime import timedelta, date import pickle names = pickle.load(file(&#39;/home/shabda/names.pickle&#39;)) for i in range(1000): emp = Employee() emp.name = random.choice(names) emp.department = random.choice(list(Department.objects.all())) emp.level = random.choice(Level.objects.all()) try: emp.reports_to = random.choice(list(Employee.objects.filter(department=emp.department))) except:pass emp.pay = random.randint(emp.level.pay_min, emp.level.pay_max) emp.joined_on = emp.department.established_on + timedelta(days = random.randint(0, 200)) emp.save() &quot;&quot;&quot; &quot;&quot;&quot; employees = list(Employees.objects.all()) for i in range(100): employee = random.choice(employees) leave = Leave(employee = employee) leave.leave_day = date.today() - timedelta(days = random.randint(0, 365)) leave.save() &quot;&quot;&quot; Find the total number of employees. In sql you might want to do something like, select count(id) from hrms_employee Which becomes, Employee.objects.all().aggregate(total=Count(&#39;id&#39;)) If fact doing a connection.queries.pop() shows the exact query. SELECT COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;total&quot; FROM &quot;hrms_employee&quot; But wait, we have a builtin method already for that, Employee.objects.all().count(), so lets try something else. Find the total pay of employees. The CEO wants to find out what is the total salary expediture, this also converts the queryset to a single value, so we want to .aggregate here. Employee.objects.all().aggregate(total_payment=Sum(&#39;pay&#39;)) Gives you the total amount you are paying to your employees. Find the total number of employees, per department. Here we want a value per row in queryset, so we need to use aggregate here. Also, there would be one aggregated value per dpeartment, so we need to annotate Department queryset. Department.objects.all().annotate(Count(&#39;employee&#39;)) If you are only interested in name of department and employee count for it, you can do, Department.objects.values(&#39;dept_name&#39;).annotate(Count(&#39;employee&#39;)) The sql is SELECT &quot;hrms_department&quot;.&quot;dept_name&quot;, COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;employee__count&quot; FROM &quot;hrms_department&quot; LEFT OUTER JOIN &quot;hrms_employee&quot; ON (&quot;hrms_department&quot;.&quot;id&quot; = &quot;hrms_employee&quot;.&quot;department_id&quot;) GROUP BY &quot;hrms_department&quot;.&quot;dept_name&quot; Find the total number of employees, for a specific department. Here you could use either of .annotate or .aggregate, Department.objects.filter(dept_name=&#39;Sales&#39;).values(&#39;dept_name&#39;).annotate(Count(&#39;employee&#39;)) Department.objects.filter(dept_name=&#39;Sales&#39;).aggregate(Count(&#39;employee&#39;)) If you see the SQLs, you will see that .annotate did a group by, while the .aggregate did not, but as there was only one row, group by had no effect. Find the total number of employees, per department, per level This time, we can not annotate either Department model, or the Level model, as we need to group by both department and level. So we will annotate on Employee Employee.objects.values(&#39;department__dept_name&#39;, &#39;level__level_name&#39;).annotate(Count(&#39;id&#39;)) This leads to the sql, SELECT &quot;hrms_department&quot;.&quot;dept_name&quot;, &quot;hrms_level&quot;.&quot;level_name&quot;, COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;id__count&quot; FROM &quot;hrms_employee&quot; INNER JOIN &quot;hrms_department&quot; ON (&quot;hrms_employee&quot;.&quot;department_id&quot; = &quot;hrms_department&quot;.&quot;id&quot;) INNER JOIN &quot;hrms_level&quot; ON (&quot;hrms_employee&quot;.&quot;level_id&quot; = &quot;hrms_level&quot;.&quot;id&quot;) GROUP BY &quot;hrms_department&quot;.&quot;dept_name&quot;, &quot;hrms_level&quot;.&quot;level_name Which combination of Employee and Deparments employes the most people We can order on the annotated fields, so the last query is modified to, Employee.objects.values(&#39;department__dept_name&#39;, &#39;level__level_name&#39;).annotate(employee_count = Count(&#39;id&#39;)).order_by(&#39;-employee_count&#39;)[:1] Which employee name is the most common. We can want to group by emp_name, so emp_name is added to values. After that we order on the annotated field and get the first element, to get the most common name. Employee.objects.values(&#39;emp_name&#39;).annotate(name_count=Count(&#39;id&#39;)).order_by(&#39;-name_count&#39;)[:1] This was a overview of how django annotations work. These remove a whole class of queries for which you had to use custom sql queries in the past. ###Resources Source on Github sqlite file for this model to test Aggregation on Django docs Want to build a Django app? Talk to us" />
+<link rel="canonical" href="http://localhost:4000/aggreagtion/2009/08/18/django-aggregation-tutorial.html" />
+<meta property="og:url" content="http://localhost:4000/aggreagtion/2009/08/18/django-aggregation-tutorial.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-08-18T18:08:29+05:30" />
+<script type="application/ld+json">
+{"description":"One of the new and most awaited features with Django 1.1 was aggregation. As usual, Django comes with a very comprehensive documentation for this. Here, I have tried to put this in how-to form. Jump to howtos or Get source on Github. Essentially, aggregations are nothing but a way to perform an operation on group of rows. In databases, they are represented by operators as sum, avg etc. To do these operations Django added two new methods to querysets. aggregate annotate When you are have a queryset you can do two operations on it, Operate over the rowset to get a single value from it. (Such as sum of all salaries in the rowset) Operate over the rowset to get a value for each row in the rowset via some related table. The thing to notice is that option 1, will create one row from rowset, while option 2 will not change the number of rows in the rowset. If you are into analogies, you can think that option 1 is like a reduce and option 2 is like a map. In sql terms, aggregate is a operation(SUM, AVG, MIN, MAX), without a group by, while annotate is a operation with a group by on rowset_table.id. (Unless explicitly overriden). Ok enough talk, on to some actual work. Here is a fictional models.py representing a HRMS application. We will use this to see how to use aggreagtion to solve some common problems. from django.db import models class Department(models.Model): dept_name = models.CharField(max_length = 100) established_on = models.DateField() def __unicode__(self): return self.dept_name class Level(models.Model): level_name = models.CharField(max_length = 100) pay_min = models.PositiveIntegerField() pay_max = models.PositiveIntegerField() def __unicode__(self): return self.level_name class Employee(models.Model): emp_name = models.CharField(max_length = 100) department = models.ForeignKey(Department) level = models.ForeignKey(Level) reports_to = models.ForeignKey(&#39;self&#39;, null=True, blank=True) pay = models.PositiveIntegerField() joined_on = models.DateField() class Leave(models.Model): employee = models.ForeignKey(Employee) leave_day = models.DateField() &quot;&quot;&quot; #Populate DB, so we can do some meaningful queries. #Create Dept, Levels manually. #Get the names file from http://dl.getdropbox.com/u/271935/djaggregations/names.pickle #Or the whole sqlite database from http://dl.getdropbox.com/u/271935/djaggregations/bata.db import random from datetime import timedelta, date import pickle names = pickle.load(file(&#39;/home/shabda/names.pickle&#39;)) for i in range(1000): emp = Employee() emp.name = random.choice(names) emp.department = random.choice(list(Department.objects.all())) emp.level = random.choice(Level.objects.all()) try: emp.reports_to = random.choice(list(Employee.objects.filter(department=emp.department))) except:pass emp.pay = random.randint(emp.level.pay_min, emp.level.pay_max) emp.joined_on = emp.department.established_on + timedelta(days = random.randint(0, 200)) emp.save() &quot;&quot;&quot; &quot;&quot;&quot; employees = list(Employees.objects.all()) for i in range(100): employee = random.choice(employees) leave = Leave(employee = employee) leave.leave_day = date.today() - timedelta(days = random.randint(0, 365)) leave.save() &quot;&quot;&quot; Find the total number of employees. In sql you might want to do something like, select count(id) from hrms_employee Which becomes, Employee.objects.all().aggregate(total=Count(&#39;id&#39;)) If fact doing a connection.queries.pop() shows the exact query. SELECT COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;total&quot; FROM &quot;hrms_employee&quot; But wait, we have a builtin method already for that, Employee.objects.all().count(), so lets try something else. Find the total pay of employees. The CEO wants to find out what is the total salary expediture, this also converts the queryset to a single value, so we want to .aggregate here. Employee.objects.all().aggregate(total_payment=Sum(&#39;pay&#39;)) Gives you the total amount you are paying to your employees. Find the total number of employees, per department. Here we want a value per row in queryset, so we need to use aggregate here. Also, there would be one aggregated value per dpeartment, so we need to annotate Department queryset. Department.objects.all().annotate(Count(&#39;employee&#39;)) If you are only interested in name of department and employee count for it, you can do, Department.objects.values(&#39;dept_name&#39;).annotate(Count(&#39;employee&#39;)) The sql is SELECT &quot;hrms_department&quot;.&quot;dept_name&quot;, COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;employee__count&quot; FROM &quot;hrms_department&quot; LEFT OUTER JOIN &quot;hrms_employee&quot; ON (&quot;hrms_department&quot;.&quot;id&quot; = &quot;hrms_employee&quot;.&quot;department_id&quot;) GROUP BY &quot;hrms_department&quot;.&quot;dept_name&quot; Find the total number of employees, for a specific department. Here you could use either of .annotate or .aggregate, Department.objects.filter(dept_name=&#39;Sales&#39;).values(&#39;dept_name&#39;).annotate(Count(&#39;employee&#39;)) Department.objects.filter(dept_name=&#39;Sales&#39;).aggregate(Count(&#39;employee&#39;)) If you see the SQLs, you will see that .annotate did a group by, while the .aggregate did not, but as there was only one row, group by had no effect. Find the total number of employees, per department, per level This time, we can not annotate either Department model, or the Level model, as we need to group by both department and level. So we will annotate on Employee Employee.objects.values(&#39;department__dept_name&#39;, &#39;level__level_name&#39;).annotate(Count(&#39;id&#39;)) This leads to the sql, SELECT &quot;hrms_department&quot;.&quot;dept_name&quot;, &quot;hrms_level&quot;.&quot;level_name&quot;, COUNT(&quot;hrms_employee&quot;.&quot;id&quot;) AS &quot;id__count&quot; FROM &quot;hrms_employee&quot; INNER JOIN &quot;hrms_department&quot; ON (&quot;hrms_employee&quot;.&quot;department_id&quot; = &quot;hrms_department&quot;.&quot;id&quot;) INNER JOIN &quot;hrms_level&quot; ON (&quot;hrms_employee&quot;.&quot;level_id&quot; = &quot;hrms_level&quot;.&quot;id&quot;) GROUP BY &quot;hrms_department&quot;.&quot;dept_name&quot;, &quot;hrms_level&quot;.&quot;level_name Which combination of Employee and Deparments employes the most people We can order on the annotated fields, so the last query is modified to, Employee.objects.values(&#39;department__dept_name&#39;, &#39;level__level_name&#39;).annotate(employee_count = Count(&#39;id&#39;)).order_by(&#39;-employee_count&#39;)[:1] Which employee name is the most common. We can want to group by emp_name, so emp_name is added to values. After that we order on the annotated field and get the first element, to get the most common name. Employee.objects.values(&#39;emp_name&#39;).annotate(name_count=Count(&#39;id&#39;)).order_by(&#39;-name_count&#39;)[:1] This was a overview of how django annotations work. These remove a whole class of queries for which you had to use custom sql queries in the past. ###Resources Source on Github sqlite file for this model to test Aggregation on Django docs Want to build a Django app? Talk to us","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/aggreagtion/2009/08/18/django-aggregation-tutorial.html","headline":"Django aggregation tutorial","dateModified":"2009-08-18T18:08:29+05:30","datePublished":"2009-08-18T18:08:29+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/aggreagtion/2009/08/18/django-aggregation-tutorial.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Django aggregation tutorial</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-08-18T18:08:29+05:30" itemprop="datePublished">Aug 18, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>One of the new and most awaited features with Django 1.1 was aggregation. As usual,
+Django comes with a very <a href="http://docs.djangoproject.com/en/dev/topics/db/aggregation/">comprehensive documentation</a> for this. Here, I have tried to
+put this in how-to form.</p>
+
+<p><a href="#howtos">Jump to howtos</a> or <a href="http://github.com/uswaretech/Shiny-New-Django-1.1/tree/master">Get source on Github</a>.</p>
+
+<p>Essentially, aggregations are nothing but a way to perform an operation on group of rows. In databases,
+they are represented by operators as <code class="highlighter-rouge">sum</code>, <code class="highlighter-rouge">avg</code> etc.</p>
+
+<p>To do these operations Django added two new methods to querysets.</p>
+
+<ol>
+  <li><code class="highlighter-rouge">aggregate</code></li>
+  <li><code class="highlighter-rouge">annotate</code></li>
+</ol>
+
+<p>When you are have a queryset you can do two operations on it,</p>
+
+<ol>
+  <li>Operate over the rowset to get a single value from it. (Such as sum of all salaries in the rowset)</li>
+  <li>Operate over the rowset to get a value for <em>each row in the rowset</em> via some related table.</li>
+</ol>
+
+<p>The thing to notice is that option 1, will create one row from rowset, while option 2 will
+not change the number of rows in the rowset. If you are into analogies, you can think that
+option 1 is like a <a href="http://docs.python.org/library/functions.html#reduce">reduce</a> and option 2 is like a <a href="http://docs.python.org/library/functions.html#map">map</a>.</p>
+
+<p>In sql terms, aggregate is a operation(SUM, AVG, MIN, MAX), without a group by,
+while annotate is a operation with a group by on rowset_table.id. (Unless explicitly overriden).</p>
+
+<p><a name="howtos"></a></p>
+
+<p>Ok enough talk, on to some actual work. Here is a fictional models.py representing
+a HRMS application. We will use this to see how to use aggreagtion to solve
+some common problems.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from django.db import models
+
+class Department(models.Model):
+    dept_name = models.CharField(max_length = 100)
+    established_on = models.DateField()
+    
+    def __unicode__(self):
+        return self.dept_name
+    
+class Level(models.Model):
+    level_name = models.CharField(max_length = 100)
+    pay_min = models.PositiveIntegerField()
+    pay_max = models.PositiveIntegerField()
+    
+    def __unicode__(self):
+        return self.level_name
+    
+class Employee(models.Model):
+    emp_name = models.CharField(max_length = 100)
+    department = models.ForeignKey(Department)
+    level = models.ForeignKey(Level)
+    reports_to = models.ForeignKey('self', null=True, blank=True)
+    
+    pay = models.PositiveIntegerField()
+    joined_on = models.DateField()
+    
+class Leave(models.Model):
+    employee = models.ForeignKey(Employee)
+    leave_day = models.DateField()
+    
+    
+"""
+#Populate DB, so we can do some meaningful queries.
+#Create Dept, Levels manually.
+#Get the names file from http://dl.getdropbox.com/u/271935/djaggregations/names.pickle
+#Or the whole sqlite database from http://dl.getdropbox.com/u/271935/djaggregations/bata.db
+import random
+from datetime import timedelta, date
+import pickle
+names = pickle.load(file('/home/shabda/names.pickle'))
+for i in range(1000):
+    emp = Employee()
+    emp.name = random.choice(names)
+    emp.department = random.choice(list(Department.objects.all()))
+    emp.level = random.choice(Level.objects.all())
+    try: emp.reports_to = random.choice(list(Employee.objects.filter(department=emp.department)))
+    except:pass
+    emp.pay = random.randint(emp.level.pay_min, emp.level.pay_max)
+    emp.joined_on = emp.department.established_on + timedelta(days = random.randint(0, 200))
+    emp.save()
+"""
+
+"""
+employees = list(Employees.objects.all())
+for i in range(100):
+    employee = random.choice(employees)
+    leave = Leave(employee = employee)
+    leave.leave_day = date.today() - timedelta(days = random.randint(0, 365))
+    leave.save()
+    
+"""
+</code></pre></div></div>
+
+<h4 id="find-the-total-number-of-employees">Find the total number of employees.</h4>
+
+<p>In sql you might want to do something like,</p>
+
+<p><code class="highlighter-rouge">select count(id) from hrms_employee</code></p>
+
+<p>Which becomes,</p>
+
+<p><code class="highlighter-rouge">Employee.objects.all().aggregate(total=Count('id'))</code></p>
+
+<p>If fact doing a <code class="highlighter-rouge">connection.queries.pop()</code> shows the exact query.</p>
+
+<p><code class="highlighter-rouge">SELECT COUNT("hrms_employee"."id") AS "total" FROM "hrms_employee"</code></p>
+
+<p>But wait, we have a builtin method already for that, <code class="highlighter-rouge">Employee.objects.all().count()</code>, so lets try something else.</p>
+
+<h4 id="find-the-total-pay-of-employees">Find the total pay of employees.</h4>
+
+<p>The CEO wants to find out what is the total salary expediture, this also converts
+the queryset to a single value, so we want to <code class="highlighter-rouge">.aggregate</code> here.</p>
+
+<p><code class="highlighter-rouge">Employee.objects.all().aggregate(total_payment=Sum('pay'))</code></p>
+
+<p>Gives you the total amount you are paying to your employees.</p>
+
+<h4 id="find-the-total-number-of-employees-per-department">Find the total number of employees, per department.</h4>
+
+<p>Here we want a value per row in queryset, so we need to use aggregate here. Also,
+there would be one aggregated value per dpeartment, so we need to annotate Department
+queryset.</p>
+
+<p><code class="highlighter-rouge">Department.objects.all().annotate(Count('employee'))</code></p>
+
+<p>If you are only interested in name of department and employee count for it, you can do,
+<code class="highlighter-rouge">Department.objects.values('dept_name').annotate(Count('employee'))</code></p>
+
+<p>The sql is</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SELECT "hrms_department"."dept_name", COUNT("hrms_employee"."id") AS "employee__count" FROM "hrms_department" LEFT OUTER JOIN "hrms_employee" ON ("hrms_department"."id" = "hrms_employee"."department_id") GROUP BY "hrms_department"."dept_name"
+</code></pre></div></div>
+
+<h4 id="find-the-total-number-of-employees-for-a-specific-department">Find the total number of employees, for a specific department.</h4>
+
+<p>Here you could use either of <code class="highlighter-rouge">.annotate</code> or <code class="highlighter-rouge">.aggregate</code>,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Department.objects.filter(dept_name='Sales').values('dept_name').annotate(Count('employee'))
+Department.objects.filter(dept_name='Sales').aggregate(Count('employee'))
+</code></pre></div></div>
+
+<p>If you see the SQLs, you will see that <code class="highlighter-rouge">.annotate</code> did a <code class="highlighter-rouge">group by</code>, while the <code class="highlighter-rouge">.aggregate</code>
+did not, but as there was only one row, <code class="highlighter-rouge">group by</code> had no effect.</p>
+
+<h4 id="find-the-total-number-of-employees-per-department-per-level">Find the total number of employees, per department, per level</h4>
+
+<p>This time, we can not annotate either Department model, or the Level model, as we
+need to <code class="highlighter-rouge">group by</code> both department and level. So we will annotate on Employee</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Employee.objects.values('department__dept_name', 'level__level_name').annotate(Count('id'))
+</code></pre></div></div>
+
+<p>This leads to the sql,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SELECT "hrms_department"."dept_name", "hrms_level"."level_name", COUNT("hrms_employee"."id") AS "id__count" FROM "hrms_employee" INNER JOIN "hrms_department" ON ("hrms_employee"."department_id" = "hrms_department"."id") INNER JOIN "hrms_level" ON ("hrms_employee"."level_id" = "hrms_level"."id") GROUP BY "hrms_department"."dept_name", "hrms_level"."level_name
+</code></pre></div></div>
+
+<h4 id="which-combination-of-employee-and-deparments-employes-the-most-people">Which combination of Employee and Deparments employes the most people</h4>
+
+<p>We can order on the annotated fields, so the last query is modified to,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Employee.objects.values('department__dept_name', 'level__level_name').annotate(employee_count = Count('id')).order_by('-employee_count')[:1]
+</code></pre></div></div>
+
+<h4 id="which-employee-name-is-the-most-common">Which employee name is the most common.</h4>
+
+<p>We can want to <code class="highlighter-rouge">group by emp_name</code>, so <code class="highlighter-rouge">emp_name</code> is added to values. After that we order on the annotated field
+and get the first element, to get the most common name.</p>
+
+<p><code class="highlighter-rouge">Employee.objects.values('emp_name').annotate(name_count=Count('id')).order_by('-name_count')[:1]</code></p>
+
+<hr />
+<p>This was a overview of how django annotations work. These remove a whole class of queries for which
+you had to use custom sql queries in the past.</p>
+
+<hr />
+<p>###Resources</p>
+
+<ol>
+  <li><a href="http://github.com/uswaretech/Shiny-New-Django-1.1/tree/master">Source on Github</a></li>
+  <li><a href="http://dl.getdropbox.com/u/271935/djaggregations/bata.db">sqlite file for this model to test</a></li>
+  <li><a href="http://docs.djangoproject.com/en/dev/topics/db/aggregation/">Aggregation on Django docs</a></li>
+</ol>
+
+<hr />
+<p>Want to build a Django app? <a href="http://uswaretech.com/contact/">Talk to us</a></p>
+
+
+  </div><a class="u-url" href="/aggreagtion/2009/08/18/django-aggregation-tutorial.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

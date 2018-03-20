@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Minimal Gunicorn configuration | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Minimal Gunicorn configuration" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Gunicorn is an http server written in Python. It is a WSGI compliant server and can serve web applications which are compliant with WSGI. This would help if you aren’t comfortable with WSGI. We will serve a basic web application using Gunicorn. And see the minimal and must configuration settings you should set while using gunicorn. We will specify the configuration variables in an external file and will direct gunicorn to use that configuration file. Web application We are working in directory /tmp and have activated a virtual environment called PythonEnv (PythonEnv)/tmp $ Let’s write the web application which we will serve using gunicorn. (PythonEnv)/tmp $ vim web_application.py #web_application.py def application(environ, start_response): path = environ.get(&#39;PATH_INFO&#39;) if path == &#39;/&#39;: response_body = &quot;Index&quot; else: response_body = &quot;Hello&quot; status = &quot;200 OK&quot; response_headers = [(&quot;Content-Length&quot;, str(len(response_body)))] start_response(status, response_headers) return [response_body] Serve application with gunicorn Make sure to install gunicorn. (PythonEnv)/tmp $ pip install gunicorn Serve this application. (PythonEnv)/tmp $ gunicorn -b localhost:8001 web_application:application Make sure you can access http://localhost:8001/ With this, gunicorn is serving the application on localhost port 8001. We had to use -b flag to instruct gunicorn to bind on a particular port and host. There are tons of other options that can be set. Setting all of them on command line is a tedious task. So, we should have a configuration file. Adding a configuration file Let’s create a configuration file. (PythonEnv)/tmp $ vim gunicorn_cfg.py Bind on host and port And add the following content in file gunicorn_cfg.py bind=&#39;localhost:8001&#39; Now run gunicorn using this configuration file. Make sure to Ctrl+c the running gunicorn before proceeding with this. (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Still gunicorn is running in the foreground, which we usually would not like on a production server. So, make it daemonized. Make sure to Ctrl+c the existing gunicorn process But at some point we would like to kill the existing gunicorn process and restart gunicorn. Since it would be daemonized, we wouldn’t be able to kill with Ctrl+c. We would require the process id of running gunicorn process for killing it. So let’s keep track of process id of gunicorn before we make it daemonized. Keep track of process id Add following to gunicorn_cfg.py pidfile=&#39;gunicorn_pid&#39; Run gunicorn (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Open another terminal and ls. You’ll see that a file callled gunicorn_pid is created. cat gunicorn_pid and you will see a number. This number is the process id of gunicorn. Kill gunicorn with Ctrl+c again. Make it daemonized Add the following to gunicorn_cfg.py daemon = True Run gunicorn (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Gunicorn is running as a daemon now. Make sure you can access http://localhost:8001/ Check process id of gunicorn (PythonEnv)/tmp $ cat gunicorn_pid 19558 Kill existing gunicorn process and restart gunicorn. (PythonEnv)/tmp $ kill 19558 (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application This would establish that gunicorn_pid is working properly. Add access loggging At some point of time, your site will start behaving strangely and you would like to verify that requests are infact coming to gunicorn. So, there should be a file to log the requests. Edit gunicorn_cfg.py and add: accesslog=&#39;gunicorn_access.log&#39; Restart gunicorn for this change to take effect. You’ll have to read the gunicorn_pid file to read the process id of gunicorn for killing it, as we did earlier. Once you restart gunicorn, you will find a file named gunicorn_access.log created in the same directory as gunicorn_config.py As you make requests to http://localhost:8001/, you will see more lines being logged to file gunicorn_access.log. Read about Linux tail command to know how to monitor a log file. Add error logging Let’s insert an error in our code. Add a = a + 1 as first line of function application in file web_application.py. ‘a’ is an undefined variable being used. Restart gunicorn and try to access localhost:8001/ You get ‘Internal Server Error’ and you don’t have a way of knowing which line caused the error. Add following line to gunicorn_cfg.py errorlog=&#39;gunicorn_error.log&#39; Restart gunicorn for this change to take effect. You’ll find a file named gunicorn_error.log is added at the same level as gunicorn_cfg.py We’ll again try to access localhost:8001/. But before that, let’s monitor the errorlog file using tail. On terminal. (PythonEnv)/tmp $ tail -f gunicorn_error.log Now access http://localhost:8001/. Look at the terminal where tail is running. You’ll notice error logged on the terminal. File &quot;/tmp/web_application.py&quot;, line 3, in application a = a + 1 UnboundLocalError: local variable &#39;a&#39; referenced before assignment So with an errorlog file, you can easily find out the cause of error. Undo the error we injected in code and restart gunicorn. Your application should start behaving properly again. Read Gunicorn config file docs to know about more config options." />
+<meta property="og:description" content="Gunicorn is an http server written in Python. It is a WSGI compliant server and can serve web applications which are compliant with WSGI. This would help if you aren’t comfortable with WSGI. We will serve a basic web application using Gunicorn. And see the minimal and must configuration settings you should set while using gunicorn. We will specify the configuration variables in an external file and will direct gunicorn to use that configuration file. Web application We are working in directory /tmp and have activated a virtual environment called PythonEnv (PythonEnv)/tmp $ Let’s write the web application which we will serve using gunicorn. (PythonEnv)/tmp $ vim web_application.py #web_application.py def application(environ, start_response): path = environ.get(&#39;PATH_INFO&#39;) if path == &#39;/&#39;: response_body = &quot;Index&quot; else: response_body = &quot;Hello&quot; status = &quot;200 OK&quot; response_headers = [(&quot;Content-Length&quot;, str(len(response_body)))] start_response(status, response_headers) return [response_body] Serve application with gunicorn Make sure to install gunicorn. (PythonEnv)/tmp $ pip install gunicorn Serve this application. (PythonEnv)/tmp $ gunicorn -b localhost:8001 web_application:application Make sure you can access http://localhost:8001/ With this, gunicorn is serving the application on localhost port 8001. We had to use -b flag to instruct gunicorn to bind on a particular port and host. There are tons of other options that can be set. Setting all of them on command line is a tedious task. So, we should have a configuration file. Adding a configuration file Let’s create a configuration file. (PythonEnv)/tmp $ vim gunicorn_cfg.py Bind on host and port And add the following content in file gunicorn_cfg.py bind=&#39;localhost:8001&#39; Now run gunicorn using this configuration file. Make sure to Ctrl+c the running gunicorn before proceeding with this. (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Still gunicorn is running in the foreground, which we usually would not like on a production server. So, make it daemonized. Make sure to Ctrl+c the existing gunicorn process But at some point we would like to kill the existing gunicorn process and restart gunicorn. Since it would be daemonized, we wouldn’t be able to kill with Ctrl+c. We would require the process id of running gunicorn process for killing it. So let’s keep track of process id of gunicorn before we make it daemonized. Keep track of process id Add following to gunicorn_cfg.py pidfile=&#39;gunicorn_pid&#39; Run gunicorn (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Open another terminal and ls. You’ll see that a file callled gunicorn_pid is created. cat gunicorn_pid and you will see a number. This number is the process id of gunicorn. Kill gunicorn with Ctrl+c again. Make it daemonized Add the following to gunicorn_cfg.py daemon = True Run gunicorn (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Gunicorn is running as a daemon now. Make sure you can access http://localhost:8001/ Check process id of gunicorn (PythonEnv)/tmp $ cat gunicorn_pid 19558 Kill existing gunicorn process and restart gunicorn. (PythonEnv)/tmp $ kill 19558 (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application This would establish that gunicorn_pid is working properly. Add access loggging At some point of time, your site will start behaving strangely and you would like to verify that requests are infact coming to gunicorn. So, there should be a file to log the requests. Edit gunicorn_cfg.py and add: accesslog=&#39;gunicorn_access.log&#39; Restart gunicorn for this change to take effect. You’ll have to read the gunicorn_pid file to read the process id of gunicorn for killing it, as we did earlier. Once you restart gunicorn, you will find a file named gunicorn_access.log created in the same directory as gunicorn_config.py As you make requests to http://localhost:8001/, you will see more lines being logged to file gunicorn_access.log. Read about Linux tail command to know how to monitor a log file. Add error logging Let’s insert an error in our code. Add a = a + 1 as first line of function application in file web_application.py. ‘a’ is an undefined variable being used. Restart gunicorn and try to access localhost:8001/ You get ‘Internal Server Error’ and you don’t have a way of knowing which line caused the error. Add following line to gunicorn_cfg.py errorlog=&#39;gunicorn_error.log&#39; Restart gunicorn for this change to take effect. You’ll find a file named gunicorn_error.log is added at the same level as gunicorn_cfg.py We’ll again try to access localhost:8001/. But before that, let’s monitor the errorlog file using tail. On terminal. (PythonEnv)/tmp $ tail -f gunicorn_error.log Now access http://localhost:8001/. Look at the terminal where tail is running. You’ll notice error logged on the terminal. File &quot;/tmp/web_application.py&quot;, line 3, in application a = a + 1 UnboundLocalError: local variable &#39;a&#39; referenced before assignment So with an errorlog file, you can easily find out the cause of error. Undo the error we injected in code and restart gunicorn. Your application should start behaving properly again. Read Gunicorn config file docs to know about more config options." />
+<link rel="canonical" href="http://localhost:4000/gunicorn/2014/06/05/minimal-gunicorn-configuration.html" />
+<meta property="og:url" content="http://localhost:4000/gunicorn/2014/06/05/minimal-gunicorn-configuration.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-06-05T11:17:33+05:30" />
+<script type="application/ld+json">
+{"description":"Gunicorn is an http server written in Python. It is a WSGI compliant server and can serve web applications which are compliant with WSGI. This would help if you aren’t comfortable with WSGI. We will serve a basic web application using Gunicorn. And see the minimal and must configuration settings you should set while using gunicorn. We will specify the configuration variables in an external file and will direct gunicorn to use that configuration file. Web application We are working in directory /tmp and have activated a virtual environment called PythonEnv (PythonEnv)/tmp $ Let’s write the web application which we will serve using gunicorn. (PythonEnv)/tmp $ vim web_application.py #web_application.py def application(environ, start_response): path = environ.get(&#39;PATH_INFO&#39;) if path == &#39;/&#39;: response_body = &quot;Index&quot; else: response_body = &quot;Hello&quot; status = &quot;200 OK&quot; response_headers = [(&quot;Content-Length&quot;, str(len(response_body)))] start_response(status, response_headers) return [response_body] Serve application with gunicorn Make sure to install gunicorn. (PythonEnv)/tmp $ pip install gunicorn Serve this application. (PythonEnv)/tmp $ gunicorn -b localhost:8001 web_application:application Make sure you can access http://localhost:8001/ With this, gunicorn is serving the application on localhost port 8001. We had to use -b flag to instruct gunicorn to bind on a particular port and host. There are tons of other options that can be set. Setting all of them on command line is a tedious task. So, we should have a configuration file. Adding a configuration file Let’s create a configuration file. (PythonEnv)/tmp $ vim gunicorn_cfg.py Bind on host and port And add the following content in file gunicorn_cfg.py bind=&#39;localhost:8001&#39; Now run gunicorn using this configuration file. Make sure to Ctrl+c the running gunicorn before proceeding with this. (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Still gunicorn is running in the foreground, which we usually would not like on a production server. So, make it daemonized. Make sure to Ctrl+c the existing gunicorn process But at some point we would like to kill the existing gunicorn process and restart gunicorn. Since it would be daemonized, we wouldn’t be able to kill with Ctrl+c. We would require the process id of running gunicorn process for killing it. So let’s keep track of process id of gunicorn before we make it daemonized. Keep track of process id Add following to gunicorn_cfg.py pidfile=&#39;gunicorn_pid&#39; Run gunicorn (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Open another terminal and ls. You’ll see that a file callled gunicorn_pid is created. cat gunicorn_pid and you will see a number. This number is the process id of gunicorn. Kill gunicorn with Ctrl+c again. Make it daemonized Add the following to gunicorn_cfg.py daemon = True Run gunicorn (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application Gunicorn is running as a daemon now. Make sure you can access http://localhost:8001/ Check process id of gunicorn (PythonEnv)/tmp $ cat gunicorn_pid 19558 Kill existing gunicorn process and restart gunicorn. (PythonEnv)/tmp $ kill 19558 (PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application This would establish that gunicorn_pid is working properly. Add access loggging At some point of time, your site will start behaving strangely and you would like to verify that requests are infact coming to gunicorn. So, there should be a file to log the requests. Edit gunicorn_cfg.py and add: accesslog=&#39;gunicorn_access.log&#39; Restart gunicorn for this change to take effect. You’ll have to read the gunicorn_pid file to read the process id of gunicorn for killing it, as we did earlier. Once you restart gunicorn, you will find a file named gunicorn_access.log created in the same directory as gunicorn_config.py As you make requests to http://localhost:8001/, you will see more lines being logged to file gunicorn_access.log. Read about Linux tail command to know how to monitor a log file. Add error logging Let’s insert an error in our code. Add a = a + 1 as first line of function application in file web_application.py. ‘a’ is an undefined variable being used. Restart gunicorn and try to access localhost:8001/ You get ‘Internal Server Error’ and you don’t have a way of knowing which line caused the error. Add following line to gunicorn_cfg.py errorlog=&#39;gunicorn_error.log&#39; Restart gunicorn for this change to take effect. You’ll find a file named gunicorn_error.log is added at the same level as gunicorn_cfg.py We’ll again try to access localhost:8001/. But before that, let’s monitor the errorlog file using tail. On terminal. (PythonEnv)/tmp $ tail -f gunicorn_error.log Now access http://localhost:8001/. Look at the terminal where tail is running. You’ll notice error logged on the terminal. File &quot;/tmp/web_application.py&quot;, line 3, in application a = a + 1 UnboundLocalError: local variable &#39;a&#39; referenced before assignment So with an errorlog file, you can easily find out the cause of error. Undo the error we injected in code and restart gunicorn. Your application should start behaving properly again. Read Gunicorn config file docs to know about more config options.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/gunicorn/2014/06/05/minimal-gunicorn-configuration.html","headline":"Minimal Gunicorn configuration","dateModified":"2014-06-05T11:17:33+05:30","datePublished":"2014-06-05T11:17:33+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/gunicorn/2014/06/05/minimal-gunicorn-configuration.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Minimal Gunicorn configuration</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-06-05T11:17:33+05:30" itemprop="datePublished">Jun 5, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><a href="http://gunicorn.org/" target="_blank">Gunicorn</a> is an http server written in Python. It is a WSGI compliant server and can serve web applications which are compliant with WSGI. <a href="http://agiliq.com/blog/2013/07/basics-wsgi/" target="_blank">This would help</a> if you aren’t comfortable with WSGI.</p>
+
+<p>We will serve a basic web application using Gunicorn. And see the minimal and must configuration settings you should set while using gunicorn. We will specify the configuration variables in an external file and will direct gunicorn to use that configuration file.</p>
+
+<h3 id="web-application">Web application</h3>
+
+<p>We are working in directory /tmp and have activated a virtual environment called PythonEnv</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $
+</code></pre></div></div>
+
+<p>Let’s write the web application which we will serve using gunicorn.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ vim web_application.py 
+
+#web_application.py
+def application(environ, start_response):
+    path = environ.get('PATH_INFO')
+    if path == '/':
+        response_body = "Index"
+    else:
+        response_body = "Hello"
+    status = "200 OK"
+    response_headers = [("Content-Length", str(len(response_body)))]
+    start_response(status, response_headers)
+    return [response_body]
+</code></pre></div></div>
+
+<h3 id="serve-application-with-gunicorn">Serve application with gunicorn</h3>
+
+<p>Make sure to install gunicorn.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ pip install gunicorn
+</code></pre></div></div>
+
+<p>Serve this application.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ gunicorn -b localhost:8001 web_application:application
+</code></pre></div></div>
+
+<p>Make sure you can access http://localhost:8001/</p>
+
+<p>With this, gunicorn is serving the application on localhost port 8001. We had to use <code class="highlighter-rouge">-b</code> flag to instruct gunicorn to <strong>bind</strong> on a particular port and host. There are tons of other options that can be set. Setting all of them on command line is a tedious task. So, we should have a configuration file.</p>
+
+<h3 id="adding-a-configuration-file">Adding a configuration file</h3>
+
+<p>Let’s create a configuration file.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ vim gunicorn_cfg.py
+</code></pre></div></div>
+
+<h4 id="bind-on-host-and-port">Bind on host and port</h4>
+
+<p>And add the following content in file gunicorn_cfg.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bind='localhost:8001'
+</code></pre></div></div>
+
+<p>Now run gunicorn using this configuration file. Make sure to <code class="highlighter-rouge">Ctrl+c</code> the running gunicorn before proceeding with this.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application
+</code></pre></div></div>
+
+<p>Still gunicorn is running in the foreground, which we usually would not like on a production server. So, make it daemonized. Make sure to <code class="highlighter-rouge">Ctrl+c</code> the existing gunicorn process</p>
+
+<p>But at some point we would like to kill the existing gunicorn process and restart gunicorn. Since it would be daemonized, we wouldn’t be able to kill with <code class="highlighter-rouge">Ctrl+c</code>. We would require the process id of running gunicorn process for killing it. So let’s keep track of process id of gunicorn before we make it daemonized.</p>
+
+<h4 id="keep-track-of-process-id">Keep track of process id</h4>
+
+<p>Add following to gunicorn_cfg.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pidfile='gunicorn_pid'
+</code></pre></div></div>
+
+<p>Run gunicorn</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application
+</code></pre></div></div>
+
+<p>Open another terminal and <strong>ls</strong>. You’ll see that a file callled gunicorn_pid is created. <strong>cat gunicorn_pid</strong> and you will see a number. This number is the process id of gunicorn. Kill gunicorn with <code class="highlighter-rouge">Ctrl+c</code> again.</p>
+
+<h4 id="make-it-daemonized">Make it daemonized</h4>
+
+<p>Add the following to gunicorn_cfg.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>daemon = True
+</code></pre></div></div>
+
+<p>Run gunicorn</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application
+</code></pre></div></div>
+
+<p>Gunicorn is running as a daemon now. Make sure you can access <code class="highlighter-rouge">http://localhost:8001/</code></p>
+
+<p>Check process id of gunicorn</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ cat gunicorn_pid 
+19558
+</code></pre></div></div>
+
+<p>Kill existing gunicorn process and restart gunicorn.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ kill 19558
+(PythonEnv)/tmp $ gunicorn -c gunicorn_cfg.py web_application:application
+</code></pre></div></div>
+
+<p>This would establish that gunicorn_pid is working properly.</p>
+
+<h4 id="add-access-loggging">Add access loggging</h4>
+
+<p>At some point of time, your site will start behaving strangely and you would like to verify that requests are infact coming to gunicorn. So, there should be a file to log the requests.</p>
+
+<p>Edit gunicorn_cfg.py and add:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>accesslog='gunicorn_access.log'
+</code></pre></div></div>
+
+<p>Restart gunicorn for this change to take effect. You’ll have to read the gunicorn_pid file to read the process id of gunicorn for killing it, as we did earlier. Once you restart gunicorn, you will find a file named <code class="highlighter-rouge">gunicorn_access.log</code> created in the same directory as gunicorn_config.py</p>
+
+<p>As you make requests to <code class="highlighter-rouge">http://localhost:8001/</code>, you will see more lines being logged to file gunicorn_access.log. Read about Linux <strong>tail</strong> command to know how to monitor a log file.</p>
+
+<h4 id="add-error-logging">Add error logging</h4>
+
+<p>Let’s insert an error in our code. Add <code class="highlighter-rouge">a = a + 1</code> as first line of function <code class="highlighter-rouge">application</code> in file <code class="highlighter-rouge">web_application.py</code>. ‘a’ is an undefined variable being used.</p>
+
+<p>Restart gunicorn and try to access localhost:8001/</p>
+
+<p>You get ‘Internal Server Error’ and you don’t have a way of knowing which line caused the error.</p>
+
+<p>Add following line to gunicorn_cfg.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>errorlog='gunicorn_error.log'
+</code></pre></div></div>
+
+<p>Restart gunicorn for this change to take effect. You’ll find a file named <code class="highlighter-rouge">gunicorn_error.log</code> is added at the same level as gunicorn_cfg.py</p>
+
+<p>We’ll again try to access <code class="highlighter-rouge">localhost:8001/</code>. But before that, let’s monitor the errorlog file using tail.</p>
+
+<p>On terminal.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(PythonEnv)/tmp $ tail -f gunicorn_error.log
+</code></pre></div></div>
+
+<p>Now access http://localhost:8001/. Look at the terminal where <code class="highlighter-rouge">tail</code> is running. You’ll notice error logged on the terminal.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>File "/tmp/web_application.py", line 3, in application
+    a = a + 1
+UnboundLocalError: local variable 'a' referenced before assignment
+</code></pre></div></div>
+
+<p>So with an errorlog file, you can easily find out the cause of error. Undo the error we injected in code and restart gunicorn. Your application should start behaving properly again.</p>
+
+<p>Read <a href="http://gunicorn-docs.readthedocs.org/en/latest/settings.html#config-file" target="_blank">Gunicorn config file docs</a> to know about more config options.</p>
+
+
+  </div><a class="u-url" href="/gunicorn/2014/06/05/minimal-gunicorn-configuration.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

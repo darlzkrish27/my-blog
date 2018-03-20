@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Better Python package management using source and version control systems | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Better Python package management using source and version control systems" />
+<meta name="author" content="lakshman" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Thanks to awesome django community, there is plenty of open source django code around. These packages get updated quite often and if you use it often like we do, you’d have possibly realized the need to manage these packages better. Thankfully, all python ever needs is the source, and all you need to do is to place the source in the python path. Most projects use Distributed Version Control Systems like Mercurial and Git, and they come locally with the entire history of the source which provides a lot of control to use any version of the code. For code that we use often, like django packages, using the source from a version control system seems to be the best way to manage. In order to install django-registration, a popular django app by James Bennett, you need to: Clone the repository: $ hg clone https://becomingguru@bitbucket.org/ubernostrum/django-registration/ django_registration Create a symbolic link in the python path: $ sudo ln -fs ~/django_registration/registration /usr/lib/python2.6/dist-packages/django_registration Thats it. django_registration is now on the python path, courtesy of symbollic link, that links the django-registration source to python path, in this case the dist-packages/ folder; thus it will be possible to import this app within the python environment. You now have the latest version of the source in the folder ~/django_registration, which you can check, and modify. With an editor/IDE that has go to source option, you can browse the source by using a simple short cut.(which may not have been simple if the code were is some egg file in a less well known folder) Because of cloning of the mercurial repository, you now have access to all the revisions of the application. So you can easily update, or change to other versions. To update to a newer version when one exists: $ hg pull -u To move to any particular revision: $ hg update -r200 To check the tags: $ hg tags tip 221:b360801eae96 v0.7 205:d073602dc103 v0.6 154:e263c551ef7b v0.5 139:dc2bf754aa94 v0.4 110:4d2a725d8c18 v0.3 75:f41e8a239016 v0.2 58:e5110bb8d48a v0.1 42:d28e5a770ff8 If you want to update to a recent release, say 0.7, $ hg update v0.7 7 files updated, 0 files merged, 0 files removed, 0 files unresolved The same is also applicable while dealing with SVN repositories; alebit some of the revision changes go thro the network to the central server. In order to install and work with django trunk, check out the trunk and add a symlink, as before $ svn co http://code.djangoproject.com/svn/django/trunk/ django-trunk $ cd django-trunk/django $ sudo ln -fs . /usr/lib/python2.6/dist-packages/django-extensions You will now be able to access the latest version of django: $ python &gt;&gt;&gt; import django &gt;&gt;&gt; django.get_version() u&#39;1.1 beta 1 SVN-11092&#39; To use any other version of django you can do some SVN manipulation, as following: #To update to a latest version svn up At revision 11092. #To update to a particular revision svn update -r11090 At revision 11090. #To update to a last committed version svn up -r&#39;COMMITTED&#39; At revision 11079. #Change to a tagged version - to release 1.02 svn switch http://code.djangoproject.com/svn/django/tags/releases/1.0.2/ #Change to any branch svn switch http://code.djangoproject.com/browser/django/branches/soc2009 svn switch commands talk to the central servers and can be time consuming. Possible shortcomings of using source and symbollic links: Setuptools distribution adds to the python standard library Distutils module, by adding a lot of functionality, among others that stores the package meta data like the version, location of download. If you perform easy_install django after installing it by source as above, easy_install again downloads the latest released version of django 1.02, listed in the Python Package Index, as it hasn’t been informed of django installation. If you are not going to use easy_install at all, this isn’t a problem; but it is good to also update setup tools that a version of this application exists, if you at all need. You can then use the pkg_resources module installed with setup tools distibution, to query to find all the installed applications, from python. If the application contains a setup.py file, you could manually inform setup tools to update using the following command python setup.py develop The workflow To install packages, in a way with high control following needs to be done: * Checkout the repository * Add a symbollic link to the repository * Update setup tools of this installation. Enter PIP PIP is a package management tool that does the workflow we need, well. It automatically checks out from the repos and runs python manage.py develop and updates few other resources, so that python package management tools in the system are well aware of the installed packages. If you are checking out the source and creating symbolic links, it is kind of awkward to have to create symbolic links all the time; Pip automates that. Pip also updates the setuptools with the metadata of the application, so that next time if you ask the same application to be installed, via easy_install or pip, it doesn’t download and install again. So the following command: pip install -e hg+http://bitbucket.org/ubernostrum/django-registration/#egg=django_registration Clones the mercurial repository django-registration locally, into Env/src/django_registration Creates the required symbollic links in the python path, in this case in the site-packages folder Updates the local package management tools by setup tools of the new package. -e option tells pip to install the package as editable, that is to leave the repository undeleted. The hg+ and egg=django_registration indicate the repository and the local folder to install to. Pip works well with git, SVN, Hg an Bzr. Provided you inform the pip of the repository and the folder name, pip completes the work-flow. Since the source is present in the Env/src folder, along with the SVN, Git or Hg data, one can modify the versions using version control systems, as illustrated in some of the commands above Multiple environments Most often the requirement will be just to update the package into the latest version, for which simple revision control update commands seem good enough. Its good to also mess around with the code changing into different versions and trying different things. But if you seem to be changing of the versions too often, for compatibility between different environments, you might want to using virtualenv, that isolates a python working environment. virtualenvwrapper adds a bash wrapper to use virtualenv conviniently. Do you also want your app development managed well? Look us up" />
+<meta property="og:description" content="Thanks to awesome django community, there is plenty of open source django code around. These packages get updated quite often and if you use it often like we do, you’d have possibly realized the need to manage these packages better. Thankfully, all python ever needs is the source, and all you need to do is to place the source in the python path. Most projects use Distributed Version Control Systems like Mercurial and Git, and they come locally with the entire history of the source which provides a lot of control to use any version of the code. For code that we use often, like django packages, using the source from a version control system seems to be the best way to manage. In order to install django-registration, a popular django app by James Bennett, you need to: Clone the repository: $ hg clone https://becomingguru@bitbucket.org/ubernostrum/django-registration/ django_registration Create a symbolic link in the python path: $ sudo ln -fs ~/django_registration/registration /usr/lib/python2.6/dist-packages/django_registration Thats it. django_registration is now on the python path, courtesy of symbollic link, that links the django-registration source to python path, in this case the dist-packages/ folder; thus it will be possible to import this app within the python environment. You now have the latest version of the source in the folder ~/django_registration, which you can check, and modify. With an editor/IDE that has go to source option, you can browse the source by using a simple short cut.(which may not have been simple if the code were is some egg file in a less well known folder) Because of cloning of the mercurial repository, you now have access to all the revisions of the application. So you can easily update, or change to other versions. To update to a newer version when one exists: $ hg pull -u To move to any particular revision: $ hg update -r200 To check the tags: $ hg tags tip 221:b360801eae96 v0.7 205:d073602dc103 v0.6 154:e263c551ef7b v0.5 139:dc2bf754aa94 v0.4 110:4d2a725d8c18 v0.3 75:f41e8a239016 v0.2 58:e5110bb8d48a v0.1 42:d28e5a770ff8 If you want to update to a recent release, say 0.7, $ hg update v0.7 7 files updated, 0 files merged, 0 files removed, 0 files unresolved The same is also applicable while dealing with SVN repositories; alebit some of the revision changes go thro the network to the central server. In order to install and work with django trunk, check out the trunk and add a symlink, as before $ svn co http://code.djangoproject.com/svn/django/trunk/ django-trunk $ cd django-trunk/django $ sudo ln -fs . /usr/lib/python2.6/dist-packages/django-extensions You will now be able to access the latest version of django: $ python &gt;&gt;&gt; import django &gt;&gt;&gt; django.get_version() u&#39;1.1 beta 1 SVN-11092&#39; To use any other version of django you can do some SVN manipulation, as following: #To update to a latest version svn up At revision 11092. #To update to a particular revision svn update -r11090 At revision 11090. #To update to a last committed version svn up -r&#39;COMMITTED&#39; At revision 11079. #Change to a tagged version - to release 1.02 svn switch http://code.djangoproject.com/svn/django/tags/releases/1.0.2/ #Change to any branch svn switch http://code.djangoproject.com/browser/django/branches/soc2009 svn switch commands talk to the central servers and can be time consuming. Possible shortcomings of using source and symbollic links: Setuptools distribution adds to the python standard library Distutils module, by adding a lot of functionality, among others that stores the package meta data like the version, location of download. If you perform easy_install django after installing it by source as above, easy_install again downloads the latest released version of django 1.02, listed in the Python Package Index, as it hasn’t been informed of django installation. If you are not going to use easy_install at all, this isn’t a problem; but it is good to also update setup tools that a version of this application exists, if you at all need. You can then use the pkg_resources module installed with setup tools distibution, to query to find all the installed applications, from python. If the application contains a setup.py file, you could manually inform setup tools to update using the following command python setup.py develop The workflow To install packages, in a way with high control following needs to be done: * Checkout the repository * Add a symbollic link to the repository * Update setup tools of this installation. Enter PIP PIP is a package management tool that does the workflow we need, well. It automatically checks out from the repos and runs python manage.py develop and updates few other resources, so that python package management tools in the system are well aware of the installed packages. If you are checking out the source and creating symbolic links, it is kind of awkward to have to create symbolic links all the time; Pip automates that. Pip also updates the setuptools with the metadata of the application, so that next time if you ask the same application to be installed, via easy_install or pip, it doesn’t download and install again. So the following command: pip install -e hg+http://bitbucket.org/ubernostrum/django-registration/#egg=django_registration Clones the mercurial repository django-registration locally, into Env/src/django_registration Creates the required symbollic links in the python path, in this case in the site-packages folder Updates the local package management tools by setup tools of the new package. -e option tells pip to install the package as editable, that is to leave the repository undeleted. The hg+ and egg=django_registration indicate the repository and the local folder to install to. Pip works well with git, SVN, Hg an Bzr. Provided you inform the pip of the repository and the folder name, pip completes the work-flow. Since the source is present in the Env/src folder, along with the SVN, Git or Hg data, one can modify the versions using version control systems, as illustrated in some of the commands above Multiple environments Most often the requirement will be just to update the package into the latest version, for which simple revision control update commands seem good enough. Its good to also mess around with the code changing into different versions and trying different things. But if you seem to be changing of the versions too often, for compatibility between different environments, you might want to using virtualenv, that isolates a python working environment. virtualenvwrapper adds a bash wrapper to use virtualenv conviniently. Do you also want your app development managed well? Look us up" />
+<link rel="canonical" href="http://localhost:4000/python/2009/06/24/better-python-package-management-using-source-and.html" />
+<meta property="og:url" content="http://localhost:4000/python/2009/06/24/better-python-package-management-using-source-and.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-06-24T22:16:13+05:30" />
+<script type="application/ld+json">
+{"description":"Thanks to awesome django community, there is plenty of open source django code around. These packages get updated quite often and if you use it often like we do, you’d have possibly realized the need to manage these packages better. Thankfully, all python ever needs is the source, and all you need to do is to place the source in the python path. Most projects use Distributed Version Control Systems like Mercurial and Git, and they come locally with the entire history of the source which provides a lot of control to use any version of the code. For code that we use often, like django packages, using the source from a version control system seems to be the best way to manage. In order to install django-registration, a popular django app by James Bennett, you need to: Clone the repository: $ hg clone https://becomingguru@bitbucket.org/ubernostrum/django-registration/ django_registration Create a symbolic link in the python path: $ sudo ln -fs ~/django_registration/registration /usr/lib/python2.6/dist-packages/django_registration Thats it. django_registration is now on the python path, courtesy of symbollic link, that links the django-registration source to python path, in this case the dist-packages/ folder; thus it will be possible to import this app within the python environment. You now have the latest version of the source in the folder ~/django_registration, which you can check, and modify. With an editor/IDE that has go to source option, you can browse the source by using a simple short cut.(which may not have been simple if the code were is some egg file in a less well known folder) Because of cloning of the mercurial repository, you now have access to all the revisions of the application. So you can easily update, or change to other versions. To update to a newer version when one exists: $ hg pull -u To move to any particular revision: $ hg update -r200 To check the tags: $ hg tags tip 221:b360801eae96 v0.7 205:d073602dc103 v0.6 154:e263c551ef7b v0.5 139:dc2bf754aa94 v0.4 110:4d2a725d8c18 v0.3 75:f41e8a239016 v0.2 58:e5110bb8d48a v0.1 42:d28e5a770ff8 If you want to update to a recent release, say 0.7, $ hg update v0.7 7 files updated, 0 files merged, 0 files removed, 0 files unresolved The same is also applicable while dealing with SVN repositories; alebit some of the revision changes go thro the network to the central server. In order to install and work with django trunk, check out the trunk and add a symlink, as before $ svn co http://code.djangoproject.com/svn/django/trunk/ django-trunk $ cd django-trunk/django $ sudo ln -fs . /usr/lib/python2.6/dist-packages/django-extensions You will now be able to access the latest version of django: $ python &gt;&gt;&gt; import django &gt;&gt;&gt; django.get_version() u&#39;1.1 beta 1 SVN-11092&#39; To use any other version of django you can do some SVN manipulation, as following: #To update to a latest version svn up At revision 11092. #To update to a particular revision svn update -r11090 At revision 11090. #To update to a last committed version svn up -r&#39;COMMITTED&#39; At revision 11079. #Change to a tagged version - to release 1.02 svn switch http://code.djangoproject.com/svn/django/tags/releases/1.0.2/ #Change to any branch svn switch http://code.djangoproject.com/browser/django/branches/soc2009 svn switch commands talk to the central servers and can be time consuming. Possible shortcomings of using source and symbollic links: Setuptools distribution adds to the python standard library Distutils module, by adding a lot of functionality, among others that stores the package meta data like the version, location of download. If you perform easy_install django after installing it by source as above, easy_install again downloads the latest released version of django 1.02, listed in the Python Package Index, as it hasn’t been informed of django installation. If you are not going to use easy_install at all, this isn’t a problem; but it is good to also update setup tools that a version of this application exists, if you at all need. You can then use the pkg_resources module installed with setup tools distibution, to query to find all the installed applications, from python. If the application contains a setup.py file, you could manually inform setup tools to update using the following command python setup.py develop The workflow To install packages, in a way with high control following needs to be done: * Checkout the repository * Add a symbollic link to the repository * Update setup tools of this installation. Enter PIP PIP is a package management tool that does the workflow we need, well. It automatically checks out from the repos and runs python manage.py develop and updates few other resources, so that python package management tools in the system are well aware of the installed packages. If you are checking out the source and creating symbolic links, it is kind of awkward to have to create symbolic links all the time; Pip automates that. Pip also updates the setuptools with the metadata of the application, so that next time if you ask the same application to be installed, via easy_install or pip, it doesn’t download and install again. So the following command: pip install -e hg+http://bitbucket.org/ubernostrum/django-registration/#egg=django_registration Clones the mercurial repository django-registration locally, into Env/src/django_registration Creates the required symbollic links in the python path, in this case in the site-packages folder Updates the local package management tools by setup tools of the new package. -e option tells pip to install the package as editable, that is to leave the repository undeleted. The hg+ and egg=django_registration indicate the repository and the local folder to install to. Pip works well with git, SVN, Hg an Bzr. Provided you inform the pip of the repository and the folder name, pip completes the work-flow. Since the source is present in the Env/src folder, along with the SVN, Git or Hg data, one can modify the versions using version control systems, as illustrated in some of the commands above Multiple environments Most often the requirement will be just to update the package into the latest version, for which simple revision control update commands seem good enough. Its good to also mess around with the code changing into different versions and trying different things. But if you seem to be changing of the versions too often, for compatibility between different environments, you might want to using virtualenv, that isolates a python working environment. virtualenvwrapper adds a bash wrapper to use virtualenv conviniently. Do you also want your app development managed well? Look us up","author":{"@type":"Person","name":"lakshman"},"@type":"BlogPosting","url":"http://localhost:4000/python/2009/06/24/better-python-package-management-using-source-and.html","headline":"Better Python package management using source and version control systems","dateModified":"2009-06-24T22:16:13+05:30","datePublished":"2009-06-24T22:16:13+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/python/2009/06/24/better-python-package-management-using-source-and.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Better Python package management using source and version control systems</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-06-24T22:16:13+05:30" itemprop="datePublished">Jun 24, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">lakshman</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Thanks to awesome <a href="http://www.djangoproject.com/community/">django community</a>, there is plenty of open source <a href="http://code.google.com/hosting/search?q=django&amp;projectsearch=Search+projects">django</a> <a href="http://bitbucket.org/repo/all/?name=django">code</a> <a href="http://github.com/search?q=django&amp;type=Everything&amp;repo=&amp;langOverride=&amp;start_value=1">around</a>.</p>
+
+<p>These packages get updated quite often and if you use it often like we do, you’d have possibly realized the need to manage these packages better.</p>
+
+<p>Thankfully, all python ever needs is the source, and all you need to do is to place the source in the python path.</p>
+
+<p>Most projects use Distributed Version Control Systems like Mercurial and Git, and they come locally with the entire history of the source which provides a lot of control to use any version of the code. For code that we use often, like django packages, using the source from a version control system seems to be the best way to manage.</p>
+
+<p>In order to install <a href="http://bitbucket.org/ubernostrum/django-registration/">django-registration</a>, a popular django app by <a href="http://www.b-list.org/">James Bennett</a>, you need to:</p>
+
+<p>Clone the repository:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ hg clone https://becomingguru@bitbucket.org/ubernostrum/django-registration/ django_registration
+</code></pre></div></div>
+
+<p>Create a symbolic link in the python path:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo ln -fs ~/django_registration/registration /usr/lib/python2.6/dist-packages/django_registration
+</code></pre></div></div>
+
+<p>Thats it. <code class="highlighter-rouge">django_registration</code> is now on the python path, courtesy of symbollic link, that links the django-registration source to python path, in this case the <code class="highlighter-rouge">dist-packages/</code> folder; thus it will be possible to import this app within the python environment.</p>
+
+<p>You now have the latest version of the source in the folder <code class="highlighter-rouge">~/django_registration</code>, which you can check, and modify. With an editor/IDE that has <em>go to source</em> option, you can browse the source by using a simple short cut.(which may not have been simple if the code were is some egg file in a less well known folder)</p>
+
+<p>Because of cloning of the mercurial repository, you now have access to all the revisions of the application. So you can easily update, or change to other versions.</p>
+
+<p>To update to a newer version when one exists:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ hg pull -u
+</code></pre></div></div>
+
+<p>To move to any particular revision:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ hg update -r200
+</code></pre></div></div>
+
+<p>To check the tags:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ hg tags
+
+tip                              221:b360801eae96
+v0.7                             205:d073602dc103
+v0.6                             154:e263c551ef7b
+v0.5                             139:dc2bf754aa94
+v0.4                             110:4d2a725d8c18
+v0.3                              75:f41e8a239016
+v0.2                              58:e5110bb8d48a
+v0.1                              42:d28e5a770ff8
+</code></pre></div></div>
+
+<p>If you want to update to a recent release, say 0.7,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> $	hg update v0.7
+7 files updated, 0 files merged, 0 files removed, 0 files unresolved
+</code></pre></div></div>
+
+<p>The same is also applicable while dealing with SVN repositories; alebit some of the revision changes go thro the network to the central server.</p>
+
+<p>In order to install and work with <a href="http://code.djangoproject.com/svn/django/trunk/">django trunk</a>, check out the trunk and add a symlink, as before</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ svn co http://code.djangoproject.com/svn/django/trunk/ django-trunk
+$ cd django-trunk/django
+$ sudo ln -fs . /usr/lib/python2.6/dist-packages/django-extensions
+</code></pre></div></div>
+
+<p>You will now be able to access the latest version of django:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ python
+&gt;&gt;&gt; import django
+&gt;&gt;&gt; django.get_version()
+u'1.1 beta 1 SVN-11092'
+</code></pre></div></div>
+
+<p>To use any other version of django you can do some SVN manipulation, as following:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#To update to a latest version
+svn up
+At revision 11092.
+
+#To update to a particular revision
+svn update -r11090
+At revision 11090.
+
+#To update to a last committed version
+svn up -r'COMMITTED'
+At revision 11079.
+
+#Change to a tagged version - to release 1.02
+svn switch http://code.djangoproject.com/svn/django/tags/releases/1.0.2/
+
+#Change to any branch
+svn switch http://code.djangoproject.com/browser/django/branches/soc2009
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">svn switch</code> commands talk to the central servers and can be time consuming.</p>
+
+<h3 id="possible-shortcomings-of-using-source-and-symbollic-links">Possible shortcomings of using source and symbollic links:</h3>
+
+<p>Setuptools distribution adds to the python standard library <a href="http://docs.python.org/distutils/">Distutils</a> module, by adding a lot of functionality, among others that stores the package meta data like the version, location of download. If you perform</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>easy_install django
+</code></pre></div></div>
+
+<p>after installing it by source as above, <code class="highlighter-rouge">easy_install</code> again downloads the latest released version of django 1.02, listed in the Python Package Index, as it hasn’t been informed of django installation.</p>
+
+<p>If you are not going to use <code class="highlighter-rouge">easy_install</code> at all, this isn’t a problem; but it is good to also update setup tools that a version of this application exists, if you at all need. You can then use the <code class="highlighter-rouge">pkg_resources</code> module installed with setup tools distibution, to query to find all the installed applications, from python.</p>
+
+<p>If the application contains a <code class="highlighter-rouge">setup.py</code> file, you could manually inform setup tools to update using the following command</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python setup.py develop
+</code></pre></div></div>
+
+<h3 id="the-workflow">The workflow</h3>
+
+<p>To install packages, in a way with high control following needs to be done:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>* Checkout the repository
+* Add a symbollic link to the repository
+* Update setup tools of this installation.
+</code></pre></div></div>
+
+<h3 id="enter-pip">Enter PIP</h3>
+
+<p>PIP is a package management tool that does the workflow we need, well. It automatically checks out from the repos and runs <code class="highlighter-rouge">python manage.py develop</code> and updates few other resources, so that python package management tools in the system are well aware of the installed packages.</p>
+
+<p>If you are checking out the source and creating symbolic links, it is kind of awkward to have to create symbolic links all the time; Pip automates that. Pip also updates the setuptools with the metadata of the application, so that next time if you ask the same application to be installed, via <code class="highlighter-rouge">easy_install</code> or <code class="highlighter-rouge">pip</code>, it doesn’t download and install again.</p>
+
+<p>So the following command:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip install -e hg+http://bitbucket.org/ubernostrum/django-registration/#egg=django_registration
+</code></pre></div></div>
+
+<ul>
+  <li>Clones the mercurial repository django-registration locally, into <code class="highlighter-rouge">Env/src/django_registration</code></li>
+  <li>Creates the required symbollic links in the python path, in this case in the <code class="highlighter-rouge">site-packages</code> folder</li>
+  <li>Updates the local package management tools by setup tools of the new package.</li>
+</ul>
+
+<p><code class="highlighter-rouge">-e</code> option tells pip to install the package as editable, that is to leave the repository undeleted. The <code class="highlighter-rouge">hg+</code> and <code class="highlighter-rouge">egg=django_registration</code> indicate the repository and the local folder to install to.</p>
+
+<p>Pip works well with git, SVN, Hg an Bzr. Provided you inform the pip of the repository and the folder name, pip completes the work-flow.</p>
+
+<p>Since the source is present in the <code class="highlighter-rouge">Env/src</code> folder,  along with the SVN, Git or Hg data, one can modify the versions using version control systems, as illustrated in some of the commands above</p>
+
+<h3 id="multiple-environments">Multiple environments</h3>
+
+<p>Most often the requirement will be just to update the package into the latest version, for which simple revision control update commands seem good enough. Its good to also mess around with the code changing into different versions and trying different things.</p>
+
+<p>But if you seem to be changing of the versions too often, for compatibility between different environments, you might want to using <a href="http://pypi.python.org/pypi/virtualenv">virtualenv</a>, that isolates a python working environment. <a href="http://pypi.python.org/pypi/virtualenvwrapper">virtualenvwrapper</a> adds a bash wrapper to use virtualenv conviniently.</p>
+
+<hr />
+
+<p>Do you also want your app development managed well? <a href="http://uswaretech.com/contact/">Look us up</a></p>
+
+
+  </div><a class="u-url" href="/python/2009/06/24/better-python-package-management-using-source-and.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

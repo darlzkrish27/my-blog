@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Migrating django app from MySQL to Postgres | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Migrating django app from MySQL to Postgres" />
+<meta name="author" content="manjunath" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this tutorial, we will take a django app backed by MySQL and will convert MySQL database to postgres database. This is useful if we are deploying our app to Heroku because Heroku uses standard Postgres Prerequisites: We assume that you have a running django app with MySQL as a database. Also, your app is running on virtualenv. Converting MySQL to Postgres: Let’s assume that you have a django app running with MySQL and you want to convert this to Postgres. 1) Install dependenicies: $ pip install psycopg2 $ pip install py-mysql2pgsql 2) Create Postgres database: postgres@agiliq-Inspiron-N5010:~$ psql psql (9.1.11) Type &quot;help&quot; for help. postgres=# create database my_database; CREATE DATABASE postgres=# 3) Run: $ py-mysql2pgsql At initial run this command creates a file named mysql2pgsql.yml having the below info: mysql: hostname: localhost port: 3306 socket: /tmp/mysql.sock username: foo password: bar database: your_database_name compress: false destination: postgres: hostname: localhost port: 5432 username: foo password: bar database: your_database_name Update the above configuration file with appropriate database credentials for both ‘MySQL’ and Postgres. 4) Run: $ py-mysql2pgsql -v -f mysql2pgsql.yml The above command will transfer the data from MySQL database to Postgres. Note: The above command may raise some Integrity errors, but no worries it can be fixed. :) You can also include or exclude some tables check this Here 5) Be sure to update your database settings.py file: DATABASES = { &quot;default&quot;: { &quot;ENGINE&quot;: &quot;django.db.backends.postgresql_psycopg2&quot;, &quot;NAME&quot;: &quot;your_database_name&quot;, &quot;USER&quot;: &quot;your_username&quot;, &quot;PASSWORD&quot;: &quot;your_password&quot;, &quot;HOST&quot;: &quot;localhost&quot;, &quot;PORT&quot;: &quot;5432&quot;, } } 6) Verify the correctness by adding some data to your existing database(Postgres)." />
+<meta property="og:description" content="In this tutorial, we will take a django app backed by MySQL and will convert MySQL database to postgres database. This is useful if we are deploying our app to Heroku because Heroku uses standard Postgres Prerequisites: We assume that you have a running django app with MySQL as a database. Also, your app is running on virtualenv. Converting MySQL to Postgres: Let’s assume that you have a django app running with MySQL and you want to convert this to Postgres. 1) Install dependenicies: $ pip install psycopg2 $ pip install py-mysql2pgsql 2) Create Postgres database: postgres@agiliq-Inspiron-N5010:~$ psql psql (9.1.11) Type &quot;help&quot; for help. postgres=# create database my_database; CREATE DATABASE postgres=# 3) Run: $ py-mysql2pgsql At initial run this command creates a file named mysql2pgsql.yml having the below info: mysql: hostname: localhost port: 3306 socket: /tmp/mysql.sock username: foo password: bar database: your_database_name compress: false destination: postgres: hostname: localhost port: 5432 username: foo password: bar database: your_database_name Update the above configuration file with appropriate database credentials for both ‘MySQL’ and Postgres. 4) Run: $ py-mysql2pgsql -v -f mysql2pgsql.yml The above command will transfer the data from MySQL database to Postgres. Note: The above command may raise some Integrity errors, but no worries it can be fixed. :) You can also include or exclude some tables check this Here 5) Be sure to update your database settings.py file: DATABASES = { &quot;default&quot;: { &quot;ENGINE&quot;: &quot;django.db.backends.postgresql_psycopg2&quot;, &quot;NAME&quot;: &quot;your_database_name&quot;, &quot;USER&quot;: &quot;your_username&quot;, &quot;PASSWORD&quot;: &quot;your_password&quot;, &quot;HOST&quot;: &quot;localhost&quot;, &quot;PORT&quot;: &quot;5432&quot;, } } 6) Verify the correctness by adding some data to your existing database(Postgres)." />
+<link rel="canonical" href="http://localhost:4000/mysqltopostgres/2014/05/27/migrating-django-app-from-mysql-to-postgres.html" />
+<meta property="og:url" content="http://localhost:4000/mysqltopostgres/2014/05/27/migrating-django-app-from-mysql-to-postgres.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-05-27T13:28:50+05:30" />
+<script type="application/ld+json">
+{"description":"In this tutorial, we will take a django app backed by MySQL and will convert MySQL database to postgres database. This is useful if we are deploying our app to Heroku because Heroku uses standard Postgres Prerequisites: We assume that you have a running django app with MySQL as a database. Also, your app is running on virtualenv. Converting MySQL to Postgres: Let’s assume that you have a django app running with MySQL and you want to convert this to Postgres. 1) Install dependenicies: $ pip install psycopg2 $ pip install py-mysql2pgsql 2) Create Postgres database: postgres@agiliq-Inspiron-N5010:~$ psql psql (9.1.11) Type &quot;help&quot; for help. postgres=# create database my_database; CREATE DATABASE postgres=# 3) Run: $ py-mysql2pgsql At initial run this command creates a file named mysql2pgsql.yml having the below info: mysql: hostname: localhost port: 3306 socket: /tmp/mysql.sock username: foo password: bar database: your_database_name compress: false destination: postgres: hostname: localhost port: 5432 username: foo password: bar database: your_database_name Update the above configuration file with appropriate database credentials for both ‘MySQL’ and Postgres. 4) Run: $ py-mysql2pgsql -v -f mysql2pgsql.yml The above command will transfer the data from MySQL database to Postgres. Note: The above command may raise some Integrity errors, but no worries it can be fixed. :) You can also include or exclude some tables check this Here 5) Be sure to update your database settings.py file: DATABASES = { &quot;default&quot;: { &quot;ENGINE&quot;: &quot;django.db.backends.postgresql_psycopg2&quot;, &quot;NAME&quot;: &quot;your_database_name&quot;, &quot;USER&quot;: &quot;your_username&quot;, &quot;PASSWORD&quot;: &quot;your_password&quot;, &quot;HOST&quot;: &quot;localhost&quot;, &quot;PORT&quot;: &quot;5432&quot;, } } 6) Verify the correctness by adding some data to your existing database(Postgres).","author":{"@type":"Person","name":"manjunath"},"@type":"BlogPosting","url":"http://localhost:4000/mysqltopostgres/2014/05/27/migrating-django-app-from-mysql-to-postgres.html","headline":"Migrating django app from MySQL to Postgres","dateModified":"2014-05-27T13:28:50+05:30","datePublished":"2014-05-27T13:28:50+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/mysqltopostgres/2014/05/27/migrating-django-app-from-mysql-to-postgres.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Migrating django app from MySQL to Postgres</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-05-27T13:28:50+05:30" itemprop="datePublished">May 27, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">manjunath</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>In this tutorial, we will take a django app backed by MySQL and will convert MySQL database to postgres database.
+This is useful if we are deploying our app to <code class="highlighter-rouge">Heroku</code> because <code class="highlighter-rouge">Heroku</code> uses standard <code class="highlighter-rouge">Postgres</code></p>
+
+<h3 id="prerequisites">Prerequisites:</h3>
+
+<ul>
+  <li>We assume that you have a running django app with MySQL as a database.</li>
+  <li>Also, your app is running on virtualenv.</li>
+</ul>
+
+<h3 id="converting-mysql-to-postgres">Converting MySQL to Postgres:</h3>
+
+<p>Let’s assume that you have a django app running with MySQL and you want to convert this to Postgres.</p>
+
+<p>1) Install dependenicies:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ pip install psycopg2
+$ pip install py-mysql2pgsql
+</code></pre></div></div>
+
+<p>2) Create Postgres database:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>postgres@agiliq-Inspiron-N5010:~$ psql
+psql (9.1.11)
+Type "help" for help.
+
+postgres=# create database my_database;
+CREATE DATABASE
+postgres=#
+</code></pre></div></div>
+
+<p>3) Run:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ py-mysql2pgsql
+</code></pre></div></div>
+
+<p>At initial run this command creates a file named <code class="highlighter-rouge">mysql2pgsql.yml</code> having the below info:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mysql:
+hostname: localhost
+port: 3306
+socket: /tmp/mysql.sock
+username: foo
+password: bar
+database: your_database_name
+compress: false
+destination:
+
+postgres:
+hostname: localhost
+port: 5432
+username: foo
+password: bar
+database: your_database_name
+</code></pre></div></div>
+
+<p>Update the above configuration file with appropriate database credentials for both ‘MySQL’ and <code class="highlighter-rouge">Postgres</code>.</p>
+
+<p>4) Run:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ py-mysql2pgsql -v -f mysql2pgsql.yml
+</code></pre></div></div>
+
+<p>The above command will transfer the data from <code class="highlighter-rouge">MySQL</code> database to <code class="highlighter-rouge">Postgres</code>.</p>
+
+<p>Note:</p>
+
+<ul>
+  <li>The above command may raise some <code class="highlighter-rouge">Integrity</code> errors, but no worries it can be fixed. :)</li>
+  <li>You can also include or exclude some tables check this <a href="https://github.com/philipsoutham/py-mysql2pgsql">Here</a></li>
+</ul>
+
+<p>5) Be sure to update your database <code class="highlighter-rouge">settings.py</code> file:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>DATABASES = {
+"default": {
+   "ENGINE": "django.db.backends.postgresql_psycopg2",
+   "NAME": "your_database_name",
+   "USER": "your_username",
+   "PASSWORD": "your_password",
+   "HOST": "localhost",
+   "PORT": "5432",
+}
+}
+</code></pre></div></div>
+
+<p>6) Verify the correctness by adding some data to your existing database(Postgres).</p>
+
+
+  </div><a class="u-url" href="/mysqltopostgres/2014/05/27/migrating-django-app-from-mysql-to-postgres.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

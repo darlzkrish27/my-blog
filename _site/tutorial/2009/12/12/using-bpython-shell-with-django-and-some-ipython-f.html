@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Using bpython shell with django (and some Ipython features you should know) | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Using bpython shell with django (and some Ipython features you should know)" />
+<meta name="author" content="lakshman" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="###What is bpython? bpython is a fancy interface to the Python interpreter for Unix-like operating system. says the bpython home page. It provides syntax highlighting, auto completion, auto-indentation and such stuff. Unlike iPython, which implements then entire shell functions and emulates the standard python shell, and adds enhancements, bpython just adds features on top of the existing python shell functionality, using the curses module. The “killer feature” of bpython is, as you can see from the image above, the IDE like prompting of the function parameters and the doc string of the function dynamically. I have always thought, what IntellijIDEA is to Java, IPython is to Python*. But bpython makes it more so, in terms of the code completion, which adds a lot of value to a ramping up developer. The only Python IDE that provides Source Assistant and Go-To-Source functionality conveniently, is the commercial one, Wing IDE Professional. Even with that, since all the defined models are replaced (by using meta-classes) in the runtime, that source assistant is not perfect. Newer versions of Wing seems to claim to obtain data dynamically at the runtime, but its not always comfortable to write code, keeping the IDE in a breakpoint. But hey, bpython provides all these for free! ###But I already use Ipython You do? So do I. In fact, I am a Power Ipython user, I use all kinds of %magic functions: %whos, %logstart, %bookmark, %ed and sometimes use Ipython as an alternative even to bash: %cd, %ls, %ll. And even for doc testing: %doctest_mode, copy-pasting %hist -n or running some code module in the interpreter namespace: %run -i and searching code %psearch. You can also give any arbitrary bash(or your default shell) command by escaping it with !. Oh, ?, ?? and / are of course the starters. In fact did you know, you could get to ipython shell within any arbitrary place within your django code? Just use the following: from IPython.Shell import IPShellEmbed ipython = IPShellEmbed() and then call ipython() anywhere within your view, model, forms and you will be dropped to the shell. Its like ipdb.set_trace() only better (unless you want to step through, that is). ###The Python readline bug The Python version 2.6.4 (the version that is shipped with Ubuntu 9.10), introduced a readline bug that adds spaces after tab completion. This bug also affects the Ipython, as it uses the same readline module. If you spend a lot of time on the shell (if you use python, you must, right?), it is very annoying to backspace after each tab, all the time. Although the bug got fixed pretty soon, it hasn’t yet made it to any release that ubuntu updates to. There are ways to workaround this problem, by fixing it at the python level and at the Ipython level, many of them are discussed on the corresponding Ipython bug ###Using bpython with django Now that you want to use bpython with django, either because you like the auto completion, or because you find the read line bug annoying (and don’t want/care-enough to patch your python locally), or you just want to try it, how to do it? django manage.py shell unfortunately, drops only into the ipython shell (if you have ipython installed), and there is no straight forward way to get it to drop to bpython. But there is still a way to use bpython with django. Just modify your ~/.bashrc to define a python startup environment variable export PYTHONSTARTUP=~/.pythonrc And within it, setup the django environment, that is, do it here manually the thing that python manage.py shell would do for you: #.pythonrc try: from django.core.management import setup_environ import settings setup_environ(settings) print &#39;imported django settings&#39; except: pass This way, bpython or even just python on the command line, should import the django environment for you. ###Importing all models automatically into the shell But then, if you are possibly already used to python manage.py shell_plus (If you are not, you should be.) that is defined by django_command_extensions. So while we are at setting up the django environment, lets just also import all the models into the shell namespace, so that it is convenient to work. Following is some ugly quick hack to get it done. This can of course be improved upon. If you do it, just leave it in the comments! In fact it would be good if it also includes from startup.py import * in a try catch, so that, you can put some extra code into startup.py. Saving into startup.py from within a bpython shell is just a Ctrl+s anyway. That way each time you get to the shell, you can have the same expected environment; and it is quite easy to change that file. *I know, I know, IPython doesn’t refactor code, nor build, nor does a million things that Intellij does, but Python is not Java and basically both intend to enhance developer productivity. And I spend a lot of time on the IPython shell and find it to be a tool just like Intellij is a tool, for Java." />
+<meta property="og:description" content="###What is bpython? bpython is a fancy interface to the Python interpreter for Unix-like operating system. says the bpython home page. It provides syntax highlighting, auto completion, auto-indentation and such stuff. Unlike iPython, which implements then entire shell functions and emulates the standard python shell, and adds enhancements, bpython just adds features on top of the existing python shell functionality, using the curses module. The “killer feature” of bpython is, as you can see from the image above, the IDE like prompting of the function parameters and the doc string of the function dynamically. I have always thought, what IntellijIDEA is to Java, IPython is to Python*. But bpython makes it more so, in terms of the code completion, which adds a lot of value to a ramping up developer. The only Python IDE that provides Source Assistant and Go-To-Source functionality conveniently, is the commercial one, Wing IDE Professional. Even with that, since all the defined models are replaced (by using meta-classes) in the runtime, that source assistant is not perfect. Newer versions of Wing seems to claim to obtain data dynamically at the runtime, but its not always comfortable to write code, keeping the IDE in a breakpoint. But hey, bpython provides all these for free! ###But I already use Ipython You do? So do I. In fact, I am a Power Ipython user, I use all kinds of %magic functions: %whos, %logstart, %bookmark, %ed and sometimes use Ipython as an alternative even to bash: %cd, %ls, %ll. And even for doc testing: %doctest_mode, copy-pasting %hist -n or running some code module in the interpreter namespace: %run -i and searching code %psearch. You can also give any arbitrary bash(or your default shell) command by escaping it with !. Oh, ?, ?? and / are of course the starters. In fact did you know, you could get to ipython shell within any arbitrary place within your django code? Just use the following: from IPython.Shell import IPShellEmbed ipython = IPShellEmbed() and then call ipython() anywhere within your view, model, forms and you will be dropped to the shell. Its like ipdb.set_trace() only better (unless you want to step through, that is). ###The Python readline bug The Python version 2.6.4 (the version that is shipped with Ubuntu 9.10), introduced a readline bug that adds spaces after tab completion. This bug also affects the Ipython, as it uses the same readline module. If you spend a lot of time on the shell (if you use python, you must, right?), it is very annoying to backspace after each tab, all the time. Although the bug got fixed pretty soon, it hasn’t yet made it to any release that ubuntu updates to. There are ways to workaround this problem, by fixing it at the python level and at the Ipython level, many of them are discussed on the corresponding Ipython bug ###Using bpython with django Now that you want to use bpython with django, either because you like the auto completion, or because you find the read line bug annoying (and don’t want/care-enough to patch your python locally), or you just want to try it, how to do it? django manage.py shell unfortunately, drops only into the ipython shell (if you have ipython installed), and there is no straight forward way to get it to drop to bpython. But there is still a way to use bpython with django. Just modify your ~/.bashrc to define a python startup environment variable export PYTHONSTARTUP=~/.pythonrc And within it, setup the django environment, that is, do it here manually the thing that python manage.py shell would do for you: #.pythonrc try: from django.core.management import setup_environ import settings setup_environ(settings) print &#39;imported django settings&#39; except: pass This way, bpython or even just python on the command line, should import the django environment for you. ###Importing all models automatically into the shell But then, if you are possibly already used to python manage.py shell_plus (If you are not, you should be.) that is defined by django_command_extensions. So while we are at setting up the django environment, lets just also import all the models into the shell namespace, so that it is convenient to work. Following is some ugly quick hack to get it done. This can of course be improved upon. If you do it, just leave it in the comments! In fact it would be good if it also includes from startup.py import * in a try catch, so that, you can put some extra code into startup.py. Saving into startup.py from within a bpython shell is just a Ctrl+s anyway. That way each time you get to the shell, you can have the same expected environment; and it is quite easy to change that file. *I know, I know, IPython doesn’t refactor code, nor build, nor does a million things that Intellij does, but Python is not Java and basically both intend to enhance developer productivity. And I spend a lot of time on the IPython shell and find it to be a tool just like Intellij is a tool, for Java." />
+<link rel="canonical" href="http://localhost:4000/tutorial/2009/12/12/using-bpython-shell-with-django-and-some-ipython-f.html" />
+<meta property="og:url" content="http://localhost:4000/tutorial/2009/12/12/using-bpython-shell-with-django-and-some-ipython-f.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-12-12T22:47:37+05:30" />
+<script type="application/ld+json">
+{"description":"###What is bpython? bpython is a fancy interface to the Python interpreter for Unix-like operating system. says the bpython home page. It provides syntax highlighting, auto completion, auto-indentation and such stuff. Unlike iPython, which implements then entire shell functions and emulates the standard python shell, and adds enhancements, bpython just adds features on top of the existing python shell functionality, using the curses module. The “killer feature” of bpython is, as you can see from the image above, the IDE like prompting of the function parameters and the doc string of the function dynamically. I have always thought, what IntellijIDEA is to Java, IPython is to Python*. But bpython makes it more so, in terms of the code completion, which adds a lot of value to a ramping up developer. The only Python IDE that provides Source Assistant and Go-To-Source functionality conveniently, is the commercial one, Wing IDE Professional. Even with that, since all the defined models are replaced (by using meta-classes) in the runtime, that source assistant is not perfect. Newer versions of Wing seems to claim to obtain data dynamically at the runtime, but its not always comfortable to write code, keeping the IDE in a breakpoint. But hey, bpython provides all these for free! ###But I already use Ipython You do? So do I. In fact, I am a Power Ipython user, I use all kinds of %magic functions: %whos, %logstart, %bookmark, %ed and sometimes use Ipython as an alternative even to bash: %cd, %ls, %ll. And even for doc testing: %doctest_mode, copy-pasting %hist -n or running some code module in the interpreter namespace: %run -i and searching code %psearch. You can also give any arbitrary bash(or your default shell) command by escaping it with !. Oh, ?, ?? and / are of course the starters. In fact did you know, you could get to ipython shell within any arbitrary place within your django code? Just use the following: from IPython.Shell import IPShellEmbed ipython = IPShellEmbed() and then call ipython() anywhere within your view, model, forms and you will be dropped to the shell. Its like ipdb.set_trace() only better (unless you want to step through, that is). ###The Python readline bug The Python version 2.6.4 (the version that is shipped with Ubuntu 9.10), introduced a readline bug that adds spaces after tab completion. This bug also affects the Ipython, as it uses the same readline module. If you spend a lot of time on the shell (if you use python, you must, right?), it is very annoying to backspace after each tab, all the time. Although the bug got fixed pretty soon, it hasn’t yet made it to any release that ubuntu updates to. There are ways to workaround this problem, by fixing it at the python level and at the Ipython level, many of them are discussed on the corresponding Ipython bug ###Using bpython with django Now that you want to use bpython with django, either because you like the auto completion, or because you find the read line bug annoying (and don’t want/care-enough to patch your python locally), or you just want to try it, how to do it? django manage.py shell unfortunately, drops only into the ipython shell (if you have ipython installed), and there is no straight forward way to get it to drop to bpython. But there is still a way to use bpython with django. Just modify your ~/.bashrc to define a python startup environment variable export PYTHONSTARTUP=~/.pythonrc And within it, setup the django environment, that is, do it here manually the thing that python manage.py shell would do for you: #.pythonrc try: from django.core.management import setup_environ import settings setup_environ(settings) print &#39;imported django settings&#39; except: pass This way, bpython or even just python on the command line, should import the django environment for you. ###Importing all models automatically into the shell But then, if you are possibly already used to python manage.py shell_plus (If you are not, you should be.) that is defined by django_command_extensions. So while we are at setting up the django environment, lets just also import all the models into the shell namespace, so that it is convenient to work. Following is some ugly quick hack to get it done. This can of course be improved upon. If you do it, just leave it in the comments! In fact it would be good if it also includes from startup.py import * in a try catch, so that, you can put some extra code into startup.py. Saving into startup.py from within a bpython shell is just a Ctrl+s anyway. That way each time you get to the shell, you can have the same expected environment; and it is quite easy to change that file. *I know, I know, IPython doesn’t refactor code, nor build, nor does a million things that Intellij does, but Python is not Java and basically both intend to enhance developer productivity. And I spend a lot of time on the IPython shell and find it to be a tool just like Intellij is a tool, for Java.","author":{"@type":"Person","name":"lakshman"},"@type":"BlogPosting","url":"http://localhost:4000/tutorial/2009/12/12/using-bpython-shell-with-django-and-some-ipython-f.html","headline":"Using bpython shell with django (and some Ipython features you should know)","dateModified":"2009-12-12T22:47:37+05:30","datePublished":"2009-12-12T22:47:37+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/tutorial/2009/12/12/using-bpython-shell-with-django-and-some-ipython-f.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Using bpython shell with django (and some Ipython features you should know)</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-12-12T22:47:37+05:30" itemprop="datePublished">Dec 12, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">lakshman</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>###What is bpython?</p>
+
+<blockquote>
+  <p>bpython is a fancy interface to the Python interpreter for Unix-like operating system.</p>
+</blockquote>
+
+<p>says the <a href="http://bpython-interpreter.org/">bpython</a> home page. It provides syntax highlighting, auto completion, auto-indentation and such stuff.</p>
+
+<p>Unlike <a href="http://ipython.scipy.org/moin/">iPython</a>, which implements then entire shell functions and emulates the standard python shell, and adds enhancements, bpython just adds features on top of the existing python shell functionality, using the curses module.</p>
+
+<p><img src="http://i.imgur.com/cqky1.png" alt="bpython" /></p>
+
+<p>The “killer feature” of bpython is, as you can see from the image above, the IDE like prompting of the function parameters and the doc string of the function dynamically. I have always thought, what <a href="http://www.jetbrains.com/idea/">IntellijIDEA</a> is to Java, IPython is to Python*. But bpython makes it more so, in terms of the code completion, which adds a lot of value to a <em>ramping up developer</em>.</p>
+
+<p>The only Python IDE that provides Source Assistant and Go-To-Source functionality conveniently, is the commercial one, <a href="http://www.wingide.com/wingide">Wing IDE Professional</a>. Even with that, since all the defined models are replaced (by using meta-classes) in the runtime, that source assistant is not perfect. Newer versions of Wing seems to claim to obtain data dynamically at the runtime, but its not always comfortable to write code, keeping the IDE in a breakpoint. But hey, bpython provides all these for free!</p>
+
+<p>###But I already use Ipython</p>
+
+<p>You do? So do I. In fact, I am a Power Ipython user, I use all kinds of <a href="http://ipython.scipy.org/doc/stable/html/interactive/reference.html#magic-command-system">%magic</a> functions: %whos, <a href="http://ipython.scipy.org/doc/stable/html/interactive/reference.html#session-logging-and-restoring">%logstart</a>, %bookmark, %ed  and sometimes use Ipython as an alternative even to bash: %cd, %ls, %ll. And even for doc testing: <a href="http://ipython.scipy.org/doc/stable/html/interactive/reference.html#pasting-of-code-starting-with-or">%doctest_mode</a>, copy-pasting %hist -n or running some code module in the interpreter namespace: %run -i and searching code %psearch. You can also give any arbitrary bash(or your default shell) command by escaping it with !. Oh, ?, ?? and / are of course the starters.</p>
+
+<p>In fact did you know, you could get to ipython shell within any arbitrary place within your django code? Just use the following:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from IPython.Shell import IPShellEmbed
+ipython = IPShellEmbed()
+</code></pre></div></div>
+
+<p>and then call ipython() anywhere within your view, model, forms and you will be dropped to the shell. Its <a href="http://aymanh.com/python-debugging-techniques">like ipdb.set_trace()</a> only better (unless you want to step through, that is).</p>
+
+<p>###The Python readline bug</p>
+
+<p>The Python version 2.6.4 (the version that is shipped with Ubuntu 9.10), introduced a <a href="http://bugs.python.org/issue5833">readline bug</a> that adds spaces after tab completion. This bug also affects the Ipython, as it uses the same readline module. If you spend a lot of time on the shell (if you use python, you must, right?), it is very annoying to backspace after each tab, all the time.</p>
+
+<p>Although the bug got fixed pretty soon, it hasn’t yet made it to any release that ubuntu updates to. There are ways to workaround this problem, by fixing it at the python level and at the Ipython level, many of them are discussed on the corresponding <a href="https://bugs.launchpad.net/ipython/+bug/470824">Ipython bug</a></p>
+
+<p>###Using bpython with django</p>
+
+<p>Now that you want to use bpython with django, either because you like the auto completion, or because you find the read line bug annoying (and don’t want/care-enough to patch your python locally), or you just want to try it, how to do it?</p>
+
+<p><code class="highlighter-rouge">django manage.py shell</code> unfortunately, drops only into the ipython shell (if you have ipython installed), and there is no straight forward way to get it to drop to bpython.</p>
+
+<p>But there is still a way to use bpython with django. Just modify your ~/.bashrc to define a python startup environment variable</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export PYTHONSTARTUP=~/.pythonrc
+</code></pre></div></div>
+
+<p>And within it, setup the django environment, that is, do it here manually the thing that <code class="highlighter-rouge">python manage.py shell</code> would do for you:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#.pythonrc
+try:
+	from django.core.management import setup_environ
+	import settings
+	setup_environ(settings)
+	print 'imported django settings'
+except:
+    pass
+</code></pre></div></div>
+
+<p>This way, <code class="highlighter-rouge">bpython</code> or even just <code class="highlighter-rouge">python</code> on the command line, should import the django environment for you.</p>
+
+<p>###Importing all models automatically into the shell</p>
+
+<p>But then, if you are possibly already used to <code class="highlighter-rouge">python manage.py shell_plus</code> (If you are not, you should be.) that is defined by <a href="http://wiki.github.com/django-extensions/django-extensions/current-command-extensions">django_command_extensions</a>.</p>
+
+<p>So while we are at setting up the django environment, lets just also import all the models into the shell namespace, so that it is convenient to work. Following is some ugly quick hack to get it done.</p>
+
+<script src="http://gist.github.com/231878.js?file=.pythonrc.py"></script>
+
+<p>This can of course be improved upon. If you do it, just leave it in the comments! In fact it would be good if it also includes <code class="highlighter-rouge">from startup.py import *</code> in a try catch, so that, you can put some extra code into startup.py. Saving into startup.py from within a bpython shell is just a <code class="highlighter-rouge">Ctrl+s</code> anyway. That way each time you get to the shell, you can have the same expected environment; and it is quite easy to change that file.</p>
+
+<p>*I know, I know, IPython doesn’t refactor code, nor build, nor does a million things that Intellij does, but <a href="http://dirtsimple.org/2004/12/python-is-not-java.html">Python is not Java</a> and basically both intend to enhance developer productivity. And I spend a lot of time on the IPython shell and find it to be a tool just like Intellij is a tool, for Java.</p>
+
+
+  </div><a class="u-url" href="/tutorial/2009/12/12/using-bpython-shell-with-django-and-some-ipython-f.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

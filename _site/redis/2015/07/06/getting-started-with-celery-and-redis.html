@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Getting started with Celery and Redis | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Getting started with Celery and Redis" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Agenda When to use Celery. Why to use Celery. A simple celery program. Having a slow script and making it faster using celery. Celery configuration and code in different files. Using celery with tasks spanned across multiple modules Using celery with a package. Redis and celery on separate machine Web-application/script and celery on separate machines. When to use Celery Celery is a task processing system. It is useful in a lot of web applications. It can be used in following scenarios. To do any network call in a request-response cycle. Server should respond immediately to any web request it receives. If some network call is required during a request-response cycle, it should be done outside of request-response cycle. eg: An activation email needs to be sent when user signs up on a site. Sending the email is a network call and might take 2-3 seconds. User should not be made to wait for these 2-3 seconds. So sending activation email should be done outside of request-response cycle. It can be achieved using celery. Breaking a large task consisting of several independent parts into smaller tasks. eg: Consider you want to read a user’s FB timeline. FB provides different endpoints to get different kind of things. FB provides one endpoint to get pictures on a user’s timelines, another endpoint to get posts on a user’s timelines, another endpoint to get likes of a user etc. If you write a single function to sequentially hit 5 endpoints provided by FB and if network calls take 2 seconds at an average, then your function will take 10 seconds to complete. So you can split your work in 5 individual tasks(it’s very easy to do as we will soon see), and let Celery handle the tasks. Celery can hit these 5 endpoints parallely and you can get the response from all the endpoints within first 2 seconds. Why to use Celery We want web responses to be fast. So on user signup, server should send the response immediately and the actual job of sending the email should be sent to celery. Celery would be running in background, outside of request-response cycle and it can send the actual email. We can use celery to make our scripts faster and to make better utilization of cpu. In the FB example I described earlier, we can go from 10 seconds to 2 seconds and also our cpu utilization would be higher if we use celery. We can use celery to make our tasks more manageable. In our FB example, if everything were in a single function being executed sequentially and if an error occurred during fetching the second url, then other 3 urls wouldn’t be hit. If all 5 urls were being executed in a different process, then getting an error in one process, wouldn’t affect others. So tasks become more manageable if we use celery properly. Simple celery example Suppose we have a function which gets a list of urls and it has to get response from all the urls. Without celery import requests import time def func(urls): start = time.time() for url in urls: resp = requests.get(url) print resp.status_code print &quot;It took&quot;, time.time() - start, &quot;seconds&quot; if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Run this program python celery_blog.py Output is (hack)~/Play/Python/hack $ python celery_blog.py 200 200 200 200 200 It took 7.58989787102 seconds With celery The main component of a celery enabled program or a celery setup is the celery worker. In our web app signup example, celery worker would do the job of sending the emails. In our FB example, celery worker would do the job of fetching the different urls. Similary in our celery_blog.py example, celery worker would do the job of fetching the urls. Celery worker and your application/script are different processes and run independent of each other. So your application/script and celery need some way to communicate with each other. That’s where a message queue comes into picture. Application code needs to put the task somewhere from where celery worker can fetch it and execute. Application code puts the task on a message queue. Celery worker fetches the task from message queue and exectues the task. We will use redis as the message queue. Make sure you have redis installed and you are able to run redis-server Make sure you have celery installed. Change your file celery_blog.py, so it looks like: from celery import Celery app = Celery(&#39;celery_blog&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Explanation of code We need a celery instace for proper celery setup. We created a celery instance called app. Quoting celery docs from here. The first argument to Celery is the name of the current module, this is needed so that names can be automatically generated, the second argument is the broker keyword argument which specifies the URL of the message broker you want to use Message queue and message broker are synonymous term for our basic discussion. A celery worker can run multiple processes parallely. We want to hit all our urls parallely and not sequentially. So we need a function which can act on one url and we will run 5 of these functions parallely. So we wrote a celery task called fetch_url and this task can work with a single url. A celery task is just a function with decorator “app.task” applied to it. From our old function, we called the task 5 times, each time passing a different url. When we say “fetch_url.delay(url)”, the code is serialized and put in the message queue, which in our case is redis. Celery worker when running will read the serialized thing from queue, then deserialize it and then execute it. Start three terminals On first terminal, run redis using redis-server. On second terminal, run celery worker using celery worker -A celery_blog -l info -c 5. By seeing the output, you will be able to tell that celery is running. On third terminal, run your script, python celery_blog.py. Unlike last execution of your script, you will not see any output on “python celery_blog.py” terminal. It is because the actual work of hitting the url isn’t being done by your script anymore, it will be done by celery. Switch to the terminal where “celery worker” is running. You would see output lines like [2015-07-05 12:57:44,705: INFO/Worker-2] Starting new HTTPS connection (1): facebook.com [2015-07-05 12:57:44,711: INFO/Worker-4] Starting new HTTPS connection (1): twitter.com [2015-07-05 12:57:44,716: INFO/Worker-3] Starting new HTTPS connection (1): alexa.com [2015-07-05 12:57:44,791: INFO/Worker-1] Starting new HTTP connection (1): www.google.co.in [2015-07-05 12:57:45,063: WARNING/Worker-1] 200 [2015-07-05 12:57:45,376: INFO/Worker-5] Starting new HTTPS connection (1): www.amazon.in [2015-07-05 12:57:46,179: WARNING/Worker-2] 200 [2015-07-05 12:57:46,185: INFO/MainProcess] Task celery_blog.fetch_url[2809a803-00b2-44c7-85e5-3f6f71d3f5e3] succeeded in 1.48678409203s: None [2015-07-05 12:57:46,218: INFO/MainProcess] Task celery_blog.fetch_url[9d011563-67f9-4961-a61f-19956bf0cf0a] succeeded in 1.50805259595s: None .... ..... Your output might not match this. First thing to notice is the entire output of celery would have been printed in much less than 8 seconds. Earlier it took around 8 seconds to fetch 5 urls. With celery, it would have taken around 3 seconds or even lesser. Understanding celery worker -A celery_blog -l info -c 5 “-c 5” means that we set the concurrency as 5. So celery can run 5 parallel sub-processes. Each sub-process can act on a single task. “-l info” means we want celery to be verbose with its output. “-A celery_blog” tells that celery configuration, which includes the app and the tasks celery worker should be aware of, is kept in module celery_blog.py Understanding the output Celery worker is running 5 sub-processes simulataneously which it calls Worker-1, Worker-2 and so on. It’s not necessary that tasks’ will be fetched in exactly the same order as they were in list. When we ran python celery_blog.py, tasks were created and put in the message queue i.e redis. celery worker running on another terminal, talked with redis and fetched the tasks from queue. celery worker deserialized each individual task and made each individual task run within a sub-process. celery worker did not wait for first task/sub-process to finish before acting on second task. While first task is still being executed in a sub-process, celery worker fetched second task, deserialized it and gave it to another sub-process. That’s why our output is mixed up, i.e four tasks have started. But before 5th task could start, we got the result from 1st task, i.e the “200” you are seeing. Keeping celery code and configuration in different files. In last example, we only wrote one celery task. Your project might span multiple modules and you might want to have different tasks in different modules. So let’s move our celery configuration to a separate file. Create a file celery_config.py from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;celery_blog&#39;]) Modify celery_blog.py so it looks like import requests from celery_config import app @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Stop old celery worker, and run “celery worker -A celery_config -l info -c 5” Start ipython and issue “func” from celery_blog import func func([&#39;https://google.com&#39;, &#39;https://facebook.com&#39;]) Output [2015-07-05 14:52:02,522: INFO/Worker-1] Starting new HTTPS connection (1): google.com [2015-07-05 14:52:02,522: INFO/Worker-5] Starting new HTTPS connection (1): facebook.com [2015-07-05 14:52:03,168: INFO/Worker-1] Starting new HTTPS connection (1): www.google.co.in [2015-07-05 14:52:03,959: INFO/Worker-5] Starting new HTTPS connection (1): www.facebook.com [2015-07-05 14:52:03,966: WARNING/Worker-1] 200 [2015-07-05 14:52:03,972: INFO/MainProcess] Task celery_blog.fetch_url[7dbf6870-987b-460e-b5f1-ca17af88bc0a] succeeded in 1.45625397097s: None [2015-07-05 14:52:04,915: WARNING/Worker-5] 200 [2015-07-05 14:52:04,922: INFO/MainProcess] Task celery_blog.fetch_url[d836a878-823f-4ca2-b918-a6ab0622a157] succeeded in 2.40576425701s: None Adding another task in a different file You can add another module and define a task in that module. Create a module celery_add.py with following content. from celery_config import app @app.task def add(a, b): return a + b Change celery_config.py to include the new module celery_add.py too. So celery_config.py becomes. from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;celery_blog&#39;, &#39;celery_add&#39;]) Use the new task add from celery_add import add add.delay(4, 5) Output [2015-07-05 15:06:28,533: INFO/MainProcess] Received task: celery_add.add[0e8752a6-1d2f-4f8f-b003-656311beadd9] [2015-07-05 15:06:28,537: INFO/MainProcess] Task celery_add.add[0e8752a6-1d2f-4f8f-b003-656311beadd9] succeeded in 0.00138387701008s: 9 Using celery with a package. We will keep working with celery_config.py. Consider the folder containing celery_config.py is the root directory of your project. Create a package called pack at the same level as celery_config.py. Since you are creating a package make sure there is a pack/init.py file. Create a file pack/celery_fetch.py with following content. import requests from celery_config import app @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) Change celery_config.py so it looks like from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;pack.celery_fetch&#39;]) Start celery worker from same level as celery_config.py celery worker -A celery_config -l info -c 5 Make sure you see the following in output. [tasks] . pack.celery_fetch.fetch_url Now use func from ipython. from pack.celery_fetch import func func([&#39;https://google.com&#39;, &#39;https://facebook.com&#39;]) Redis and celery on separate machines Till now our script, celery worker and redis were running on the same machine. But there is no such necessity. Three of them can be on separate machines. Celery tasks need to make network calls. So having celery worker on a network optimized machine would make the tasks run faster. Redis is an in-memory database, so very often you’ll want redis running on a memory-optimized machine. In this example let’s run redis on a separate machine and keep running script and celery worker on local system. I have a server at 54.69.176.94 where I have redis running. So change “broker” in the celery_config.py so it becomes. app = Celery(&#39;celery_config&#39;, broker=&#39;redis://54.69.176.94:6379/0&#39;, include=[&#39;celery_blog&#39;]) Now if I run any task, our script will serialize it and put it on redis running at 54.69.176.94. Celery worker will also communicate with 54.69.176.94, get the task from redis on this server and execute it. Note: You will have to use your own server address where redis-server is running. I have stopped redis on my server and so you will not be able to connect to redis. Celery and script/web-application on separate machines. As I told earlier, celery worker and your program are separate processes and are independent of each other. We can run them on different machines. Suppose you have a server at 54.69.176.94 where you want to run celery but you want to keep running your script on local machine. So you can copy all the files, in our case celery_config.py and celery_blog.py to the server. And run celery worker -A celery_config -l info on the server. Call any task on the local machine, it will be enqueued wherever the broker points. Celery worker on 54.69.176.94 is also connected with same broker, so it will fetch the task from this broker and can execute it. Gotchas In the simplest celery example, i.e where we have configuration and task fetch_url in the same file. Change app name from celery_blog to celery_blo. Run the worker, celery -A celery_blog worker -l info The output tells that task is registered as celery_blog.fetch_url Now try putting a task in queue. python celery_blog.py A KeyError is raised. Some lines of error: [2015-07-05 16:59:22,956: ERROR/MainProcess] Received unregistered task of type &#39;celery_blo.fetch_url&#39;. KeyError: &#39;celery_blo.fetch_url&#39; So when putting the task on queue, celery uses the app name i.e celery_blo. But worker i.e celery worker -A celery_blog registers the task using the module name i.e celery_blog and not using the app name i.e celery_bio." />
+<meta property="og:description" content="Agenda When to use Celery. Why to use Celery. A simple celery program. Having a slow script and making it faster using celery. Celery configuration and code in different files. Using celery with tasks spanned across multiple modules Using celery with a package. Redis and celery on separate machine Web-application/script and celery on separate machines. When to use Celery Celery is a task processing system. It is useful in a lot of web applications. It can be used in following scenarios. To do any network call in a request-response cycle. Server should respond immediately to any web request it receives. If some network call is required during a request-response cycle, it should be done outside of request-response cycle. eg: An activation email needs to be sent when user signs up on a site. Sending the email is a network call and might take 2-3 seconds. User should not be made to wait for these 2-3 seconds. So sending activation email should be done outside of request-response cycle. It can be achieved using celery. Breaking a large task consisting of several independent parts into smaller tasks. eg: Consider you want to read a user’s FB timeline. FB provides different endpoints to get different kind of things. FB provides one endpoint to get pictures on a user’s timelines, another endpoint to get posts on a user’s timelines, another endpoint to get likes of a user etc. If you write a single function to sequentially hit 5 endpoints provided by FB and if network calls take 2 seconds at an average, then your function will take 10 seconds to complete. So you can split your work in 5 individual tasks(it’s very easy to do as we will soon see), and let Celery handle the tasks. Celery can hit these 5 endpoints parallely and you can get the response from all the endpoints within first 2 seconds. Why to use Celery We want web responses to be fast. So on user signup, server should send the response immediately and the actual job of sending the email should be sent to celery. Celery would be running in background, outside of request-response cycle and it can send the actual email. We can use celery to make our scripts faster and to make better utilization of cpu. In the FB example I described earlier, we can go from 10 seconds to 2 seconds and also our cpu utilization would be higher if we use celery. We can use celery to make our tasks more manageable. In our FB example, if everything were in a single function being executed sequentially and if an error occurred during fetching the second url, then other 3 urls wouldn’t be hit. If all 5 urls were being executed in a different process, then getting an error in one process, wouldn’t affect others. So tasks become more manageable if we use celery properly. Simple celery example Suppose we have a function which gets a list of urls and it has to get response from all the urls. Without celery import requests import time def func(urls): start = time.time() for url in urls: resp = requests.get(url) print resp.status_code print &quot;It took&quot;, time.time() - start, &quot;seconds&quot; if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Run this program python celery_blog.py Output is (hack)~/Play/Python/hack $ python celery_blog.py 200 200 200 200 200 It took 7.58989787102 seconds With celery The main component of a celery enabled program or a celery setup is the celery worker. In our web app signup example, celery worker would do the job of sending the emails. In our FB example, celery worker would do the job of fetching the different urls. Similary in our celery_blog.py example, celery worker would do the job of fetching the urls. Celery worker and your application/script are different processes and run independent of each other. So your application/script and celery need some way to communicate with each other. That’s where a message queue comes into picture. Application code needs to put the task somewhere from where celery worker can fetch it and execute. Application code puts the task on a message queue. Celery worker fetches the task from message queue and exectues the task. We will use redis as the message queue. Make sure you have redis installed and you are able to run redis-server Make sure you have celery installed. Change your file celery_blog.py, so it looks like: from celery import Celery app = Celery(&#39;celery_blog&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Explanation of code We need a celery instace for proper celery setup. We created a celery instance called app. Quoting celery docs from here. The first argument to Celery is the name of the current module, this is needed so that names can be automatically generated, the second argument is the broker keyword argument which specifies the URL of the message broker you want to use Message queue and message broker are synonymous term for our basic discussion. A celery worker can run multiple processes parallely. We want to hit all our urls parallely and not sequentially. So we need a function which can act on one url and we will run 5 of these functions parallely. So we wrote a celery task called fetch_url and this task can work with a single url. A celery task is just a function with decorator “app.task” applied to it. From our old function, we called the task 5 times, each time passing a different url. When we say “fetch_url.delay(url)”, the code is serialized and put in the message queue, which in our case is redis. Celery worker when running will read the serialized thing from queue, then deserialize it and then execute it. Start three terminals On first terminal, run redis using redis-server. On second terminal, run celery worker using celery worker -A celery_blog -l info -c 5. By seeing the output, you will be able to tell that celery is running. On third terminal, run your script, python celery_blog.py. Unlike last execution of your script, you will not see any output on “python celery_blog.py” terminal. It is because the actual work of hitting the url isn’t being done by your script anymore, it will be done by celery. Switch to the terminal where “celery worker” is running. You would see output lines like [2015-07-05 12:57:44,705: INFO/Worker-2] Starting new HTTPS connection (1): facebook.com [2015-07-05 12:57:44,711: INFO/Worker-4] Starting new HTTPS connection (1): twitter.com [2015-07-05 12:57:44,716: INFO/Worker-3] Starting new HTTPS connection (1): alexa.com [2015-07-05 12:57:44,791: INFO/Worker-1] Starting new HTTP connection (1): www.google.co.in [2015-07-05 12:57:45,063: WARNING/Worker-1] 200 [2015-07-05 12:57:45,376: INFO/Worker-5] Starting new HTTPS connection (1): www.amazon.in [2015-07-05 12:57:46,179: WARNING/Worker-2] 200 [2015-07-05 12:57:46,185: INFO/MainProcess] Task celery_blog.fetch_url[2809a803-00b2-44c7-85e5-3f6f71d3f5e3] succeeded in 1.48678409203s: None [2015-07-05 12:57:46,218: INFO/MainProcess] Task celery_blog.fetch_url[9d011563-67f9-4961-a61f-19956bf0cf0a] succeeded in 1.50805259595s: None .... ..... Your output might not match this. First thing to notice is the entire output of celery would have been printed in much less than 8 seconds. Earlier it took around 8 seconds to fetch 5 urls. With celery, it would have taken around 3 seconds or even lesser. Understanding celery worker -A celery_blog -l info -c 5 “-c 5” means that we set the concurrency as 5. So celery can run 5 parallel sub-processes. Each sub-process can act on a single task. “-l info” means we want celery to be verbose with its output. “-A celery_blog” tells that celery configuration, which includes the app and the tasks celery worker should be aware of, is kept in module celery_blog.py Understanding the output Celery worker is running 5 sub-processes simulataneously which it calls Worker-1, Worker-2 and so on. It’s not necessary that tasks’ will be fetched in exactly the same order as they were in list. When we ran python celery_blog.py, tasks were created and put in the message queue i.e redis. celery worker running on another terminal, talked with redis and fetched the tasks from queue. celery worker deserialized each individual task and made each individual task run within a sub-process. celery worker did not wait for first task/sub-process to finish before acting on second task. While first task is still being executed in a sub-process, celery worker fetched second task, deserialized it and gave it to another sub-process. That’s why our output is mixed up, i.e four tasks have started. But before 5th task could start, we got the result from 1st task, i.e the “200” you are seeing. Keeping celery code and configuration in different files. In last example, we only wrote one celery task. Your project might span multiple modules and you might want to have different tasks in different modules. So let’s move our celery configuration to a separate file. Create a file celery_config.py from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;celery_blog&#39;]) Modify celery_blog.py so it looks like import requests from celery_config import app @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Stop old celery worker, and run “celery worker -A celery_config -l info -c 5” Start ipython and issue “func” from celery_blog import func func([&#39;https://google.com&#39;, &#39;https://facebook.com&#39;]) Output [2015-07-05 14:52:02,522: INFO/Worker-1] Starting new HTTPS connection (1): google.com [2015-07-05 14:52:02,522: INFO/Worker-5] Starting new HTTPS connection (1): facebook.com [2015-07-05 14:52:03,168: INFO/Worker-1] Starting new HTTPS connection (1): www.google.co.in [2015-07-05 14:52:03,959: INFO/Worker-5] Starting new HTTPS connection (1): www.facebook.com [2015-07-05 14:52:03,966: WARNING/Worker-1] 200 [2015-07-05 14:52:03,972: INFO/MainProcess] Task celery_blog.fetch_url[7dbf6870-987b-460e-b5f1-ca17af88bc0a] succeeded in 1.45625397097s: None [2015-07-05 14:52:04,915: WARNING/Worker-5] 200 [2015-07-05 14:52:04,922: INFO/MainProcess] Task celery_blog.fetch_url[d836a878-823f-4ca2-b918-a6ab0622a157] succeeded in 2.40576425701s: None Adding another task in a different file You can add another module and define a task in that module. Create a module celery_add.py with following content. from celery_config import app @app.task def add(a, b): return a + b Change celery_config.py to include the new module celery_add.py too. So celery_config.py becomes. from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;celery_blog&#39;, &#39;celery_add&#39;]) Use the new task add from celery_add import add add.delay(4, 5) Output [2015-07-05 15:06:28,533: INFO/MainProcess] Received task: celery_add.add[0e8752a6-1d2f-4f8f-b003-656311beadd9] [2015-07-05 15:06:28,537: INFO/MainProcess] Task celery_add.add[0e8752a6-1d2f-4f8f-b003-656311beadd9] succeeded in 0.00138387701008s: 9 Using celery with a package. We will keep working with celery_config.py. Consider the folder containing celery_config.py is the root directory of your project. Create a package called pack at the same level as celery_config.py. Since you are creating a package make sure there is a pack/init.py file. Create a file pack/celery_fetch.py with following content. import requests from celery_config import app @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) Change celery_config.py so it looks like from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;pack.celery_fetch&#39;]) Start celery worker from same level as celery_config.py celery worker -A celery_config -l info -c 5 Make sure you see the following in output. [tasks] . pack.celery_fetch.fetch_url Now use func from ipython. from pack.celery_fetch import func func([&#39;https://google.com&#39;, &#39;https://facebook.com&#39;]) Redis and celery on separate machines Till now our script, celery worker and redis were running on the same machine. But there is no such necessity. Three of them can be on separate machines. Celery tasks need to make network calls. So having celery worker on a network optimized machine would make the tasks run faster. Redis is an in-memory database, so very often you’ll want redis running on a memory-optimized machine. In this example let’s run redis on a separate machine and keep running script and celery worker on local system. I have a server at 54.69.176.94 where I have redis running. So change “broker” in the celery_config.py so it becomes. app = Celery(&#39;celery_config&#39;, broker=&#39;redis://54.69.176.94:6379/0&#39;, include=[&#39;celery_blog&#39;]) Now if I run any task, our script will serialize it and put it on redis running at 54.69.176.94. Celery worker will also communicate with 54.69.176.94, get the task from redis on this server and execute it. Note: You will have to use your own server address where redis-server is running. I have stopped redis on my server and so you will not be able to connect to redis. Celery and script/web-application on separate machines. As I told earlier, celery worker and your program are separate processes and are independent of each other. We can run them on different machines. Suppose you have a server at 54.69.176.94 where you want to run celery but you want to keep running your script on local machine. So you can copy all the files, in our case celery_config.py and celery_blog.py to the server. And run celery worker -A celery_config -l info on the server. Call any task on the local machine, it will be enqueued wherever the broker points. Celery worker on 54.69.176.94 is also connected with same broker, so it will fetch the task from this broker and can execute it. Gotchas In the simplest celery example, i.e where we have configuration and task fetch_url in the same file. Change app name from celery_blog to celery_blo. Run the worker, celery -A celery_blog worker -l info The output tells that task is registered as celery_blog.fetch_url Now try putting a task in queue. python celery_blog.py A KeyError is raised. Some lines of error: [2015-07-05 16:59:22,956: ERROR/MainProcess] Received unregistered task of type &#39;celery_blo.fetch_url&#39;. KeyError: &#39;celery_blo.fetch_url&#39; So when putting the task on queue, celery uses the app name i.e celery_blo. But worker i.e celery worker -A celery_blog registers the task using the module name i.e celery_blog and not using the app name i.e celery_bio." />
+<link rel="canonical" href="http://localhost:4000/redis/2015/07/06/getting-started-with-celery-and-redis.html" />
+<meta property="og:url" content="http://localhost:4000/redis/2015/07/06/getting-started-with-celery-and-redis.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2015-07-06T10:54:44+05:30" />
+<script type="application/ld+json">
+{"description":"Agenda When to use Celery. Why to use Celery. A simple celery program. Having a slow script and making it faster using celery. Celery configuration and code in different files. Using celery with tasks spanned across multiple modules Using celery with a package. Redis and celery on separate machine Web-application/script and celery on separate machines. When to use Celery Celery is a task processing system. It is useful in a lot of web applications. It can be used in following scenarios. To do any network call in a request-response cycle. Server should respond immediately to any web request it receives. If some network call is required during a request-response cycle, it should be done outside of request-response cycle. eg: An activation email needs to be sent when user signs up on a site. Sending the email is a network call and might take 2-3 seconds. User should not be made to wait for these 2-3 seconds. So sending activation email should be done outside of request-response cycle. It can be achieved using celery. Breaking a large task consisting of several independent parts into smaller tasks. eg: Consider you want to read a user’s FB timeline. FB provides different endpoints to get different kind of things. FB provides one endpoint to get pictures on a user’s timelines, another endpoint to get posts on a user’s timelines, another endpoint to get likes of a user etc. If you write a single function to sequentially hit 5 endpoints provided by FB and if network calls take 2 seconds at an average, then your function will take 10 seconds to complete. So you can split your work in 5 individual tasks(it’s very easy to do as we will soon see), and let Celery handle the tasks. Celery can hit these 5 endpoints parallely and you can get the response from all the endpoints within first 2 seconds. Why to use Celery We want web responses to be fast. So on user signup, server should send the response immediately and the actual job of sending the email should be sent to celery. Celery would be running in background, outside of request-response cycle and it can send the actual email. We can use celery to make our scripts faster and to make better utilization of cpu. In the FB example I described earlier, we can go from 10 seconds to 2 seconds and also our cpu utilization would be higher if we use celery. We can use celery to make our tasks more manageable. In our FB example, if everything were in a single function being executed sequentially and if an error occurred during fetching the second url, then other 3 urls wouldn’t be hit. If all 5 urls were being executed in a different process, then getting an error in one process, wouldn’t affect others. So tasks become more manageable if we use celery properly. Simple celery example Suppose we have a function which gets a list of urls and it has to get response from all the urls. Without celery import requests import time def func(urls): start = time.time() for url in urls: resp = requests.get(url) print resp.status_code print &quot;It took&quot;, time.time() - start, &quot;seconds&quot; if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Run this program python celery_blog.py Output is (hack)~/Play/Python/hack $ python celery_blog.py 200 200 200 200 200 It took 7.58989787102 seconds With celery The main component of a celery enabled program or a celery setup is the celery worker. In our web app signup example, celery worker would do the job of sending the emails. In our FB example, celery worker would do the job of fetching the different urls. Similary in our celery_blog.py example, celery worker would do the job of fetching the urls. Celery worker and your application/script are different processes and run independent of each other. So your application/script and celery need some way to communicate with each other. That’s where a message queue comes into picture. Application code needs to put the task somewhere from where celery worker can fetch it and execute. Application code puts the task on a message queue. Celery worker fetches the task from message queue and exectues the task. We will use redis as the message queue. Make sure you have redis installed and you are able to run redis-server Make sure you have celery installed. Change your file celery_blog.py, so it looks like: from celery import Celery app = Celery(&#39;celery_blog&#39;, broker=&#39;redis://localhost:6379/0&#39;) @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Explanation of code We need a celery instace for proper celery setup. We created a celery instance called app. Quoting celery docs from here. The first argument to Celery is the name of the current module, this is needed so that names can be automatically generated, the second argument is the broker keyword argument which specifies the URL of the message broker you want to use Message queue and message broker are synonymous term for our basic discussion. A celery worker can run multiple processes parallely. We want to hit all our urls parallely and not sequentially. So we need a function which can act on one url and we will run 5 of these functions parallely. So we wrote a celery task called fetch_url and this task can work with a single url. A celery task is just a function with decorator “app.task” applied to it. From our old function, we called the task 5 times, each time passing a different url. When we say “fetch_url.delay(url)”, the code is serialized and put in the message queue, which in our case is redis. Celery worker when running will read the serialized thing from queue, then deserialize it and then execute it. Start three terminals On first terminal, run redis using redis-server. On second terminal, run celery worker using celery worker -A celery_blog -l info -c 5. By seeing the output, you will be able to tell that celery is running. On third terminal, run your script, python celery_blog.py. Unlike last execution of your script, you will not see any output on “python celery_blog.py” terminal. It is because the actual work of hitting the url isn’t being done by your script anymore, it will be done by celery. Switch to the terminal where “celery worker” is running. You would see output lines like [2015-07-05 12:57:44,705: INFO/Worker-2] Starting new HTTPS connection (1): facebook.com [2015-07-05 12:57:44,711: INFO/Worker-4] Starting new HTTPS connection (1): twitter.com [2015-07-05 12:57:44,716: INFO/Worker-3] Starting new HTTPS connection (1): alexa.com [2015-07-05 12:57:44,791: INFO/Worker-1] Starting new HTTP connection (1): www.google.co.in [2015-07-05 12:57:45,063: WARNING/Worker-1] 200 [2015-07-05 12:57:45,376: INFO/Worker-5] Starting new HTTPS connection (1): www.amazon.in [2015-07-05 12:57:46,179: WARNING/Worker-2] 200 [2015-07-05 12:57:46,185: INFO/MainProcess] Task celery_blog.fetch_url[2809a803-00b2-44c7-85e5-3f6f71d3f5e3] succeeded in 1.48678409203s: None [2015-07-05 12:57:46,218: INFO/MainProcess] Task celery_blog.fetch_url[9d011563-67f9-4961-a61f-19956bf0cf0a] succeeded in 1.50805259595s: None .... ..... Your output might not match this. First thing to notice is the entire output of celery would have been printed in much less than 8 seconds. Earlier it took around 8 seconds to fetch 5 urls. With celery, it would have taken around 3 seconds or even lesser. Understanding celery worker -A celery_blog -l info -c 5 “-c 5” means that we set the concurrency as 5. So celery can run 5 parallel sub-processes. Each sub-process can act on a single task. “-l info” means we want celery to be verbose with its output. “-A celery_blog” tells that celery configuration, which includes the app and the tasks celery worker should be aware of, is kept in module celery_blog.py Understanding the output Celery worker is running 5 sub-processes simulataneously which it calls Worker-1, Worker-2 and so on. It’s not necessary that tasks’ will be fetched in exactly the same order as they were in list. When we ran python celery_blog.py, tasks were created and put in the message queue i.e redis. celery worker running on another terminal, talked with redis and fetched the tasks from queue. celery worker deserialized each individual task and made each individual task run within a sub-process. celery worker did not wait for first task/sub-process to finish before acting on second task. While first task is still being executed in a sub-process, celery worker fetched second task, deserialized it and gave it to another sub-process. That’s why our output is mixed up, i.e four tasks have started. But before 5th task could start, we got the result from 1st task, i.e the “200” you are seeing. Keeping celery code and configuration in different files. In last example, we only wrote one celery task. Your project might span multiple modules and you might want to have different tasks in different modules. So let’s move our celery configuration to a separate file. Create a file celery_config.py from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;celery_blog&#39;]) Modify celery_blog.py so it looks like import requests from celery_config import app @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) if __name__ == &quot;__main__&quot;: func([&quot;http://google.com&quot;, &quot;https://amazon.in&quot;, &quot;https://facebook.com&quot;, &quot;https://twitter.com&quot;, &quot;https://alexa.com&quot;]) Stop old celery worker, and run “celery worker -A celery_config -l info -c 5” Start ipython and issue “func” from celery_blog import func func([&#39;https://google.com&#39;, &#39;https://facebook.com&#39;]) Output [2015-07-05 14:52:02,522: INFO/Worker-1] Starting new HTTPS connection (1): google.com [2015-07-05 14:52:02,522: INFO/Worker-5] Starting new HTTPS connection (1): facebook.com [2015-07-05 14:52:03,168: INFO/Worker-1] Starting new HTTPS connection (1): www.google.co.in [2015-07-05 14:52:03,959: INFO/Worker-5] Starting new HTTPS connection (1): www.facebook.com [2015-07-05 14:52:03,966: WARNING/Worker-1] 200 [2015-07-05 14:52:03,972: INFO/MainProcess] Task celery_blog.fetch_url[7dbf6870-987b-460e-b5f1-ca17af88bc0a] succeeded in 1.45625397097s: None [2015-07-05 14:52:04,915: WARNING/Worker-5] 200 [2015-07-05 14:52:04,922: INFO/MainProcess] Task celery_blog.fetch_url[d836a878-823f-4ca2-b918-a6ab0622a157] succeeded in 2.40576425701s: None Adding another task in a different file You can add another module and define a task in that module. Create a module celery_add.py with following content. from celery_config import app @app.task def add(a, b): return a + b Change celery_config.py to include the new module celery_add.py too. So celery_config.py becomes. from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;celery_blog&#39;, &#39;celery_add&#39;]) Use the new task add from celery_add import add add.delay(4, 5) Output [2015-07-05 15:06:28,533: INFO/MainProcess] Received task: celery_add.add[0e8752a6-1d2f-4f8f-b003-656311beadd9] [2015-07-05 15:06:28,537: INFO/MainProcess] Task celery_add.add[0e8752a6-1d2f-4f8f-b003-656311beadd9] succeeded in 0.00138387701008s: 9 Using celery with a package. We will keep working with celery_config.py. Consider the folder containing celery_config.py is the root directory of your project. Create a package called pack at the same level as celery_config.py. Since you are creating a package make sure there is a pack/init.py file. Create a file pack/celery_fetch.py with following content. import requests from celery_config import app @app.task def fetch_url(url): resp = requests.get(url) print resp.status_code def func(urls): for url in urls: fetch_url.delay(url) Change celery_config.py so it looks like from celery import Celery app = Celery(&#39;celery_config&#39;, broker=&#39;redis://localhost:6379/0&#39;, include=[&#39;pack.celery_fetch&#39;]) Start celery worker from same level as celery_config.py celery worker -A celery_config -l info -c 5 Make sure you see the following in output. [tasks] . pack.celery_fetch.fetch_url Now use func from ipython. from pack.celery_fetch import func func([&#39;https://google.com&#39;, &#39;https://facebook.com&#39;]) Redis and celery on separate machines Till now our script, celery worker and redis were running on the same machine. But there is no such necessity. Three of them can be on separate machines. Celery tasks need to make network calls. So having celery worker on a network optimized machine would make the tasks run faster. Redis is an in-memory database, so very often you’ll want redis running on a memory-optimized machine. In this example let’s run redis on a separate machine and keep running script and celery worker on local system. I have a server at 54.69.176.94 where I have redis running. So change “broker” in the celery_config.py so it becomes. app = Celery(&#39;celery_config&#39;, broker=&#39;redis://54.69.176.94:6379/0&#39;, include=[&#39;celery_blog&#39;]) Now if I run any task, our script will serialize it and put it on redis running at 54.69.176.94. Celery worker will also communicate with 54.69.176.94, get the task from redis on this server and execute it. Note: You will have to use your own server address where redis-server is running. I have stopped redis on my server and so you will not be able to connect to redis. Celery and script/web-application on separate machines. As I told earlier, celery worker and your program are separate processes and are independent of each other. We can run them on different machines. Suppose you have a server at 54.69.176.94 where you want to run celery but you want to keep running your script on local machine. So you can copy all the files, in our case celery_config.py and celery_blog.py to the server. And run celery worker -A celery_config -l info on the server. Call any task on the local machine, it will be enqueued wherever the broker points. Celery worker on 54.69.176.94 is also connected with same broker, so it will fetch the task from this broker and can execute it. Gotchas In the simplest celery example, i.e where we have configuration and task fetch_url in the same file. Change app name from celery_blog to celery_blo. Run the worker, celery -A celery_blog worker -l info The output tells that task is registered as celery_blog.fetch_url Now try putting a task in queue. python celery_blog.py A KeyError is raised. Some lines of error: [2015-07-05 16:59:22,956: ERROR/MainProcess] Received unregistered task of type &#39;celery_blo.fetch_url&#39;. KeyError: &#39;celery_blo.fetch_url&#39; So when putting the task on queue, celery uses the app name i.e celery_blo. But worker i.e celery worker -A celery_blog registers the task using the module name i.e celery_blog and not using the app name i.e celery_bio.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/redis/2015/07/06/getting-started-with-celery-and-redis.html","headline":"Getting started with Celery and Redis","dateModified":"2015-07-06T10:54:44+05:30","datePublished":"2015-07-06T10:54:44+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/redis/2015/07/06/getting-started-with-celery-and-redis.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Getting started with Celery and Redis</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2015-07-06T10:54:44+05:30" itemprop="datePublished">Jul 6, 2015
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h3 id="agenda">Agenda</h3>
+
+<ul>
+  <li>When to use Celery.</li>
+  <li>Why to use Celery.</li>
+  <li>A simple celery program.</li>
+  <li>Having a slow script and making it faster using celery.</li>
+  <li>Celery configuration and code in different files.</li>
+  <li>Using celery with tasks spanned across multiple modules</li>
+  <li>Using celery with a package.</li>
+  <li>Redis and celery on separate machine</li>
+  <li>Web-application/script and celery on separate machines.</li>
+</ul>
+
+<h3 id="when-to-use-celery">When to use Celery</h3>
+
+<p>Celery is a task processing system. It is useful in a lot of web applications.</p>
+
+<p>It can be used in following scenarios.</p>
+
+<p>To do any network call in a request-response cycle. Server should respond immediately to any web request it receives. If some network call is required during a request-response cycle, it should be done outside of request-response cycle. eg: An activation email needs to be sent when user signs up on a site. Sending the email is a network call and might take 2-3 seconds. User should not be made to wait for these 2-3 seconds. So sending activation email should be done outside of request-response cycle. It can be achieved using celery.</p>
+
+<p>Breaking a large task consisting of several independent parts into smaller tasks. eg: Consider you want to read a user’s FB timeline. FB provides different endpoints to get different kind of things. FB provides one endpoint to get pictures on a user’s timelines, another endpoint to get posts on a user’s timelines, another endpoint to get likes of a user etc. If you write a single function to sequentially hit 5 endpoints provided by FB and if network calls take 2 seconds at an average, then your function will take 10 seconds to complete. So you can split your work in 5 individual tasks(it’s very easy to do as we will soon see), and let Celery handle the tasks. Celery can hit these 5 endpoints parallely and you can get the response from all the endpoints within first 2 seconds.</p>
+
+<h3 id="why-to-use-celery">Why to use Celery</h3>
+
+<p>We want web responses to be fast. So on user signup, server should send the response immediately and the actual job of sending the email should be sent to celery. Celery would be running in background, outside of request-response cycle and it can send the actual email.</p>
+
+<p>We can use celery to make our scripts faster and to make better utilization of cpu. In the FB example I described earlier, we can go from 10 seconds to 2 seconds and also our cpu utilization would be higher if we use celery.</p>
+
+<p>We can use celery to make our tasks more manageable. In our FB example, if everything were in a single function being executed sequentially and if an error occurred during fetching the second url, then other 3 urls wouldn’t be hit. If all 5 urls were being executed in a different process, then getting an error in one process, wouldn’t affect others. So tasks become more manageable if we use celery properly.</p>
+
+<h3 id="simple-celery-example">Simple celery example</h3>
+
+<p>Suppose we have a function which gets a list of urls and it has to get response from all the urls.</p>
+
+<h4 id="without-celery">Without celery</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import requests
+import time
+
+def func(urls):
+	start = time.time()
+	for url in urls:
+		resp = requests.get(url)
+		print resp.status_code
+	print "It took", time.time() - start, "seconds"
+
+if __name__ == "__main__":
+	func(["http://google.com", "https://amazon.in", "https://facebook.com", "https://twitter.com", "https://alexa.com"])
+</code></pre></div></div>
+
+<h4 id="run-this-program">Run this program</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python celery_blog.py
+</code></pre></div></div>
+
+<p>Output is</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(hack)~/Play/Python/hack $ python celery_blog.py
+200
+200
+200
+200
+200
+It took 7.58989787102 seconds
+</code></pre></div></div>
+
+<h4 id="with-celery">With celery</h4>
+
+<p>The main component of a celery enabled program or a celery setup is the <strong>celery worker</strong>.</p>
+
+<p>In our web app signup example, <code class="highlighter-rouge">celery worker</code> would do the job of sending the emails.</p>
+
+<p>In our FB example, <code class="highlighter-rouge">celery worker</code> would do the job of fetching the different urls.</p>
+
+<p>Similary in our <code class="highlighter-rouge">celery_blog.py</code> example, <code class="highlighter-rouge">celery worker</code> would do the job of fetching the urls.</p>
+
+<p><code class="highlighter-rouge">Celery worker</code> and your application/script are different processes and run independent of each other. So your application/script and celery need some way to communicate with each other. That’s where a message queue comes into picture.</p>
+
+<p>Application code needs to put the task somewhere from where celery worker can fetch it and execute. Application code puts the task on a message queue. Celery worker fetches the task from message queue and exectues the task. We will use redis as the message queue.</p>
+
+<p>Make sure you have redis installed and you are able to run <code class="highlighter-rouge">redis-server</code></p>
+
+<p>Make sure you have celery installed.</p>
+
+<p>Change your file celery_blog.py, so it looks like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery import Celery
+
+app = Celery('celery_blog', broker='redis://localhost:6379/0')
+
+@app.task
+def fetch_url(url):
+	resp = requests.get(url)
+	print resp.status_code
+
+def func(urls):
+	for url in urls:
+		fetch_url.delay(url)
+
+if __name__ == "__main__":
+	func(["http://google.com", "https://amazon.in", "https://facebook.com", "https://twitter.com", "https://alexa.com"])
+</code></pre></div></div>
+
+<h5 id="explanation-of-code">Explanation of code</h5>
+
+<p>We need a celery instace for proper celery setup. We created a celery instance called <strong>app</strong>.</p>
+
+<p>Quoting celery docs from <a href="http://celery.readthedocs.org/en/latest/getting-started/first-steps-with-celery.html#application" target="_blank">here</a>.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The first argument to Celery is the name of the current module, this is needed so that names can be automatically generated, the second argument is the broker keyword argument which specifies the URL of the message broker you want to use
+</code></pre></div></div>
+
+<p>Message queue and message broker are synonymous term for our basic discussion.</p>
+
+<p>A celery worker can run multiple processes parallely. We want to hit all our urls parallely and not sequentially. So we need a function which can act on one url and we will run 5 of these functions parallely. So we wrote a <strong>celery task</strong> called <strong>fetch_url</strong> and this task can work with a single url. A celery task is just a function with decorator “app.task” applied to it.</p>
+
+<p>From our old function, we called the task 5 times, each time passing a different url.</p>
+
+<p>When we say “fetch_url.delay(url)”, the code is serialized and put in the message queue, which in our case is redis. Celery worker when running will read the serialized thing from queue, then deserialize it and then execute it.</p>
+
+<h5 id="start-three-terminals">Start three terminals</h5>
+
+<ul>
+  <li>On first terminal, run redis using <strong>redis-server</strong>.</li>
+  <li>On second terminal, run celery worker using <strong>celery worker -A celery_blog -l info -c 5</strong>. By seeing the output, you will be able to tell that celery is running.</li>
+  <li>On third terminal, run your script, <strong>python celery_blog.py</strong>.</li>
+</ul>
+
+<p>Unlike last execution of your script, you will not see any output on “python celery_blog.py” terminal. It is because the actual work of hitting the url isn’t being done by your script anymore, it will be done by celery.</p>
+
+<p>Switch to the terminal where “celery worker” is running. You would see output lines like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-05 12:57:44,705: INFO/Worker-2] Starting new HTTPS connection (1): facebook.com
+[2015-07-05 12:57:44,711: INFO/Worker-4] Starting new HTTPS connection (1): twitter.com
+[2015-07-05 12:57:44,716: INFO/Worker-3] Starting new HTTPS connection (1): alexa.com
+[2015-07-05 12:57:44,791: INFO/Worker-1] Starting new HTTP connection (1): www.google.co.in
+
+[2015-07-05 12:57:45,063: WARNING/Worker-1] 200
+
+[2015-07-05 12:57:45,376: INFO/Worker-5] Starting new HTTPS connection (1): www.amazon.in
+
+[2015-07-05 12:57:46,179: WARNING/Worker-2] 200
+
+[2015-07-05 12:57:46,185: INFO/MainProcess] Task celery_blog.fetch_url[2809a803-00b2-44c7-85e5-3f6f71d3f5e3] succeeded in 1.48678409203s: None
+[2015-07-05 12:57:46,218: INFO/MainProcess] Task celery_blog.fetch_url[9d011563-67f9-4961-a61f-19956bf0cf0a] succeeded in 1.50805259595s: None
+....
+.....
+</code></pre></div></div>
+
+<p>Your output might not match this.</p>
+
+<p>First thing to notice is the entire output of celery would have been printed in much less than 8 seconds. Earlier it took around 8 seconds to fetch 5 urls. With celery, it would have taken around 3 seconds or even lesser.</p>
+
+<h5 id="understanding-celery-worker--a-celery_blog--l-info--c-5">Understanding celery worker -A celery_blog -l info -c 5</h5>
+
+<ul>
+  <li>“-c 5” means that we set the concurrency as 5. So celery can run 5 parallel sub-processes. Each sub-process can act on a single task.</li>
+  <li>“-l info” means we want celery to be verbose with its output.</li>
+  <li>“-A celery_blog” tells that celery configuration, which includes the <strong>app</strong> and the tasks celery worker should be aware of, is kept in module celery_blog.py</li>
+</ul>
+
+<h5 id="understanding-the-output">Understanding the output</h5>
+<ul>
+  <li>Celery worker is running 5 sub-processes simulataneously which it calls Worker-1, Worker-2 and so on.</li>
+  <li>It’s not necessary that tasks’ will be fetched in exactly the same order as they were in list.</li>
+  <li>When we ran <strong>python celery_blog.py</strong>, tasks were created and put in the message queue i.e redis.</li>
+  <li><strong>celery worker</strong> running on another terminal, talked with redis and fetched the tasks from queue.</li>
+  <li>celery worker deserialized each individual task and made each individual task run within a sub-process.</li>
+  <li>celery worker did not wait for first task/sub-process to finish before acting on second task.</li>
+  <li>While first task is still being executed in a sub-process, celery worker fetched second task, deserialized it and gave it to another sub-process.</li>
+  <li>That’s why our output is mixed up, i.e four tasks have started. But before 5th task could start, we got the result from 1st task, i.e the “200” you are seeing.</li>
+</ul>
+
+<h3 id="keeping-celery-code-and-configuration-in-different-files">Keeping celery code and configuration in different files.</h3>
+
+<p>In last example, we only wrote one celery task. Your project might span multiple modules and you might want to have different tasks in different modules. So let’s move our celery configuration to a separate file.</p>
+
+<p>Create a file celery_config.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery import Celery
+
+app = Celery('celery_config', broker='redis://localhost:6379/0', include=['celery_blog'])
+</code></pre></div></div>
+
+<p>Modify celery_blog.py so it looks like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import requests
+from celery_config import app
+
+@app.task
+def fetch_url(url):
+	resp = requests.get(url)
+	print resp.status_code
+
+def func(urls):
+	for url in urls:
+		fetch_url.delay(url)
+
+if __name__ == "__main__":
+	func(["http://google.com", "https://amazon.in", "https://facebook.com", "https://twitter.com", "https://alexa.com"])
+</code></pre></div></div>
+
+<p>Stop old celery worker, and run “celery worker -A celery_config -l info -c 5”</p>
+
+<p>Start ipython and issue “func”</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery_blog import func
+
+func(['https://google.com', 'https://facebook.com'])
+</code></pre></div></div>
+
+<h5 id="output">Output</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-05 14:52:02,522: INFO/Worker-1] Starting new HTTPS connection (1): google.com
+[2015-07-05 14:52:02,522: INFO/Worker-5] Starting new HTTPS connection (1): facebook.com
+[2015-07-05 14:52:03,168: INFO/Worker-1] Starting new HTTPS connection (1): www.google.co.in
+[2015-07-05 14:52:03,959: INFO/Worker-5] Starting new HTTPS connection (1): www.facebook.com
+[2015-07-05 14:52:03,966: WARNING/Worker-1] 200
+[2015-07-05 14:52:03,972: INFO/MainProcess] Task celery_blog.fetch_url[7dbf6870-987b-460e-b5f1-ca17af88bc0a] succeeded in 1.45625397097s: None
+[2015-07-05 14:52:04,915: WARNING/Worker-5] 200
+[2015-07-05 14:52:04,922: INFO/MainProcess] Task celery_blog.fetch_url[d836a878-823f-4ca2-b918-a6ab0622a157] succeeded in 2.40576425701s: None
+</code></pre></div></div>
+
+<h5 id="adding-another-task-in-a-different-file">Adding another task in a different file</h5>
+
+<p>You can add another module and define a task in that module.</p>
+
+<p>Create a module celery_add.py with following content.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery_config import app
+
+@app.task
+def add(a, b):
+	return a + b
+</code></pre></div></div>
+
+<p>Change celery_config.py to include the new module celery_add.py too. So celery_config.py becomes.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery import Celery
+
+app = Celery('celery_config', broker='redis://localhost:6379/0', include=['celery_blog', 'celery_add'])
+</code></pre></div></div>
+
+<p>Use the new task add</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery_add import add
+
+add.delay(4, 5)
+</code></pre></div></div>
+
+<h5 id="output-1">Output</h5>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-05 15:06:28,533: INFO/MainProcess] Received task: celery_add.add[0e8752a6-1d2f-4f8f-b003-656311beadd9]
+[2015-07-05 15:06:28,537: INFO/MainProcess] Task celery_add.add[0e8752a6-1d2f-4f8f-b003-656311beadd9] succeeded in 0.00138387701008s: 9
+</code></pre></div></div>
+
+<h3 id="using-celery-with-a-package">Using celery with a package.</h3>
+
+<p>We will keep working with celery_config.py. Consider the folder containing celery_config.py is the root directory of your project.</p>
+
+<p>Create a package called <code class="highlighter-rouge">pack</code> at the same level as celery_config.py. Since you are creating a package make sure there is a pack/<strong>init</strong>.py file.</p>
+
+<p>Create a file pack/celery_fetch.py with following content.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import requests
+from celery_config import app
+
+@app.task
+def fetch_url(url):
+	resp = requests.get(url)
+	print resp.status_code
+
+def func(urls):
+	for url in urls:
+		fetch_url.delay(url)
+</code></pre></div></div>
+
+<p>Change celery_config.py so it looks like</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from celery import Celery
+app = Celery('celery_config', broker='redis://localhost:6379/0', include=['pack.celery_fetch'])
+</code></pre></div></div>
+
+<p>Start celery worker from same level as celery_config.py</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>celery worker -A celery_config -l info -c 5
+</code></pre></div></div>
+
+<p>Make sure you see the following in output.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[tasks]
+  . pack.celery_fetch.fetch_url
+</code></pre></div></div>
+
+<p>Now use <code class="highlighter-rouge">func</code> from ipython.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from pack.celery_fetch import func
+
+func(['https://google.com', 'https://facebook.com'])
+</code></pre></div></div>
+
+<h3 id="redis-and-celery-on-separate-machines">Redis and celery on separate machines</h3>
+
+<p>Till now our script, celery worker and redis were running on the same machine. But there is no such necessity. Three of them can be on separate machines.</p>
+
+<p>Celery tasks need to make network calls. So having celery worker on a network optimized machine would make the tasks run faster. Redis is an in-memory database, so very often you’ll want redis running on a memory-optimized machine.</p>
+
+<p>In this example let’s run redis on a separate machine and keep running script and celery worker on local system.</p>
+
+<p>I have a server at 54.69.176.94 where I have redis running.</p>
+
+<p>So change “broker” in the celery_config.py so it becomes.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>app = Celery('celery_config', broker='redis://54.69.176.94:6379/0', include=['celery_blog'])
+</code></pre></div></div>
+
+<p>Now if I run any task, our script will serialize it and put it on redis running at 54.69.176.94.</p>
+
+<p>Celery worker will also communicate with 54.69.176.94, get the task from redis on this server and execute it.</p>
+
+<p>Note: You will have to use your own server address where redis-server is running. I have stopped redis on my server and so you will not be able to connect to redis.</p>
+
+<h3 id="celery-and-scriptweb-application-on-separate-machines">Celery and script/web-application on separate machines.</h3>
+
+<p>As I told earlier, celery worker and your program are separate processes and are independent of each other. We can run them on different machines.</p>
+
+<p>Suppose you have a server at 54.69.176.94 where you want to run celery but you want to keep running your script on local machine.</p>
+
+<p>So you can copy all the files, in our case celery_config.py and celery_blog.py to the server. And run <code class="highlighter-rouge">celery worker -A celery_config -l info</code> on the server.</p>
+
+<p>Call any task on the local machine, it will be enqueued wherever the <code class="highlighter-rouge">broker</code> points. Celery worker on 54.69.176.94 is also connected with same broker, so it will fetch the task from this broker and can execute it.</p>
+
+<h3 id="gotchas">Gotchas</h3>
+
+<p>In the simplest celery example, i.e where we have configuration and task fetch_url in the same file.</p>
+
+<p>Change app name from <code class="highlighter-rouge">celery_blog</code> to <code class="highlighter-rouge">celery_blo</code>.</p>
+
+<p>Run the worker, <code class="highlighter-rouge">celery -A celery_blog worker -l info</code></p>
+
+<p>The output tells that task is registered as <code class="highlighter-rouge">celery_blog.fetch_url</code></p>
+
+<p>Now try putting a task in queue.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python celery_blog.py
+</code></pre></div></div>
+
+<p>A KeyError is raised.</p>
+
+<p>Some lines of error:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[2015-07-05 16:59:22,956: ERROR/MainProcess] Received unregistered task of type 'celery_blo.fetch_url'.
+KeyError: 'celery_blo.fetch_url'
+</code></pre></div></div>
+
+<p>So when putting the task on queue, celery uses the app name i.e <code class="highlighter-rouge">celery_blo</code>. But worker i.e <code class="highlighter-rouge">celery worker -A celery_blog</code> registers the task using the module name i.e <code class="highlighter-rouge">celery_blog</code> and not using the app name i.e <code class="highlighter-rouge">celery_bio</code>.</p>
+
+
+  </div><a class="u-url" href="/redis/2015/07/06/getting-started-with-celery-and-redis.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

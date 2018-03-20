@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Using subdomains with Django | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Using subdomains with Django" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Django makes using beautiful urls a snap. However using subdomains with Django is not so obvious. Here is an article explaining this. Advantages of subdomain Sometimes looks more professional. Users will prefer someblog.wordpress.com over wordpress.com/someblog. If each part of your site is Under a different untrusted users, you might want to give them a separate subdomain, so that if they do Blackhat Seo on their part, the main site is not harmed. Your users can point a Cname to their subdomain to use domain of their choice with their subdomain. Disadvantages of subdomain When you need subdomains, you will know it. If you do not if you need it or not, you probably do not. Getting the current subdomain is ridiculously easy. bits = urlparse.urlsplit(request.META[&#39;HTTP_HOST&#39;])[0].split(&#39;.&#39;) bits[0] now bits[0] is you subdomain. However if you are using subdomains you are probably going to be needing this, In all your views. In all your templates. So you need to expose the subdomains using A Middleware for all requests. A request context for all templates. A Middleware is nothing but a normal Python class which can implement process_request, process_response and others. The code to expose subdomains for all requests via a middleware is, import urlparse class GetSubdomainMiddleware: def process_request(self, request): bits = urlparse.urlsplit(request.META[&#39;HTTP_HOST&#39;])[0].split(&#39;.&#39;) if not( len(bits) == 3): pass#Todo Raise an exception etc request.subdomain = bits[0] The way to populate subdomain in all templates is similar def populate_board(request): &quot;Populate the board in the template&quot; return {&#39;board&#39;:request.subdomain}#request.subdomain has been populated via the Middleware. And now you need to edit you settings.py file to add TEMPLATE_CONTEXT_PROCESSORS and MIDDLEWARE_CLASSES to include your Middleware and context processor. You are almost ready to go, however your cookies will not work across sub domains. To make your cookies work across subdomains, add this line to your settings.py SESSION_COOKIE_DOMAIN = ‘.example.com’ if not DEBUG else ‘.local Thanks" />
+<meta property="og:description" content="Django makes using beautiful urls a snap. However using subdomains with Django is not so obvious. Here is an article explaining this. Advantages of subdomain Sometimes looks more professional. Users will prefer someblog.wordpress.com over wordpress.com/someblog. If each part of your site is Under a different untrusted users, you might want to give them a separate subdomain, so that if they do Blackhat Seo on their part, the main site is not harmed. Your users can point a Cname to their subdomain to use domain of their choice with their subdomain. Disadvantages of subdomain When you need subdomains, you will know it. If you do not if you need it or not, you probably do not. Getting the current subdomain is ridiculously easy. bits = urlparse.urlsplit(request.META[&#39;HTTP_HOST&#39;])[0].split(&#39;.&#39;) bits[0] now bits[0] is you subdomain. However if you are using subdomains you are probably going to be needing this, In all your views. In all your templates. So you need to expose the subdomains using A Middleware for all requests. A request context for all templates. A Middleware is nothing but a normal Python class which can implement process_request, process_response and others. The code to expose subdomains for all requests via a middleware is, import urlparse class GetSubdomainMiddleware: def process_request(self, request): bits = urlparse.urlsplit(request.META[&#39;HTTP_HOST&#39;])[0].split(&#39;.&#39;) if not( len(bits) == 3): pass#Todo Raise an exception etc request.subdomain = bits[0] The way to populate subdomain in all templates is similar def populate_board(request): &quot;Populate the board in the template&quot; return {&#39;board&#39;:request.subdomain}#request.subdomain has been populated via the Middleware. And now you need to edit you settings.py file to add TEMPLATE_CONTEXT_PROCESSORS and MIDDLEWARE_CLASSES to include your Middleware and context processor. You are almost ready to go, however your cookies will not work across sub domains. To make your cookies work across subdomains, add this line to your settings.py SESSION_COOKIE_DOMAIN = ‘.example.com’ if not DEBUG else ‘.local Thanks" />
+<link rel="canonical" href="http://localhost:4000/tips/2008/10/10/using-subdomains-with-django.html" />
+<meta property="og:url" content="http://localhost:4000/tips/2008/10/10/using-subdomains-with-django.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2008-10-10T20:31:57+05:30" />
+<script type="application/ld+json">
+{"description":"Django makes using beautiful urls a snap. However using subdomains with Django is not so obvious. Here is an article explaining this. Advantages of subdomain Sometimes looks more professional. Users will prefer someblog.wordpress.com over wordpress.com/someblog. If each part of your site is Under a different untrusted users, you might want to give them a separate subdomain, so that if they do Blackhat Seo on their part, the main site is not harmed. Your users can point a Cname to their subdomain to use domain of their choice with their subdomain. Disadvantages of subdomain When you need subdomains, you will know it. If you do not if you need it or not, you probably do not. Getting the current subdomain is ridiculously easy. bits = urlparse.urlsplit(request.META[&#39;HTTP_HOST&#39;])[0].split(&#39;.&#39;) bits[0] now bits[0] is you subdomain. However if you are using subdomains you are probably going to be needing this, In all your views. In all your templates. So you need to expose the subdomains using A Middleware for all requests. A request context for all templates. A Middleware is nothing but a normal Python class which can implement process_request, process_response and others. The code to expose subdomains for all requests via a middleware is, import urlparse class GetSubdomainMiddleware: def process_request(self, request): bits = urlparse.urlsplit(request.META[&#39;HTTP_HOST&#39;])[0].split(&#39;.&#39;) if not( len(bits) == 3): pass#Todo Raise an exception etc request.subdomain = bits[0] The way to populate subdomain in all templates is similar def populate_board(request): &quot;Populate the board in the template&quot; return {&#39;board&#39;:request.subdomain}#request.subdomain has been populated via the Middleware. And now you need to edit you settings.py file to add TEMPLATE_CONTEXT_PROCESSORS and MIDDLEWARE_CLASSES to include your Middleware and context processor. You are almost ready to go, however your cookies will not work across sub domains. To make your cookies work across subdomains, add this line to your settings.py SESSION_COOKIE_DOMAIN = ‘.example.com’ if not DEBUG else ‘.local Thanks","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/tips/2008/10/10/using-subdomains-with-django.html","headline":"Using subdomains with Django","dateModified":"2008-10-10T20:31:57+05:30","datePublished":"2008-10-10T20:31:57+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/tips/2008/10/10/using-subdomains-with-django.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Using subdomains with Django</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2008-10-10T20:31:57+05:30" itemprop="datePublished">Oct 10, 2008
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Django makes using beautiful urls a snap. However using subdomains with Django is not so obvious. Here is an article explaining this.</p>
+
+<p>Advantages of subdomain</p>
+
+<ol>
+  <li>Sometimes looks more professional. Users will prefer someblog.wordpress.com over wordpress.com/someblog.</li>
+  <li>If each part of your site is Under a different untrusted users, you might want to give them a separate subdomain, so that if they do Blackhat Seo on their part, the main site is not harmed.</li>
+  <li>Your users can point a Cname to their subdomain to use domain of their choice with their subdomain.</li>
+</ol>
+
+<p>Disadvantages of subdomain</p>
+
+<ol>
+  <li>When you need subdomains, you will know it. If you do not if you need it or not, you probably do not.</li>
+</ol>
+
+<p>Getting the current subdomain is ridiculously easy.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bits = urlparse.urlsplit(request.META['HTTP_HOST'])[0].split('.')
+bits[0]
+</code></pre></div></div>
+
+<p>now bits[0] is you subdomain.</p>
+
+<p>However if you are using subdomains you are probably going to be needing this,</p>
+
+<ol>
+  <li>In all your views.</li>
+  <li>In all your templates.</li>
+</ol>
+
+<p>So you need to expose the subdomains using</p>
+
+<ol>
+  <li>A <a href="http://docs.djangoproject.com/en/dev/topics/http/middleware/">Middleware</a> for all requests.</li>
+  <li>A <a href="http://docs.djangoproject.com/en/dev/ref/templates/api/">request context</a> for all templates.</li>
+</ol>
+
+<p>A Middleware is nothing but a normal Python class which can implement <code class="highlighter-rouge">process_request</code>, <code class="highlighter-rouge">process_response</code> and others.</p>
+
+<p>The code to expose subdomains for all requests via a middleware is,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import urlparse
+
+class GetSubdomainMiddleware:
+    
+    def process_request(self, request):
+	bits = urlparse.urlsplit(request.META['HTTP_HOST'])[0].split('.')
+	if not( len(bits) == 3):
+	    pass#Todo Raise an exception etc
+	request.subdomain = bits[0]
+</code></pre></div></div>
+
+<p>The way to populate subdomain in all templates is similar</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def populate_board(request):
+    "Populate the board in the template"
+    return {'board':request.subdomain}#request.subdomain has been populated via the Middleware.
+</code></pre></div></div>
+
+<p>And now you need to edit you settings.py file to add <code class="highlighter-rouge">TEMPLATE_CONTEXT_PROCESSORS</code> and <code class="highlighter-rouge">MIDDLEWARE_CLASSES</code> to include your Middleware and context processor.</p>
+
+<p>You are almost ready to go, however your cookies will not work across sub domains. To
+make your cookies work across subdomains, add this line to your settings.py</p>
+
+<p><code class="highlighter-rouge">SESSION_COOKIE_DOMAIN</code> = ‘.example.com’ if not DEBUG else ‘.local</p>
+
+<p><a href="http://sharjeel.2scomplement.com/2008/07/24/django-subdomains/">Thanks</a></p>
+
+
+  </div><a class="u-url" href="/tips/2008/10/10/using-subdomains-with-django.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

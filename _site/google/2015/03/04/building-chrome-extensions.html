@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Building Chrome Extensions | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Building Chrome Extensions" />
+<meta name="author" content="karambir" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this blog post, we will look at how to build a chrome extension that can work with multiple online services. Specifically we will see how to update Trello web pages with relevant content from Google Drive. For a particular Trello board, we will update trello cards with data from Google Drive document. Google Chrome extensions are nothing but some html, js files linked together that are running behind the scenes. Before starting out, we need to make sure that Developer mode is checked in chrome://extensions/. Chrome extensions work by telling chrome about our html, js files using a Manifest.json. It will have some meta data like name, description, icon images and more important information like permissions our extension needs, files to load in background. A simple Manifest.json can look like this: { &quot;name&quot;: &quot;Trello Updater&quot;, &quot;version&quot;: &quot;0.1&quot;, &quot;manifest_version&quot; : 2, &quot;description&quot;: &quot;Update trello with Google Drive&quot;, &quot;background&quot;: { &quot;scripts&quot;: [&quot;background.js&quot;], &quot;persistent&quot;: false }, &quot;browser_action&quot;: { &quot;default_icon&quot;: &quot;icon.png&quot;, &quot;default_title&quot;: &quot;Trello Updater&quot; }, &quot;content_scripts&quot;: [ { &quot;matches&quot;: [&quot;https://trello.com/*&quot;], &quot;js&quot;: [&quot;lib/jquery.js&quot;, &quot;trelloupdater.js&quot;] } ], &quot;permissions&quot;: [ &quot;tabs&quot;, &quot;storage&quot;, &quot;*://*.google.com/*&quot;, &quot;https://*.trello.com/*&quot; ] } First lets learn what these mean: Meta-Data: The first 4 lines in our manifest.json provides meta-data about our extension like name, version, description. Background: This is the main script that will be running for our extension. It can detect events/changes on Google Chrome and act on them. There are many events that Google Chrome provides for us to use. Read them here. This page/script will be calling other parts of our extension code to act on something. It can use chrome messaging api for this. Content Scripts: Content scripts are JavaScript files that run in the context of web pages. By using the standard Document Object Model (DOM), they can read details of the web pages the browser visits, or make changes to them. We tell Chrome when to inject our content_scripts using “matches” and “permissions” keyword. Here we are telling it to inject our two content_scripts jquery and trelloupdater in all trello.com webpages. We are taking permissions to have access to chrome tabs(you will see why), chrome storage and google.com(for authentication). Note that for security reasons, content scripts have different execution environment than a Web page javascript environment. There can be two ways for our extension to work: Browser Actions: This property keeps an icon representing our extension on the right side of the address bar. Users can then click the icon and open a pop-up which is actually HTML content controlled by us. For most extensions, developers use this property. Page Actions: This property is similar to browser actions but the icon is shown inside the address bar. Initially this icon is hidden and we decide when to show it. We use page actions when we need to invoke our script only when a page with specific property is loaded. Like a page with a rss feed or video. We can load our extension using Load unpacked extension in chrome://extensions/. Once loaded, our background script will be loaded instantly and we can use a chrome event called onInstalled to do something. For our example we will call Google Oauth to get the user permission for Google Drive files: background.js function encodeData(data) { var urlEncodedDataPairs = []; for(var name in data) { urlEncodedDataPairs.push(encodeURIComponent(name) + &#39;=&#39; + encodeURIComponent(data[name])); } return urlEncodedDataPairs.join(&#39;&amp;&#39;).replace(/%20/g, &#39;+&#39;); } function getAccessToken(code) { var uriData = { &quot;client_id&quot;: &quot;your google oauth client id&quot;, &quot;client_secret&quot;: &quot;your google client secret&quot;, &quot;redirect_uri&quot;: &quot;urn:ietf:wg:oauth:2.0:oob:auto&quot;, &quot;grant_type&quot;: &quot;authorization_code&quot;, &quot;code&quot;: code }; var result = false; var xhr = new XMLHttpRequest(); encodedData = encodeData(uriData); xhr.open(&quot;POST&quot;, &quot;https://accounts.google.com/o/oauth2/token&quot;, true); xhr.setRequestHeader(&#39;Content-Type&#39;, &#39;application/x-www-form-urlencoded&#39;); xhr.onload = function(e) { if (xhr.status == 200) { data = JSON.parse(xhr.responseText); chrome.storage.sync.set({&#39;GoogleAccess&#39;: data.access_token}); chrome.storage.sync.set({&#39;GoogleRefresh&#39;: data.refresh_token}); chrome.storage.sync.set({&#39;GoogleType&#39;: data.token_type}); result = data.access_token; } else { console.error(xhr.statusText + &#39; &#39; + xhr.responseText); } }; xhr.send(encodedData); return result; }); chrome.runtime.onInstalled.addListener(function (details) { var uriData = { &quot;access_type&quot;: &quot;offline&quot;, &quot;redirect_uri&quot;: &quot;urn:ietf:wg:oauth:2.0:oob:auto&quot;, &quot;response_type&quot;: &quot;code&quot;, &quot;client_id&quot;: &quot;your google oauth client id&quot;, &quot;approval_prompt&quot;: &quot;auto&quot;, &quot;scope&quot;: &quot;https://spreadsheets.google.com/feeds&quot; }; var encodedData = encodeData(uriData); chrome.tabs.create({ url: &#39;https://accounts.google.com/o/oauth2/auth?&#39;+encodedData }); //Create new tab and call Google Oauth chrome.tabs.onUpdated.addListener(function googleAuth(tabId, changeInfo, tab) { //Check for auth token on the page. if ((changeInfo.status == &quot;complete&quot;) &amp;&amp; (tab.title.match(&quot;Success code=&quot;))) { var authToken = tab.title.slice(13); chrome.storage.sync.set({&#39;GoogleAuth&#39;: authToken}); chrome.tabs.onUpdated.removeListener(googleAuth); //get access token getAccessToken(authToken); } }); }); Here we are doing the oauth2 and getting Access token from Google. For this we have an event listener which will be called when our extension is first installed. We are doing following with our function: First, we create a new tab using chrome.tabs.create and redirect user to Google oAuth. Then, we add a listener on that tab to check when user give us permission(note that we are only taking permission for Spreadsheets) and the page have the auth token. Then, we are calling function getAccessToken to get the access token. This is done behind the scenes. At last, we are saving the access token using `chrome.storage.sync.set’. Once we have the access token, we can make calls to Google Drive from our content scripts to get data and fill in our trello web pages using simple javascript. From our manifest, we can see that we added pattern match for our content scripts. So our scripts will be loaded on all trello web pages automatically and we can use document.onload to make the changes. Also we can add one more thing to our extension. When a user clicks our extension, we can explicitly call our content script again from our background page to update data. We will use chrome browser action onClicked event to send a message to our content script like this: background.js chrome.browserAction.onClicked.addListener(function(activeTab) { chrome.tabs.sendMessage(activeTab.id, {action: &quot;forceUpdate&quot;}); // Send a message to content_scipt }); trelloupdater.js function getGoogleData(access_token, sheetId) { // Call Google Sheets API var sheets_url = &quot;https://spreadsheets.google.com/feeds/list/&quot; + sheetId + &quot;/od6/private/full&quot;; $.ajax({ type: &quot;GET&quot;, url: sheets_url, async: true, headers: { &quot;Authorization&quot;: &quot;Bearer &quot; + access_token } }).done(function (sheetXml) { //Update Trello board cards with data &quot;sheetXml&quot; $(&#39;.list-card-title&#39;).each(function() { var originalCard = this.text.trim().split(&#39; &#39;); var cardUuid = originalCard[originalCard.length-1]; if ((cardUuid.length == 16) &amp;&amp; ($.isNumeric(cardUuid))) { var cardName = &quot;&quot;; var cardDob = &quot;&quot;; $(sheetXml).find(&#39;entry&#39;).each(function () { if (this.textContent.search(cardUuid) != -1) { cardName = $(this).find(&#39;name&#39;).text(); cardDob = $(this).find(&#39;dob&#39;).text(); return false; } }); if (cardName) { this.text = cardName + &quot; &quot; + cardDob + &quot; &quot; + cardUuid; console.log(&quot;Changed card &quot; + this.text); } } }) }).fail(function (jqXHR, textStatus) { console.error(textStatus); }); } function updateTrello(tData) { var page = &quot;&quot;; var trelloApi = &quot;https://api.trello.com/1/&quot;; var trelloBoardId = &quot;&quot;; if (document.URL.indexOf(tData.board)!=-1) { page = &quot;board&quot;; console.log(&quot;Board Page found to sync&quot;); getGoogleData(tData.GoogleAccess, tData.sheet); //send sheet id and access token for Google Sheets api } } chrome.runtime.onMessage.addListener(function(msg) { if (msg.action == &quot;forceTrello&quot;) { chrome.storage.sync.get(function (items) { // Get access token from chrome storage. updateTrello(items); }); } }); Thats it. Our updateTrello function will be called everytime a user clicks on our extension icon. And updateTrello is just doing some simple calls to Google Sheets Api and updating trello cards according to that data. This is just tip of iceberg, a simple example showing simple event listeners like tabs.onUpdated, tabs.sendMessage, runtime.onMessage, runtime.onInstalled etc. Chrome gives you so many events, ways to interact with your user that you can add complex functionalities easily. For more information, check their documentation." />
+<meta property="og:description" content="In this blog post, we will look at how to build a chrome extension that can work with multiple online services. Specifically we will see how to update Trello web pages with relevant content from Google Drive. For a particular Trello board, we will update trello cards with data from Google Drive document. Google Chrome extensions are nothing but some html, js files linked together that are running behind the scenes. Before starting out, we need to make sure that Developer mode is checked in chrome://extensions/. Chrome extensions work by telling chrome about our html, js files using a Manifest.json. It will have some meta data like name, description, icon images and more important information like permissions our extension needs, files to load in background. A simple Manifest.json can look like this: { &quot;name&quot;: &quot;Trello Updater&quot;, &quot;version&quot;: &quot;0.1&quot;, &quot;manifest_version&quot; : 2, &quot;description&quot;: &quot;Update trello with Google Drive&quot;, &quot;background&quot;: { &quot;scripts&quot;: [&quot;background.js&quot;], &quot;persistent&quot;: false }, &quot;browser_action&quot;: { &quot;default_icon&quot;: &quot;icon.png&quot;, &quot;default_title&quot;: &quot;Trello Updater&quot; }, &quot;content_scripts&quot;: [ { &quot;matches&quot;: [&quot;https://trello.com/*&quot;], &quot;js&quot;: [&quot;lib/jquery.js&quot;, &quot;trelloupdater.js&quot;] } ], &quot;permissions&quot;: [ &quot;tabs&quot;, &quot;storage&quot;, &quot;*://*.google.com/*&quot;, &quot;https://*.trello.com/*&quot; ] } First lets learn what these mean: Meta-Data: The first 4 lines in our manifest.json provides meta-data about our extension like name, version, description. Background: This is the main script that will be running for our extension. It can detect events/changes on Google Chrome and act on them. There are many events that Google Chrome provides for us to use. Read them here. This page/script will be calling other parts of our extension code to act on something. It can use chrome messaging api for this. Content Scripts: Content scripts are JavaScript files that run in the context of web pages. By using the standard Document Object Model (DOM), they can read details of the web pages the browser visits, or make changes to them. We tell Chrome when to inject our content_scripts using “matches” and “permissions” keyword. Here we are telling it to inject our two content_scripts jquery and trelloupdater in all trello.com webpages. We are taking permissions to have access to chrome tabs(you will see why), chrome storage and google.com(for authentication). Note that for security reasons, content scripts have different execution environment than a Web page javascript environment. There can be two ways for our extension to work: Browser Actions: This property keeps an icon representing our extension on the right side of the address bar. Users can then click the icon and open a pop-up which is actually HTML content controlled by us. For most extensions, developers use this property. Page Actions: This property is similar to browser actions but the icon is shown inside the address bar. Initially this icon is hidden and we decide when to show it. We use page actions when we need to invoke our script only when a page with specific property is loaded. Like a page with a rss feed or video. We can load our extension using Load unpacked extension in chrome://extensions/. Once loaded, our background script will be loaded instantly and we can use a chrome event called onInstalled to do something. For our example we will call Google Oauth to get the user permission for Google Drive files: background.js function encodeData(data) { var urlEncodedDataPairs = []; for(var name in data) { urlEncodedDataPairs.push(encodeURIComponent(name) + &#39;=&#39; + encodeURIComponent(data[name])); } return urlEncodedDataPairs.join(&#39;&amp;&#39;).replace(/%20/g, &#39;+&#39;); } function getAccessToken(code) { var uriData = { &quot;client_id&quot;: &quot;your google oauth client id&quot;, &quot;client_secret&quot;: &quot;your google client secret&quot;, &quot;redirect_uri&quot;: &quot;urn:ietf:wg:oauth:2.0:oob:auto&quot;, &quot;grant_type&quot;: &quot;authorization_code&quot;, &quot;code&quot;: code }; var result = false; var xhr = new XMLHttpRequest(); encodedData = encodeData(uriData); xhr.open(&quot;POST&quot;, &quot;https://accounts.google.com/o/oauth2/token&quot;, true); xhr.setRequestHeader(&#39;Content-Type&#39;, &#39;application/x-www-form-urlencoded&#39;); xhr.onload = function(e) { if (xhr.status == 200) { data = JSON.parse(xhr.responseText); chrome.storage.sync.set({&#39;GoogleAccess&#39;: data.access_token}); chrome.storage.sync.set({&#39;GoogleRefresh&#39;: data.refresh_token}); chrome.storage.sync.set({&#39;GoogleType&#39;: data.token_type}); result = data.access_token; } else { console.error(xhr.statusText + &#39; &#39; + xhr.responseText); } }; xhr.send(encodedData); return result; }); chrome.runtime.onInstalled.addListener(function (details) { var uriData = { &quot;access_type&quot;: &quot;offline&quot;, &quot;redirect_uri&quot;: &quot;urn:ietf:wg:oauth:2.0:oob:auto&quot;, &quot;response_type&quot;: &quot;code&quot;, &quot;client_id&quot;: &quot;your google oauth client id&quot;, &quot;approval_prompt&quot;: &quot;auto&quot;, &quot;scope&quot;: &quot;https://spreadsheets.google.com/feeds&quot; }; var encodedData = encodeData(uriData); chrome.tabs.create({ url: &#39;https://accounts.google.com/o/oauth2/auth?&#39;+encodedData }); //Create new tab and call Google Oauth chrome.tabs.onUpdated.addListener(function googleAuth(tabId, changeInfo, tab) { //Check for auth token on the page. if ((changeInfo.status == &quot;complete&quot;) &amp;&amp; (tab.title.match(&quot;Success code=&quot;))) { var authToken = tab.title.slice(13); chrome.storage.sync.set({&#39;GoogleAuth&#39;: authToken}); chrome.tabs.onUpdated.removeListener(googleAuth); //get access token getAccessToken(authToken); } }); }); Here we are doing the oauth2 and getting Access token from Google. For this we have an event listener which will be called when our extension is first installed. We are doing following with our function: First, we create a new tab using chrome.tabs.create and redirect user to Google oAuth. Then, we add a listener on that tab to check when user give us permission(note that we are only taking permission for Spreadsheets) and the page have the auth token. Then, we are calling function getAccessToken to get the access token. This is done behind the scenes. At last, we are saving the access token using `chrome.storage.sync.set’. Once we have the access token, we can make calls to Google Drive from our content scripts to get data and fill in our trello web pages using simple javascript. From our manifest, we can see that we added pattern match for our content scripts. So our scripts will be loaded on all trello web pages automatically and we can use document.onload to make the changes. Also we can add one more thing to our extension. When a user clicks our extension, we can explicitly call our content script again from our background page to update data. We will use chrome browser action onClicked event to send a message to our content script like this: background.js chrome.browserAction.onClicked.addListener(function(activeTab) { chrome.tabs.sendMessage(activeTab.id, {action: &quot;forceUpdate&quot;}); // Send a message to content_scipt }); trelloupdater.js function getGoogleData(access_token, sheetId) { // Call Google Sheets API var sheets_url = &quot;https://spreadsheets.google.com/feeds/list/&quot; + sheetId + &quot;/od6/private/full&quot;; $.ajax({ type: &quot;GET&quot;, url: sheets_url, async: true, headers: { &quot;Authorization&quot;: &quot;Bearer &quot; + access_token } }).done(function (sheetXml) { //Update Trello board cards with data &quot;sheetXml&quot; $(&#39;.list-card-title&#39;).each(function() { var originalCard = this.text.trim().split(&#39; &#39;); var cardUuid = originalCard[originalCard.length-1]; if ((cardUuid.length == 16) &amp;&amp; ($.isNumeric(cardUuid))) { var cardName = &quot;&quot;; var cardDob = &quot;&quot;; $(sheetXml).find(&#39;entry&#39;).each(function () { if (this.textContent.search(cardUuid) != -1) { cardName = $(this).find(&#39;name&#39;).text(); cardDob = $(this).find(&#39;dob&#39;).text(); return false; } }); if (cardName) { this.text = cardName + &quot; &quot; + cardDob + &quot; &quot; + cardUuid; console.log(&quot;Changed card &quot; + this.text); } } }) }).fail(function (jqXHR, textStatus) { console.error(textStatus); }); } function updateTrello(tData) { var page = &quot;&quot;; var trelloApi = &quot;https://api.trello.com/1/&quot;; var trelloBoardId = &quot;&quot;; if (document.URL.indexOf(tData.board)!=-1) { page = &quot;board&quot;; console.log(&quot;Board Page found to sync&quot;); getGoogleData(tData.GoogleAccess, tData.sheet); //send sheet id and access token for Google Sheets api } } chrome.runtime.onMessage.addListener(function(msg) { if (msg.action == &quot;forceTrello&quot;) { chrome.storage.sync.get(function (items) { // Get access token from chrome storage. updateTrello(items); }); } }); Thats it. Our updateTrello function will be called everytime a user clicks on our extension icon. And updateTrello is just doing some simple calls to Google Sheets Api and updating trello cards according to that data. This is just tip of iceberg, a simple example showing simple event listeners like tabs.onUpdated, tabs.sendMessage, runtime.onMessage, runtime.onInstalled etc. Chrome gives you so many events, ways to interact with your user that you can add complex functionalities easily. For more information, check their documentation." />
+<link rel="canonical" href="http://localhost:4000/google/2015/03/04/building-chrome-extensions.html" />
+<meta property="og:url" content="http://localhost:4000/google/2015/03/04/building-chrome-extensions.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2015-03-04T11:40:38+05:30" />
+<script type="application/ld+json">
+{"description":"In this blog post, we will look at how to build a chrome extension that can work with multiple online services. Specifically we will see how to update Trello web pages with relevant content from Google Drive. For a particular Trello board, we will update trello cards with data from Google Drive document. Google Chrome extensions are nothing but some html, js files linked together that are running behind the scenes. Before starting out, we need to make sure that Developer mode is checked in chrome://extensions/. Chrome extensions work by telling chrome about our html, js files using a Manifest.json. It will have some meta data like name, description, icon images and more important information like permissions our extension needs, files to load in background. A simple Manifest.json can look like this: { &quot;name&quot;: &quot;Trello Updater&quot;, &quot;version&quot;: &quot;0.1&quot;, &quot;manifest_version&quot; : 2, &quot;description&quot;: &quot;Update trello with Google Drive&quot;, &quot;background&quot;: { &quot;scripts&quot;: [&quot;background.js&quot;], &quot;persistent&quot;: false }, &quot;browser_action&quot;: { &quot;default_icon&quot;: &quot;icon.png&quot;, &quot;default_title&quot;: &quot;Trello Updater&quot; }, &quot;content_scripts&quot;: [ { &quot;matches&quot;: [&quot;https://trello.com/*&quot;], &quot;js&quot;: [&quot;lib/jquery.js&quot;, &quot;trelloupdater.js&quot;] } ], &quot;permissions&quot;: [ &quot;tabs&quot;, &quot;storage&quot;, &quot;*://*.google.com/*&quot;, &quot;https://*.trello.com/*&quot; ] } First lets learn what these mean: Meta-Data: The first 4 lines in our manifest.json provides meta-data about our extension like name, version, description. Background: This is the main script that will be running for our extension. It can detect events/changes on Google Chrome and act on them. There are many events that Google Chrome provides for us to use. Read them here. This page/script will be calling other parts of our extension code to act on something. It can use chrome messaging api for this. Content Scripts: Content scripts are JavaScript files that run in the context of web pages. By using the standard Document Object Model (DOM), they can read details of the web pages the browser visits, or make changes to them. We tell Chrome when to inject our content_scripts using “matches” and “permissions” keyword. Here we are telling it to inject our two content_scripts jquery and trelloupdater in all trello.com webpages. We are taking permissions to have access to chrome tabs(you will see why), chrome storage and google.com(for authentication). Note that for security reasons, content scripts have different execution environment than a Web page javascript environment. There can be two ways for our extension to work: Browser Actions: This property keeps an icon representing our extension on the right side of the address bar. Users can then click the icon and open a pop-up which is actually HTML content controlled by us. For most extensions, developers use this property. Page Actions: This property is similar to browser actions but the icon is shown inside the address bar. Initially this icon is hidden and we decide when to show it. We use page actions when we need to invoke our script only when a page with specific property is loaded. Like a page with a rss feed or video. We can load our extension using Load unpacked extension in chrome://extensions/. Once loaded, our background script will be loaded instantly and we can use a chrome event called onInstalled to do something. For our example we will call Google Oauth to get the user permission for Google Drive files: background.js function encodeData(data) { var urlEncodedDataPairs = []; for(var name in data) { urlEncodedDataPairs.push(encodeURIComponent(name) + &#39;=&#39; + encodeURIComponent(data[name])); } return urlEncodedDataPairs.join(&#39;&amp;&#39;).replace(/%20/g, &#39;+&#39;); } function getAccessToken(code) { var uriData = { &quot;client_id&quot;: &quot;your google oauth client id&quot;, &quot;client_secret&quot;: &quot;your google client secret&quot;, &quot;redirect_uri&quot;: &quot;urn:ietf:wg:oauth:2.0:oob:auto&quot;, &quot;grant_type&quot;: &quot;authorization_code&quot;, &quot;code&quot;: code }; var result = false; var xhr = new XMLHttpRequest(); encodedData = encodeData(uriData); xhr.open(&quot;POST&quot;, &quot;https://accounts.google.com/o/oauth2/token&quot;, true); xhr.setRequestHeader(&#39;Content-Type&#39;, &#39;application/x-www-form-urlencoded&#39;); xhr.onload = function(e) { if (xhr.status == 200) { data = JSON.parse(xhr.responseText); chrome.storage.sync.set({&#39;GoogleAccess&#39;: data.access_token}); chrome.storage.sync.set({&#39;GoogleRefresh&#39;: data.refresh_token}); chrome.storage.sync.set({&#39;GoogleType&#39;: data.token_type}); result = data.access_token; } else { console.error(xhr.statusText + &#39; &#39; + xhr.responseText); } }; xhr.send(encodedData); return result; }); chrome.runtime.onInstalled.addListener(function (details) { var uriData = { &quot;access_type&quot;: &quot;offline&quot;, &quot;redirect_uri&quot;: &quot;urn:ietf:wg:oauth:2.0:oob:auto&quot;, &quot;response_type&quot;: &quot;code&quot;, &quot;client_id&quot;: &quot;your google oauth client id&quot;, &quot;approval_prompt&quot;: &quot;auto&quot;, &quot;scope&quot;: &quot;https://spreadsheets.google.com/feeds&quot; }; var encodedData = encodeData(uriData); chrome.tabs.create({ url: &#39;https://accounts.google.com/o/oauth2/auth?&#39;+encodedData }); //Create new tab and call Google Oauth chrome.tabs.onUpdated.addListener(function googleAuth(tabId, changeInfo, tab) { //Check for auth token on the page. if ((changeInfo.status == &quot;complete&quot;) &amp;&amp; (tab.title.match(&quot;Success code=&quot;))) { var authToken = tab.title.slice(13); chrome.storage.sync.set({&#39;GoogleAuth&#39;: authToken}); chrome.tabs.onUpdated.removeListener(googleAuth); //get access token getAccessToken(authToken); } }); }); Here we are doing the oauth2 and getting Access token from Google. For this we have an event listener which will be called when our extension is first installed. We are doing following with our function: First, we create a new tab using chrome.tabs.create and redirect user to Google oAuth. Then, we add a listener on that tab to check when user give us permission(note that we are only taking permission for Spreadsheets) and the page have the auth token. Then, we are calling function getAccessToken to get the access token. This is done behind the scenes. At last, we are saving the access token using `chrome.storage.sync.set’. Once we have the access token, we can make calls to Google Drive from our content scripts to get data and fill in our trello web pages using simple javascript. From our manifest, we can see that we added pattern match for our content scripts. So our scripts will be loaded on all trello web pages automatically and we can use document.onload to make the changes. Also we can add one more thing to our extension. When a user clicks our extension, we can explicitly call our content script again from our background page to update data. We will use chrome browser action onClicked event to send a message to our content script like this: background.js chrome.browserAction.onClicked.addListener(function(activeTab) { chrome.tabs.sendMessage(activeTab.id, {action: &quot;forceUpdate&quot;}); // Send a message to content_scipt }); trelloupdater.js function getGoogleData(access_token, sheetId) { // Call Google Sheets API var sheets_url = &quot;https://spreadsheets.google.com/feeds/list/&quot; + sheetId + &quot;/od6/private/full&quot;; $.ajax({ type: &quot;GET&quot;, url: sheets_url, async: true, headers: { &quot;Authorization&quot;: &quot;Bearer &quot; + access_token } }).done(function (sheetXml) { //Update Trello board cards with data &quot;sheetXml&quot; $(&#39;.list-card-title&#39;).each(function() { var originalCard = this.text.trim().split(&#39; &#39;); var cardUuid = originalCard[originalCard.length-1]; if ((cardUuid.length == 16) &amp;&amp; ($.isNumeric(cardUuid))) { var cardName = &quot;&quot;; var cardDob = &quot;&quot;; $(sheetXml).find(&#39;entry&#39;).each(function () { if (this.textContent.search(cardUuid) != -1) { cardName = $(this).find(&#39;name&#39;).text(); cardDob = $(this).find(&#39;dob&#39;).text(); return false; } }); if (cardName) { this.text = cardName + &quot; &quot; + cardDob + &quot; &quot; + cardUuid; console.log(&quot;Changed card &quot; + this.text); } } }) }).fail(function (jqXHR, textStatus) { console.error(textStatus); }); } function updateTrello(tData) { var page = &quot;&quot;; var trelloApi = &quot;https://api.trello.com/1/&quot;; var trelloBoardId = &quot;&quot;; if (document.URL.indexOf(tData.board)!=-1) { page = &quot;board&quot;; console.log(&quot;Board Page found to sync&quot;); getGoogleData(tData.GoogleAccess, tData.sheet); //send sheet id and access token for Google Sheets api } } chrome.runtime.onMessage.addListener(function(msg) { if (msg.action == &quot;forceTrello&quot;) { chrome.storage.sync.get(function (items) { // Get access token from chrome storage. updateTrello(items); }); } }); Thats it. Our updateTrello function will be called everytime a user clicks on our extension icon. And updateTrello is just doing some simple calls to Google Sheets Api and updating trello cards according to that data. This is just tip of iceberg, a simple example showing simple event listeners like tabs.onUpdated, tabs.sendMessage, runtime.onMessage, runtime.onInstalled etc. Chrome gives you so many events, ways to interact with your user that you can add complex functionalities easily. For more information, check their documentation.","author":{"@type":"Person","name":"karambir"},"@type":"BlogPosting","url":"http://localhost:4000/google/2015/03/04/building-chrome-extensions.html","headline":"Building Chrome Extensions","dateModified":"2015-03-04T11:40:38+05:30","datePublished":"2015-03-04T11:40:38+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/google/2015/03/04/building-chrome-extensions.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Building Chrome Extensions</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2015-03-04T11:40:38+05:30" itemprop="datePublished">Mar 4, 2015
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">karambir</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>In this blog post, we will look at how to build a chrome extension that can work with multiple online services. Specifically we will see how to update Trello web pages with relevant content from Google Drive. For a particular Trello board, we will update trello cards with data from Google Drive document.</p>
+
+<p>Google Chrome extensions are nothing but some html, js files linked together that are running behind the scenes. Before starting out, we need to make sure that <em>Developer mode</em> is checked in <code class="highlighter-rouge">chrome://extensions/</code>.</p>
+
+<p>Chrome extensions work by telling chrome about our html, js files using a Manifest.json. It will have some meta data like name, description, icon images and more important information like permissions our extension needs, files to load in background. A simple Manifest.json can look like this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+    "name": "Trello Updater",
+    "version": "0.1",
+    "manifest_version" : 2,
+
+    "description": "Update trello with Google Drive",
+
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": false
+    },
+
+    "browser_action": {
+        "default_icon": "icon.png",
+        "default_title": "Trello Updater"
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["https://trello.com/*"],
+            "js": ["lib/jquery.js",
+            "trelloupdater.js"]
+        }
+    ],
+    "permissions": [
+        "tabs",
+        "storage",
+        "*://*.google.com/*",
+        "https://*.trello.com/*"
+    ]
+}
+</code></pre></div></div>
+
+<p>First lets learn what these mean:</p>
+
+<ul>
+  <li>
+    <p>Meta-Data: The first 4 lines in our manifest.json provides meta-data about our extension like name, version, description.</p>
+  </li>
+  <li>
+    <p>Background: This is the main script that will be running for our extension. It can detect events/changes on Google Chrome and act on them. There are many events that Google Chrome provides for us to use. Read <a href="https://developer.chrome.com/extensions/runtime">them here</a>. This page/script will be calling other parts of our extension code to act on something. It can use chrome messaging api for this.</p>
+  </li>
+  <li>
+    <p>Content Scripts: Content scripts are JavaScript files that run in the context of web pages. By using the standard Document Object Model (DOM), they can read details of the web pages the browser visits, or make changes to them. We tell Chrome when to inject our content_scripts using “matches” and “permissions” keyword. Here we are telling it to inject our two content_scripts <em>jquery</em> and <em>trelloupdater</em> in all trello.com webpages. We are taking permissions to have access to chrome tabs(you will see why), chrome storage and google.com(for authentication).</p>
+  </li>
+</ul>
+
+<blockquote>
+  <p><em>Note that for security reasons, content scripts have different execution environment than a Web page javascript environment.</em></p>
+</blockquote>
+
+<p>There can be two ways for our extension to work:</p>
+
+<ul>
+  <li>
+    <p>Browser Actions: This property keeps an icon representing our extension on the right side of the address bar. Users can then click the icon and open a pop-up which is actually HTML content controlled by us. For most extensions, developers use this property.</p>
+  </li>
+  <li>
+    <p>Page Actions: This property is similar to browser actions but the icon is shown inside the address bar. Initially this icon is hidden and we decide when to show it. We use page actions when we need to invoke our script only when a page with specific property is loaded. Like a page with a rss feed or video.</p>
+  </li>
+</ul>
+
+<p>We can load our extension using Load unpacked extension in <code class="highlighter-rouge">chrome://extensions/</code>. Once loaded, our background script will be loaded instantly and we can use a chrome event called <a href="https://developer.chrome.com/extensions/runtime#event-onInstalled">onInstalled</a> to do something. For our example we will call <a href="https://developers.google.com/accounts/docs/OAuth2">Google Oauth</a> to get the user permission for Google Drive files:</p>
+
+<p><em>background.js</em></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function encodeData(data) {
+    var urlEncodedDataPairs = [];
+    for(var name in data) {
+        urlEncodedDataPairs.push(encodeURIComponent(name) + '=' + encodeURIComponent(data[name]));
+    }
+    return urlEncodedDataPairs.join('&amp;').replace(/%20/g, '+');
+}
+
+function getAccessToken(code) {
+    var uriData  = {
+        "client_id": "your google oauth client id",
+        "client_secret": "your google client secret",
+        "redirect_uri": "urn:ietf:wg:oauth:2.0:oob:auto",
+        "grant_type": "authorization_code",
+        "code": code
+    };
+    var result = false;
+    var xhr = new XMLHttpRequest();
+    encodedData = encodeData(uriData);
+    xhr.open("POST", "https://accounts.google.com/o/oauth2/token", true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onload = function(e) {
+        if (xhr.status == 200) {
+            data = JSON.parse(xhr.responseText);
+            chrome.storage.sync.set({'GoogleAccess': data.access_token});
+            chrome.storage.sync.set({'GoogleRefresh': data.refresh_token});
+            chrome.storage.sync.set({'GoogleType': data.token_type});
+            result = data.access_token;
+        } else {
+            console.error(xhr.statusText + ' ' + xhr.responseText);
+        }
+    };
+    xhr.send(encodedData);
+    return result;
+});
+
+chrome.runtime.onInstalled.addListener(function (details) {
+    var uriData = {
+      "access_type": "offline",
+      "redirect_uri": "urn:ietf:wg:oauth:2.0:oob:auto",
+      "response_type": "code",
+      "client_id": "your google oauth client id",
+      "approval_prompt": "auto",
+      "scope": "https://spreadsheets.google.com/feeds"
+    };
+    var encodedData = encodeData(uriData);
+    chrome.tabs.create({ url: 'https://accounts.google.com/o/oauth2/auth?'+encodedData }); //Create new tab and call Google Oauth
+
+    chrome.tabs.onUpdated.addListener(function googleAuth(tabId, changeInfo, tab) { //Check for auth token on the page.
+        if ((changeInfo.status == "complete") &amp;&amp; (tab.title.match("Success code="))) {
+        var authToken = tab.title.slice(13);
+        chrome.storage.sync.set({'GoogleAuth': authToken});
+        chrome.tabs.onUpdated.removeListener(googleAuth);
+
+        //get access token
+        getAccessToken(authToken);
+        }
+    });
+});
+</code></pre></div></div>
+
+<p>Here we are doing the oauth2 and getting Access token from Google. For this we have an event listener which will be called when our extension is first installed. We are doing following with our function:</p>
+
+<ul>
+  <li>First, we create a new tab using <code class="highlighter-rouge">chrome.tabs.create</code> and redirect user to Google oAuth.</li>
+  <li>Then, we add a listener on that tab to check when user give us permission(note that we are only taking permission for Spreadsheets) and the page have the auth token.</li>
+  <li>Then, we are calling function <em>getAccessToken</em> to get the access token. This is done behind the scenes.</li>
+  <li>At last, we are saving the access token using `chrome.storage.sync.set’.</li>
+</ul>
+
+<p>Once we have the access token, we can make calls to Google Drive from our content scripts to get data and fill in our trello web pages using simple javascript. From our manifest, we can see that we added pattern match for our content scripts. So our scripts will be loaded on all trello web pages automatically and we can use document.onload to make the changes.</p>
+
+<p>Also we can add one more thing to our extension. When a user clicks our extension, we can explicitly call our content script again from our background page to update data. We will use chrome browser action onClicked event to send a message to our content script like this:</p>
+
+<p><em>background.js</em></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>chrome.browserAction.onClicked.addListener(function(activeTab) {
+    chrome.tabs.sendMessage(activeTab.id, {action: "forceUpdate"}); // Send a message to content_scipt
+});
+</code></pre></div></div>
+
+<p><em>trelloupdater.js</em></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getGoogleData(access_token, sheetId) {
+  // Call Google Sheets API
+  var sheets_url = "https://spreadsheets.google.com/feeds/list/" + sheetId + "/od6/private/full";
+  $.ajax({
+    type: "GET",
+    url: sheets_url,
+    async: true,
+    headers: {
+      "Authorization": "Bearer " + access_token
+    }
+  }).done(function (sheetXml) {
+    
+      //Update Trello board cards with data "sheetXml"
+      $('.list-card-title').each(function() {
+        var originalCard = this.text.trim().split(' ');
+        var cardUuid = originalCard[originalCard.length-1];
+        if ((cardUuid.length == 16) &amp;&amp; ($.isNumeric(cardUuid))) {
+          var cardName = "";
+          var cardDob = "";
+          $(sheetXml).find('entry').each(function () {
+            if (this.textContent.search(cardUuid) != -1) {
+              cardName = $(this).find('name').text();
+              cardDob = $(this).find('dob').text();
+              return false;
+            }
+          });
+          if (cardName) {
+            this.text = cardName + " " + cardDob + " " + cardUuid;
+            console.log("Changed card " + this.text);
+          }
+        }
+      })
+
+  }).fail(function (jqXHR, textStatus) {
+    console.error(textStatus);
+  });
+
+}
+
+function updateTrello(tData) {
+  var page = "";
+  var trelloApi = "https://api.trello.com/1/";
+  var trelloBoardId = "";
+
+  if (document.URL.indexOf(tData.board)!=-1) { 
+    page = "board";
+    console.log("Board Page found to sync");
+    getGoogleData(tData.GoogleAccess, tData.sheet); //send sheet id and access token for Google Sheets api
+  }
+
+}
+
+chrome.runtime.onMessage.addListener(function(msg) {
+  if (msg.action == "forceTrello") {
+    chrome.storage.sync.get(function (items) { // Get access token from chrome storage.
+        updateTrello(items);
+    });
+  }
+});
+</code></pre></div></div>
+
+<p>Thats it. Our updateTrello function will be called everytime a user clicks on our extension icon. And updateTrello is just doing some simple calls to Google Sheets Api and updating trello cards according to that data. This is just tip of iceberg, a simple example showing simple event listeners like tabs.onUpdated, tabs.sendMessage, runtime.onMessage, runtime.onInstalled etc. Chrome gives you so many events, ways to <a href="https://developer.chrome.com/extensions/options">interact with your user</a> that you can add complex functionalities easily. For more information, check their <a href="https://developer.chrome.com/extensions">documentation</a>.</p>
+
+
+  </div><a class="u-url" href="/google/2015/03/04/building-chrome-extensions.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

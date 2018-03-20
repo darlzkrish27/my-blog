@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Understanding Threads in Python | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Understanding Threads in Python" />
+<meta name="author" content="akshar" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="We will see some examples of using threads in Python and how to avoid race conditions: You should run each example several times to notice that threads are unpredictable and that your results differ every time. Disclaimer: Forget anything you heard about GIL for now, because GIL is not going to mess up with scenarios I want to show. ###Example 1: We want to fetch five different urls: ####Single threaded way: def get_responses(): urls = [&#39;http://www.google.com&#39;, &#39;http://www.amazon.com&#39;, &#39;http://www.ebay.com&#39;, &#39;http://www.alibaba.com&#39;, &#39;http://www.reddit.com&#39;] start = time.time() for url in urls: print url resp = urllib2.urlopen(url) print resp.getcode() print &quot;Elapsed time: %s&quot; % (time.time()-start) get_response() Output is: http://www.google.com 200 http://www.amazon.com 200 http://www.ebay.com 200 http://www.alibaba.com 200 http://www.reddit.com 200 Elapsed time: 3.0814409256 #####Explanation: All the urls are fetched in sequence. Unless the processor got response from a url, it didn’t fetch the next url. Network operations are time taking, so processor was idle during the time it was expecting the response from a url. Even in a single threaded program, there is one thread of execution. Let’s call it main thread. So, last example had only one thread, i.e main thread. ####Multi threaded way: You need to create a class which subclasses Thread: from threading import Thread class GetUrlThread(Thread): def __init__(self, url): self.url = url super(GetUrlThread, self).__init__() def run(self): resp = urllib2.urlopen(self.url) print self.url, resp.getcode() def get_responses(): urls = [&#39;http://www.google.com&#39;, &#39;http://www.amazon.com&#39;, &#39;http://www.ebay.com&#39;, &#39;http://www.alibaba.com&#39;, &#39;http://www.reddit.com&#39;] start = time.time() threads = [] for url in urls: t = GetUrlThread(url) threads.append(t) t.start() for t in threads: t.join() print &quot;Elapsed time: %s&quot; % (time.time()-start) get_responses() Output is: http://www.reddit.com 200 http://www.google.com 200 http://www.amazon.com 200 http://www.alibaba.com 200 http://www.ebay.com 200 Elapsed time: 0.689890861511 #####Explanation: Appreciate the improvement in running time of this program. We wrote a multi threaded program to decrease processor’s idle time. While waiting for response of a particular thread’s url, processor can work on some other thread and fetch the other thread’s url. We wanted one thread to act on one url, so overridden the constructor of thread class to pass it a url. Execution of a thread means execution of a thread’s run(). So, whatever we want the thread to do must go in its run(). Created one thread for each url and called start() on it. This tells the processor that it can execute the particular thread i.e the run() of thread. We don’t want the elapsed time to be evaluated until all the threads have executed, join() comes in picture here. Calling join() on a thread tells the main thread to wait for this particular thread to finish before the main thread can execute the next instruction. We call join() on all the threads, so elapsed time will be printed only after all the threads have run. #####Few things about threads Processor might not execute run() of a thread immediately after start(). You can’t say in which order run() of different threads will be called. For a specific thread, it’s guaranteed that the statements inside run() will be executed sequentially. It means that first the the url associated with the thread will be fetched and only then the recieved response will be printed. ###Example 2: We will demonstrate race condition with a program and then fix it: Read wikipedia example to understand what race condition means. #define a global variable some_var = 0 class IncrementThread(Thread): def run(self): #we want to read a global variable #and then increment it global some_var read_value = some_var print &quot;some_var in %s is %d&quot; % (self.name, read_value) some_var = read_value + 1 print &quot;some_var in %s after increment is %d&quot; % (self.name, some_var) def use_increment_thread(): threads = [] for i in range(50): t = IncrementThread() threads.append(t) t.start() for t in threads: t.join() print &quot;After 50 modifications, some_var should have become 50&quot; print &quot;After 50 modifications, some_var is %d&quot; % (some_var,) use_increment_thread() Run this and you will find different result every time. #####Explanation: There is a global variable and all the threads will modify it. All threads should add 1 to the existing value of the variable. There are 50 threads, so at end the value of some_var should become 50, but it doesn’t. #####Why some_var didn’t reach 50? At some point thread t1 read the value of some_var as 15 and then processor took the control from this thread and gave it to thread t2. t2 also reads some_var as 15. Both t1 and t2 reset the value of some_var to 15+1 i.e 16. But when two threads act on some_var we expected it’s value to be increased by 2. So, we have a race condition here. A similar race condition might have occurred few more times and so value of some_var at end remains something like 41 or 42 or anything less than 50. ####Fix this race condition Change the run() of IncrementThread to: from threading import Lock lock = Lock() class IncrementThread(Thread): def run(self): #we want to read a global variable #and then increment it global some_var lock.acquire() read_value = some_var print &quot;some_var in %s is %d&quot; % (self.name, read_value) some_var = read_value + 1 print &quot;some_var in %s after increment is %d&quot; % (self.name, some_var) lock.release() You should run use_increment_thread again and the result will match your expectation. #####Explanation: Lock is used to guard against race condition. If thread t1 has acquired the lock before performing a set of operations, no other thread can perform the same set of operation until t1 releases the lock. We want to make sure that once t1 has read some_var, no other thread can read some_var until t1 is done with modifying the value of some_var. So reading some_var and modifying it are logically related operations here. And that is why we keep read and modify part of some_var guarded by a Lock instance. Lock is a separate object and it will be acquired by the thread from whose context it is called. ###Example 3 In last example we saw how a global variable gets affected in multithreading. Let’s see an example to verify that one thread cannot affect the instance variable of some other thread. Let’s introduce time.sleep() in this example. It will make sure that a thread goes in suspended state and hence enforces thread switching to occur. import time class CreateListThread(Thread): def run(self): self.entries = [] for i in range(10): time.sleep(1) self.entries.append(i) print self.entries def use_create_list_thread(): for i in range(3): t = CreateListThread() t.start() use_create_list_thread() Run it few times and you will notice that the list do not get printed properly. Possibly the entries of one thread was getting printed and during this operation, processor switched to some other thread and started printing the entries for other thread. We want to ensure that entries get printed one after another for separate threads. Change run() of CreateListThread to use lock. class CreateListThread(Thread): def run(self): self.entries = [] for i in range(10): time.sleep(1) self.entries.append(i) lock.acquire() print self.entries lock.release() So, we put the print operation inside a lock. When one thread has acquired the lock and printing its entries, no other thread can print its entries. And so you will see entries of different threads printed on separate lines. This will show that all threads’ entries, which is an instance variable, is a list with numbers from 0 to 9. So, thread switching doesn’t affect the instance variable of a thread." />
+<meta property="og:description" content="We will see some examples of using threads in Python and how to avoid race conditions: You should run each example several times to notice that threads are unpredictable and that your results differ every time. Disclaimer: Forget anything you heard about GIL for now, because GIL is not going to mess up with scenarios I want to show. ###Example 1: We want to fetch five different urls: ####Single threaded way: def get_responses(): urls = [&#39;http://www.google.com&#39;, &#39;http://www.amazon.com&#39;, &#39;http://www.ebay.com&#39;, &#39;http://www.alibaba.com&#39;, &#39;http://www.reddit.com&#39;] start = time.time() for url in urls: print url resp = urllib2.urlopen(url) print resp.getcode() print &quot;Elapsed time: %s&quot; % (time.time()-start) get_response() Output is: http://www.google.com 200 http://www.amazon.com 200 http://www.ebay.com 200 http://www.alibaba.com 200 http://www.reddit.com 200 Elapsed time: 3.0814409256 #####Explanation: All the urls are fetched in sequence. Unless the processor got response from a url, it didn’t fetch the next url. Network operations are time taking, so processor was idle during the time it was expecting the response from a url. Even in a single threaded program, there is one thread of execution. Let’s call it main thread. So, last example had only one thread, i.e main thread. ####Multi threaded way: You need to create a class which subclasses Thread: from threading import Thread class GetUrlThread(Thread): def __init__(self, url): self.url = url super(GetUrlThread, self).__init__() def run(self): resp = urllib2.urlopen(self.url) print self.url, resp.getcode() def get_responses(): urls = [&#39;http://www.google.com&#39;, &#39;http://www.amazon.com&#39;, &#39;http://www.ebay.com&#39;, &#39;http://www.alibaba.com&#39;, &#39;http://www.reddit.com&#39;] start = time.time() threads = [] for url in urls: t = GetUrlThread(url) threads.append(t) t.start() for t in threads: t.join() print &quot;Elapsed time: %s&quot; % (time.time()-start) get_responses() Output is: http://www.reddit.com 200 http://www.google.com 200 http://www.amazon.com 200 http://www.alibaba.com 200 http://www.ebay.com 200 Elapsed time: 0.689890861511 #####Explanation: Appreciate the improvement in running time of this program. We wrote a multi threaded program to decrease processor’s idle time. While waiting for response of a particular thread’s url, processor can work on some other thread and fetch the other thread’s url. We wanted one thread to act on one url, so overridden the constructor of thread class to pass it a url. Execution of a thread means execution of a thread’s run(). So, whatever we want the thread to do must go in its run(). Created one thread for each url and called start() on it. This tells the processor that it can execute the particular thread i.e the run() of thread. We don’t want the elapsed time to be evaluated until all the threads have executed, join() comes in picture here. Calling join() on a thread tells the main thread to wait for this particular thread to finish before the main thread can execute the next instruction. We call join() on all the threads, so elapsed time will be printed only after all the threads have run. #####Few things about threads Processor might not execute run() of a thread immediately after start(). You can’t say in which order run() of different threads will be called. For a specific thread, it’s guaranteed that the statements inside run() will be executed sequentially. It means that first the the url associated with the thread will be fetched and only then the recieved response will be printed. ###Example 2: We will demonstrate race condition with a program and then fix it: Read wikipedia example to understand what race condition means. #define a global variable some_var = 0 class IncrementThread(Thread): def run(self): #we want to read a global variable #and then increment it global some_var read_value = some_var print &quot;some_var in %s is %d&quot; % (self.name, read_value) some_var = read_value + 1 print &quot;some_var in %s after increment is %d&quot; % (self.name, some_var) def use_increment_thread(): threads = [] for i in range(50): t = IncrementThread() threads.append(t) t.start() for t in threads: t.join() print &quot;After 50 modifications, some_var should have become 50&quot; print &quot;After 50 modifications, some_var is %d&quot; % (some_var,) use_increment_thread() Run this and you will find different result every time. #####Explanation: There is a global variable and all the threads will modify it. All threads should add 1 to the existing value of the variable. There are 50 threads, so at end the value of some_var should become 50, but it doesn’t. #####Why some_var didn’t reach 50? At some point thread t1 read the value of some_var as 15 and then processor took the control from this thread and gave it to thread t2. t2 also reads some_var as 15. Both t1 and t2 reset the value of some_var to 15+1 i.e 16. But when two threads act on some_var we expected it’s value to be increased by 2. So, we have a race condition here. A similar race condition might have occurred few more times and so value of some_var at end remains something like 41 or 42 or anything less than 50. ####Fix this race condition Change the run() of IncrementThread to: from threading import Lock lock = Lock() class IncrementThread(Thread): def run(self): #we want to read a global variable #and then increment it global some_var lock.acquire() read_value = some_var print &quot;some_var in %s is %d&quot; % (self.name, read_value) some_var = read_value + 1 print &quot;some_var in %s after increment is %d&quot; % (self.name, some_var) lock.release() You should run use_increment_thread again and the result will match your expectation. #####Explanation: Lock is used to guard against race condition. If thread t1 has acquired the lock before performing a set of operations, no other thread can perform the same set of operation until t1 releases the lock. We want to make sure that once t1 has read some_var, no other thread can read some_var until t1 is done with modifying the value of some_var. So reading some_var and modifying it are logically related operations here. And that is why we keep read and modify part of some_var guarded by a Lock instance. Lock is a separate object and it will be acquired by the thread from whose context it is called. ###Example 3 In last example we saw how a global variable gets affected in multithreading. Let’s see an example to verify that one thread cannot affect the instance variable of some other thread. Let’s introduce time.sleep() in this example. It will make sure that a thread goes in suspended state and hence enforces thread switching to occur. import time class CreateListThread(Thread): def run(self): self.entries = [] for i in range(10): time.sleep(1) self.entries.append(i) print self.entries def use_create_list_thread(): for i in range(3): t = CreateListThread() t.start() use_create_list_thread() Run it few times and you will notice that the list do not get printed properly. Possibly the entries of one thread was getting printed and during this operation, processor switched to some other thread and started printing the entries for other thread. We want to ensure that entries get printed one after another for separate threads. Change run() of CreateListThread to use lock. class CreateListThread(Thread): def run(self): self.entries = [] for i in range(10): time.sleep(1) self.entries.append(i) lock.acquire() print self.entries lock.release() So, we put the print operation inside a lock. When one thread has acquired the lock and printing its entries, no other thread can print its entries. And so you will see entries of different threads printed on separate lines. This will show that all threads’ entries, which is an instance variable, is a list with numbers from 0 to 9. So, thread switching doesn’t affect the instance variable of a thread." />
+<link rel="canonical" href="http://localhost:4000/threads/2013/09/17/understanding-threads-in-python.html" />
+<meta property="og:url" content="http://localhost:4000/threads/2013/09/17/understanding-threads-in-python.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2013-09-17T23:53:01+05:30" />
+<script type="application/ld+json">
+{"description":"We will see some examples of using threads in Python and how to avoid race conditions: You should run each example several times to notice that threads are unpredictable and that your results differ every time. Disclaimer: Forget anything you heard about GIL for now, because GIL is not going to mess up with scenarios I want to show. ###Example 1: We want to fetch five different urls: ####Single threaded way: def get_responses(): urls = [&#39;http://www.google.com&#39;, &#39;http://www.amazon.com&#39;, &#39;http://www.ebay.com&#39;, &#39;http://www.alibaba.com&#39;, &#39;http://www.reddit.com&#39;] start = time.time() for url in urls: print url resp = urllib2.urlopen(url) print resp.getcode() print &quot;Elapsed time: %s&quot; % (time.time()-start) get_response() Output is: http://www.google.com 200 http://www.amazon.com 200 http://www.ebay.com 200 http://www.alibaba.com 200 http://www.reddit.com 200 Elapsed time: 3.0814409256 #####Explanation: All the urls are fetched in sequence. Unless the processor got response from a url, it didn’t fetch the next url. Network operations are time taking, so processor was idle during the time it was expecting the response from a url. Even in a single threaded program, there is one thread of execution. Let’s call it main thread. So, last example had only one thread, i.e main thread. ####Multi threaded way: You need to create a class which subclasses Thread: from threading import Thread class GetUrlThread(Thread): def __init__(self, url): self.url = url super(GetUrlThread, self).__init__() def run(self): resp = urllib2.urlopen(self.url) print self.url, resp.getcode() def get_responses(): urls = [&#39;http://www.google.com&#39;, &#39;http://www.amazon.com&#39;, &#39;http://www.ebay.com&#39;, &#39;http://www.alibaba.com&#39;, &#39;http://www.reddit.com&#39;] start = time.time() threads = [] for url in urls: t = GetUrlThread(url) threads.append(t) t.start() for t in threads: t.join() print &quot;Elapsed time: %s&quot; % (time.time()-start) get_responses() Output is: http://www.reddit.com 200 http://www.google.com 200 http://www.amazon.com 200 http://www.alibaba.com 200 http://www.ebay.com 200 Elapsed time: 0.689890861511 #####Explanation: Appreciate the improvement in running time of this program. We wrote a multi threaded program to decrease processor’s idle time. While waiting for response of a particular thread’s url, processor can work on some other thread and fetch the other thread’s url. We wanted one thread to act on one url, so overridden the constructor of thread class to pass it a url. Execution of a thread means execution of a thread’s run(). So, whatever we want the thread to do must go in its run(). Created one thread for each url and called start() on it. This tells the processor that it can execute the particular thread i.e the run() of thread. We don’t want the elapsed time to be evaluated until all the threads have executed, join() comes in picture here. Calling join() on a thread tells the main thread to wait for this particular thread to finish before the main thread can execute the next instruction. We call join() on all the threads, so elapsed time will be printed only after all the threads have run. #####Few things about threads Processor might not execute run() of a thread immediately after start(). You can’t say in which order run() of different threads will be called. For a specific thread, it’s guaranteed that the statements inside run() will be executed sequentially. It means that first the the url associated with the thread will be fetched and only then the recieved response will be printed. ###Example 2: We will demonstrate race condition with a program and then fix it: Read wikipedia example to understand what race condition means. #define a global variable some_var = 0 class IncrementThread(Thread): def run(self): #we want to read a global variable #and then increment it global some_var read_value = some_var print &quot;some_var in %s is %d&quot; % (self.name, read_value) some_var = read_value + 1 print &quot;some_var in %s after increment is %d&quot; % (self.name, some_var) def use_increment_thread(): threads = [] for i in range(50): t = IncrementThread() threads.append(t) t.start() for t in threads: t.join() print &quot;After 50 modifications, some_var should have become 50&quot; print &quot;After 50 modifications, some_var is %d&quot; % (some_var,) use_increment_thread() Run this and you will find different result every time. #####Explanation: There is a global variable and all the threads will modify it. All threads should add 1 to the existing value of the variable. There are 50 threads, so at end the value of some_var should become 50, but it doesn’t. #####Why some_var didn’t reach 50? At some point thread t1 read the value of some_var as 15 and then processor took the control from this thread and gave it to thread t2. t2 also reads some_var as 15. Both t1 and t2 reset the value of some_var to 15+1 i.e 16. But when two threads act on some_var we expected it’s value to be increased by 2. So, we have a race condition here. A similar race condition might have occurred few more times and so value of some_var at end remains something like 41 or 42 or anything less than 50. ####Fix this race condition Change the run() of IncrementThread to: from threading import Lock lock = Lock() class IncrementThread(Thread): def run(self): #we want to read a global variable #and then increment it global some_var lock.acquire() read_value = some_var print &quot;some_var in %s is %d&quot; % (self.name, read_value) some_var = read_value + 1 print &quot;some_var in %s after increment is %d&quot; % (self.name, some_var) lock.release() You should run use_increment_thread again and the result will match your expectation. #####Explanation: Lock is used to guard against race condition. If thread t1 has acquired the lock before performing a set of operations, no other thread can perform the same set of operation until t1 releases the lock. We want to make sure that once t1 has read some_var, no other thread can read some_var until t1 is done with modifying the value of some_var. So reading some_var and modifying it are logically related operations here. And that is why we keep read and modify part of some_var guarded by a Lock instance. Lock is a separate object and it will be acquired by the thread from whose context it is called. ###Example 3 In last example we saw how a global variable gets affected in multithreading. Let’s see an example to verify that one thread cannot affect the instance variable of some other thread. Let’s introduce time.sleep() in this example. It will make sure that a thread goes in suspended state and hence enforces thread switching to occur. import time class CreateListThread(Thread): def run(self): self.entries = [] for i in range(10): time.sleep(1) self.entries.append(i) print self.entries def use_create_list_thread(): for i in range(3): t = CreateListThread() t.start() use_create_list_thread() Run it few times and you will notice that the list do not get printed properly. Possibly the entries of one thread was getting printed and during this operation, processor switched to some other thread and started printing the entries for other thread. We want to ensure that entries get printed one after another for separate threads. Change run() of CreateListThread to use lock. class CreateListThread(Thread): def run(self): self.entries = [] for i in range(10): time.sleep(1) self.entries.append(i) lock.acquire() print self.entries lock.release() So, we put the print operation inside a lock. When one thread has acquired the lock and printing its entries, no other thread can print its entries. And so you will see entries of different threads printed on separate lines. This will show that all threads’ entries, which is an instance variable, is a list with numbers from 0 to 9. So, thread switching doesn’t affect the instance variable of a thread.","author":{"@type":"Person","name":"akshar"},"@type":"BlogPosting","url":"http://localhost:4000/threads/2013/09/17/understanding-threads-in-python.html","headline":"Understanding Threads in Python","dateModified":"2013-09-17T23:53:01+05:30","datePublished":"2013-09-17T23:53:01+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/threads/2013/09/17/understanding-threads-in-python.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Understanding Threads in Python</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2013-09-17T23:53:01+05:30" itemprop="datePublished">Sep 17, 2013
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">akshar</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>We will see some examples of using threads in Python and how to avoid race conditions:</p>
+
+<p>You should run each example several times to notice that threads are unpredictable and that your results differ every time.</p>
+
+<p>Disclaimer: Forget anything you heard about GIL for now, because GIL is not going to mess up with scenarios I want to show.</p>
+
+<p>###Example 1:</p>
+
+<p>We want to fetch five different urls:</p>
+
+<p>####Single threaded way:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def get_responses():
+    urls = ['http://www.google.com', 'http://www.amazon.com', 'http://www.ebay.com', 'http://www.alibaba.com', 'http://www.reddit.com']
+    start = time.time()
+    for url in urls:
+        print url
+        resp = urllib2.urlopen(url)
+        print resp.getcode()
+    print "Elapsed time: %s" % (time.time()-start)
+
+get_response()
+</code></pre></div></div>
+
+<p>Output is:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://www.google.com 200
+http://www.amazon.com 200
+http://www.ebay.com 200
+http://www.alibaba.com 200
+http://www.reddit.com 200
+Elapsed time: 3.0814409256
+</code></pre></div></div>
+
+<p>#####Explanation:</p>
+
+<ul>
+  <li>All the urls are fetched in sequence.</li>
+  <li>Unless the processor got response from a url, it didn’t fetch the next url.</li>
+  <li>Network operations are time taking, so processor was idle during the time it was expecting the response from a url.</li>
+</ul>
+
+<p>Even in a single threaded program, there is one thread of execution. Let’s call it <strong>main thread</strong>. So, last example had only one thread, i.e main thread.</p>
+
+<p>####Multi threaded way:</p>
+
+<p>You need to create a class which subclasses Thread:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from threading import Thread
+
+class GetUrlThread(Thread):
+    def __init__(self, url):
+        self.url = url 
+        super(GetUrlThread, self).__init__()
+
+    def run(self):
+        resp = urllib2.urlopen(self.url)
+        print self.url, resp.getcode()
+
+def get_responses():
+    urls = ['http://www.google.com', 'http://www.amazon.com', 'http://www.ebay.com', 'http://www.alibaba.com', 'http://www.reddit.com']
+    start = time.time()
+    threads = []
+    for url in urls:
+        t = GetUrlThread(url)
+        threads.append(t)
+        t.start()
+    for t in threads:
+        t.join()
+    print "Elapsed time: %s" % (time.time()-start)
+
+get_responses()
+</code></pre></div></div>
+
+<p>Output is:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://www.reddit.com 200
+http://www.google.com 200
+http://www.amazon.com 200
+http://www.alibaba.com 200
+http://www.ebay.com 200
+Elapsed time: 0.689890861511
+</code></pre></div></div>
+
+<p>#####Explanation:</p>
+
+<ul>
+  <li>Appreciate the improvement in running time of this program.</li>
+  <li>We wrote a multi threaded program to decrease processor’s idle time. While waiting for response of a particular thread’s url, processor can work on some other thread and fetch the other thread’s url.</li>
+  <li>We wanted one thread to act on one url, so overridden the constructor of thread class to pass it a url.</li>
+  <li>Execution of a thread means execution of a thread’s <strong>run()</strong>.</li>
+  <li>So, whatever we want the thread to do must go in its <strong>run()</strong>.</li>
+  <li>Created one thread for each url and called <strong>start()</strong> on it. This tells the processor that it can execute the particular thread i.e the <strong>run()</strong> of thread.</li>
+  <li>We don’t want the elapsed time to be evaluated until all the threads have executed, <strong>join()</strong> comes in picture here.</li>
+  <li>Calling <strong>join()</strong> on a thread tells the <strong>main thread</strong> to wait for this particular thread to finish before the main thread can execute the next instruction.</li>
+  <li>We call join() on all the threads, so elapsed time will be printed only after all the threads have run.</li>
+</ul>
+
+<p>#####Few things about threads</p>
+<ul>
+  <li>Processor might not execute run() of a thread immediately after <strong>start()</strong>.</li>
+  <li>You can’t say in which order run() of different threads will be called.</li>
+  <li>For a specific thread, it’s guaranteed that the statements inside run() will be executed sequentially.</li>
+  <li>It means that first the the url associated with the thread will be fetched and only then the recieved response will be printed.</li>
+</ul>
+
+<p>###Example 2:</p>
+
+<p>We will demonstrate race condition with a program and then fix it:</p>
+
+<p>Read <a href="http://en.wikipedia.org/wiki/Race_condition#Example">wikipedia example</a> to understand what race condition means.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#define a global variable
+some_var = 0
+
+class IncrementThread(Thread):
+    def run(self):
+        #we want to read a global variable
+        #and then increment it
+        global some_var
+        read_value = some_var
+        print "some_var in %s is %d" % (self.name, read_value)
+        some_var = read_value + 1 
+        print "some_var in %s after increment is %d" % (self.name, some_var)
+
+def use_increment_thread():
+    threads = []
+    for i in range(50):
+        t = IncrementThread()
+        threads.append(t)
+        t.start()
+    for t in threads:
+        t.join()
+    print "After 50 modifications, some_var should have become 50"
+    print "After 50 modifications, some_var is %d" % (some_var,)
+
+use_increment_thread()
+</code></pre></div></div>
+
+<p>Run this and you will find different result every time.</p>
+
+<p>#####Explanation:</p>
+
+<ul>
+  <li>There is a global variable and all the threads will modify it.</li>
+  <li>All threads should add 1 to the existing value of the variable.</li>
+  <li>There are 50 threads, so at end the value of some_var should become 50, but it doesn’t.</li>
+</ul>
+
+<p>#####Why some_var didn’t reach 50?</p>
+<ul>
+  <li>At some point thread <strong>t1</strong> read the value of some_var as 15 and then processor took the control from this thread and gave it to thread <strong>t2</strong>.</li>
+  <li>t2 also reads some_var as 15.</li>
+  <li>Both t1 and t2 reset the value of some_var to <strong>15+1</strong> i.e 16.</li>
+  <li>But when two threads act on some_var we expected it’s value to be increased by 2.</li>
+  <li>So, we have a race condition here.</li>
+  <li>A similar race condition might have occurred few more times and so value of <strong>some_var</strong> at end remains something like 41 or 42 or anything less than 50.</li>
+</ul>
+
+<p>####Fix this race condition</p>
+
+<p>Change the <strong>run()</strong> of IncrementThread to:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from threading import Lock
+lock = Lock()
+
+class IncrementThread(Thread):
+    def run(self):
+        #we want to read a global variable
+        #and then increment it
+        global some_var
+        lock.acquire()
+        read_value = some_var
+        print "some_var in %s is %d" % (self.name, read_value)
+        some_var = read_value + 1
+        print "some_var in %s after increment is %d" % (self.name, some_var)
+        lock.release()
+</code></pre></div></div>
+
+<p>You should run use_increment_thread again and the result will match your expectation.</p>
+
+<p>#####Explanation:</p>
+
+<ul>
+  <li>Lock is used to guard against race condition.</li>
+  <li>If thread t1 has acquired the lock before performing a set of operations, no other thread can perform the same set of operation until t1 releases the lock.</li>
+  <li>We want to make sure that once t1 has read some_var, no other thread can read some_var until t1 is done with modifying the value of some_var.</li>
+  <li>So reading some_var and modifying it are logically related operations here.</li>
+  <li>And that is why we keep read and modify part of some_var guarded by a Lock instance.</li>
+  <li>Lock is a separate object and it will be acquired by the thread from whose context it is called.</li>
+</ul>
+
+<p>###Example 3</p>
+
+<p>In last example we saw how a global variable gets affected in multithreading. Let’s see an example to verify that one thread cannot affect the instance variable of some other thread.</p>
+
+<p>Let’s introduce <strong>time.sleep()</strong> in this example. It will make sure that a thread goes in suspended state and hence enforces thread switching to occur.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import time
+
+class CreateListThread(Thread):
+    def run(self):
+        self.entries = []
+        for i in range(10):
+            time.sleep(1)
+            self.entries.append(i)
+        print self.entries
+
+def use_create_list_thread():
+    for i in range(3):
+        t = CreateListThread()
+        t.start()
+
+use_create_list_thread()
+</code></pre></div></div>
+
+<p>Run it few times and you will notice that the list do not get printed properly.</p>
+
+<p>Possibly the entries of one thread was getting printed and during this operation, processor switched to some other thread and started printing the entries for other thread. We want to ensure that entries get printed one after another for separate threads.</p>
+
+<p>Change run() of CreateListThread to use lock.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>class CreateListThread(Thread):
+    def run(self):
+        self.entries = []
+        for i in range(10):
+            time.sleep(1)
+            self.entries.append(i)
+        lock.acquire()
+        print self.entries
+        lock.release()
+</code></pre></div></div>
+
+<p>So, we put the print operation inside a lock. When one thread has acquired the lock and printing its <strong>entries</strong>, no other thread can print its entries. And so you will see entries of different threads printed on separate lines.</p>
+
+<p>This will show that all threads’ <strong>entries</strong>, which is an instance variable, is a list with numbers from 0 to 9. So, thread switching doesn’t affect the instance variable of a thread.</p>
+
+
+  </div><a class="u-url" href="/threads/2013/09/17/understanding-threads-in-python.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

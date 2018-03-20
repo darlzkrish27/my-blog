@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Exploring Authorize.net Payment Gateway Options and integrating it with django | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Exploring Authorize.net Payment Gateway Options and integrating it with django" />
+<meta name="author" content="lakshman" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Authorize.net has a user base of over 200k merchants making it the largest payment gateway service provider. Most e-commerce solutions already integrate with Authorize.net, including our favorite e-commerce store Satchmo, developed in django, that we have covered earlier. However, many shopping portals still require custom development. The robust REST API Authorize.net offers (AIM and SIM) allows for integration with e-commerce merchants’ websites. The AIM API allows for the check out of the customer within the merchant’s site, it requires SSL certificate for the merchants site and data is to be transferred in an 128-bit encrypted format. The SIM API on the other hand allows for a hosted check out from Authorize.net’s site. The appearance, look and feel, CSS, logos, header and footer of their site can be customised, so that users experience a similar interface. Thus a merchant can perform, based on his business need, one of the following: Using the SIM API, perform the checkout and display the receipt on Authorize.net Using the SIM API perform the checkout on Authorize.net and display the receipt on merchant&#39;s site, by using relay response Using the SIM API obtain Authorization confirmation on Authorize.net and perform the checkout and display the recipt on the merchant&#39;s site Using AIM API, perform the entire checkout process on merchant&#39;s site The third option above is interesting. The Authorize.net’s SIM provides the flexibility to checkout on merchant’s site for transactions, even without SSL, for the cost of a round trip of http handshakes, just like the Paypal’s Express Checkout API. Typically, users return back to the merchant site and where the receipt is displayed (case 2) or confirm at the merchant site (case 3). Lets examine the workflow for such a scenario. Find the total amount payable by user, all inclusive. (incl taxes, shipping) Generate the fingerprint of transaction, based on merchant login-id, invoice-number, time-stamp and amount using the MD5 hashing library. Pre-populate all the hidden input form fields for the transaction on the template. (covered in detail, below) Send the user to Authorize.net when they submit the form, with pre-populated values After the authentication, the response is posted to merchant site Verify for success in the response. If you opted for payment on the authorize.net site itself, display the receipt. If you have opted for check out at your site, Confirm payment from the user and submit a new request of `x_type = &#39;PRIOR_AUTH_CAPTURE&#39;`, also include the `x_trans_id` obtained in the response. (preferably as an AJAX request) If error occurs or if customer cancels, submit a void request. The integration essentially involves, sending a list of hidden fields in a form to the specified url: Include the following Required fields in the form, set to appropriate values. x_fp_hash                       The fingerprint x_fp_timestamp             UTC time in seconds since epoch x_fp_sequence             Invoice number, or a random number x_login                           Login ID of merchant, provided by Authorize.net x_show_form                  TRUE, to show form x_amount                        Total Amount of the transaction Set the response type, `x_relay_response` to TRUE, and `url_response` to the url that to which POST has to be posted- We prefer to use the same url which is submitting the request. Set the `x_type` to `Auth_only` for a checkout at your site, or `Auth_capture` for a checkout at Authorize.net Include Additional fields, where appropriate. Entire list of fields Set the form submit to the Authorize.net specified url. Submissions go to: https://secure.authorize.net/gateway/transact.dll The following view code should indicate how you should go about doing it: import hmac,time,urllib,urllib2 def payment1(req): if (req.method == &#39;GET&#39;): #Use these values in the template to pre-populate a form that submits #these hidded fields to url http://secure.authorize.net/gateway/transact.dll payload = { &#39;x_login&#39; : &#39;login-id&#39;, &#39;x_amount&#39; : &#39;100.00&#39;, &#39;x_show_form&#39; : &#39;PAYMENT_FORM&#39;, &#39;x_type&#39; : &#39;AUTH_CAPTURE&#39;, &#39;x_method&#39; : &#39;CC&#39;, &#39;x_fp_sequence&#39; : &#39;101&#39;, &#39;x_version&#39; : &#39;3.1&#39;, &#39;x_relay_response&#39; : &#39;TRUE&#39;, &#39;x_fp_timestamp&#39; : str(int(time.time())), #The same Url as the current one, whatever it is. &#39;x_relay_url&#39; : reverse(&quot;payment_url&quot;) } msg = &#39;^&#39;.join([params[&#39;x_login&#39;], params[&#39;x_fp_sequence&#39;], params[&#39;x_fp_timestamp&#39;], params[&#39;x_amount&#39;] ])+&#39;^&#39; fingerprint = hmac.new(&#39;9LyEU8t87h9Hj49Y&#39;,msg).hexdigest() payload[&#39;x_fp_hash&#39;] = fingerprint return render_to_response(&#39;template1.html&#39;, payload, RequestContext(request)) else if (req.method == &#39;POST&#39;): #Handle the response, Verify POST dictionary if(req.post[x_response_code] == 1) : #Success #Display the receipt or #Confirm from the user pass Looking to develop an e-commerce website? We offer services. Get in touch." />
+<meta property="og:description" content="Authorize.net has a user base of over 200k merchants making it the largest payment gateway service provider. Most e-commerce solutions already integrate with Authorize.net, including our favorite e-commerce store Satchmo, developed in django, that we have covered earlier. However, many shopping portals still require custom development. The robust REST API Authorize.net offers (AIM and SIM) allows for integration with e-commerce merchants’ websites. The AIM API allows for the check out of the customer within the merchant’s site, it requires SSL certificate for the merchants site and data is to be transferred in an 128-bit encrypted format. The SIM API on the other hand allows for a hosted check out from Authorize.net’s site. The appearance, look and feel, CSS, logos, header and footer of their site can be customised, so that users experience a similar interface. Thus a merchant can perform, based on his business need, one of the following: Using the SIM API, perform the checkout and display the receipt on Authorize.net Using the SIM API perform the checkout on Authorize.net and display the receipt on merchant&#39;s site, by using relay response Using the SIM API obtain Authorization confirmation on Authorize.net and perform the checkout and display the recipt on the merchant&#39;s site Using AIM API, perform the entire checkout process on merchant&#39;s site The third option above is interesting. The Authorize.net’s SIM provides the flexibility to checkout on merchant’s site for transactions, even without SSL, for the cost of a round trip of http handshakes, just like the Paypal’s Express Checkout API. Typically, users return back to the merchant site and where the receipt is displayed (case 2) or confirm at the merchant site (case 3). Lets examine the workflow for such a scenario. Find the total amount payable by user, all inclusive. (incl taxes, shipping) Generate the fingerprint of transaction, based on merchant login-id, invoice-number, time-stamp and amount using the MD5 hashing library. Pre-populate all the hidden input form fields for the transaction on the template. (covered in detail, below) Send the user to Authorize.net when they submit the form, with pre-populated values After the authentication, the response is posted to merchant site Verify for success in the response. If you opted for payment on the authorize.net site itself, display the receipt. If you have opted for check out at your site, Confirm payment from the user and submit a new request of `x_type = &#39;PRIOR_AUTH_CAPTURE&#39;`, also include the `x_trans_id` obtained in the response. (preferably as an AJAX request) If error occurs or if customer cancels, submit a void request. The integration essentially involves, sending a list of hidden fields in a form to the specified url: Include the following Required fields in the form, set to appropriate values. x_fp_hash                       The fingerprint x_fp_timestamp             UTC time in seconds since epoch x_fp_sequence             Invoice number, or a random number x_login                           Login ID of merchant, provided by Authorize.net x_show_form                  TRUE, to show form x_amount                        Total Amount of the transaction Set the response type, `x_relay_response` to TRUE, and `url_response` to the url that to which POST has to be posted- We prefer to use the same url which is submitting the request. Set the `x_type` to `Auth_only` for a checkout at your site, or `Auth_capture` for a checkout at Authorize.net Include Additional fields, where appropriate. Entire list of fields Set the form submit to the Authorize.net specified url. Submissions go to: https://secure.authorize.net/gateway/transact.dll The following view code should indicate how you should go about doing it: import hmac,time,urllib,urllib2 def payment1(req): if (req.method == &#39;GET&#39;): #Use these values in the template to pre-populate a form that submits #these hidded fields to url http://secure.authorize.net/gateway/transact.dll payload = { &#39;x_login&#39; : &#39;login-id&#39;, &#39;x_amount&#39; : &#39;100.00&#39;, &#39;x_show_form&#39; : &#39;PAYMENT_FORM&#39;, &#39;x_type&#39; : &#39;AUTH_CAPTURE&#39;, &#39;x_method&#39; : &#39;CC&#39;, &#39;x_fp_sequence&#39; : &#39;101&#39;, &#39;x_version&#39; : &#39;3.1&#39;, &#39;x_relay_response&#39; : &#39;TRUE&#39;, &#39;x_fp_timestamp&#39; : str(int(time.time())), #The same Url as the current one, whatever it is. &#39;x_relay_url&#39; : reverse(&quot;payment_url&quot;) } msg = &#39;^&#39;.join([params[&#39;x_login&#39;], params[&#39;x_fp_sequence&#39;], params[&#39;x_fp_timestamp&#39;], params[&#39;x_amount&#39;] ])+&#39;^&#39; fingerprint = hmac.new(&#39;9LyEU8t87h9Hj49Y&#39;,msg).hexdigest() payload[&#39;x_fp_hash&#39;] = fingerprint return render_to_response(&#39;template1.html&#39;, payload, RequestContext(request)) else if (req.method == &#39;POST&#39;): #Handle the response, Verify POST dictionary if(req.post[x_response_code] == 1) : #Success #Display the receipt or #Confirm from the user pass Looking to develop an e-commerce website? We offer services. Get in touch." />
+<link rel="canonical" href="http://localhost:4000/ecommerce/2009/03/31/exploring-authorizenet-payment-gateway-options-and.html" />
+<meta property="og:url" content="http://localhost:4000/ecommerce/2009/03/31/exploring-authorizenet-payment-gateway-options-and.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-03-31T19:54:33+05:30" />
+<script type="application/ld+json">
+{"description":"Authorize.net has a user base of over 200k merchants making it the largest payment gateway service provider. Most e-commerce solutions already integrate with Authorize.net, including our favorite e-commerce store Satchmo, developed in django, that we have covered earlier. However, many shopping portals still require custom development. The robust REST API Authorize.net offers (AIM and SIM) allows for integration with e-commerce merchants’ websites. The AIM API allows for the check out of the customer within the merchant’s site, it requires SSL certificate for the merchants site and data is to be transferred in an 128-bit encrypted format. The SIM API on the other hand allows for a hosted check out from Authorize.net’s site. The appearance, look and feel, CSS, logos, header and footer of their site can be customised, so that users experience a similar interface. Thus a merchant can perform, based on his business need, one of the following: Using the SIM API, perform the checkout and display the receipt on Authorize.net Using the SIM API perform the checkout on Authorize.net and display the receipt on merchant&#39;s site, by using relay response Using the SIM API obtain Authorization confirmation on Authorize.net and perform the checkout and display the recipt on the merchant&#39;s site Using AIM API, perform the entire checkout process on merchant&#39;s site The third option above is interesting. The Authorize.net’s SIM provides the flexibility to checkout on merchant’s site for transactions, even without SSL, for the cost of a round trip of http handshakes, just like the Paypal’s Express Checkout API. Typically, users return back to the merchant site and where the receipt is displayed (case 2) or confirm at the merchant site (case 3). Lets examine the workflow for such a scenario. Find the total amount payable by user, all inclusive. (incl taxes, shipping) Generate the fingerprint of transaction, based on merchant login-id, invoice-number, time-stamp and amount using the MD5 hashing library. Pre-populate all the hidden input form fields for the transaction on the template. (covered in detail, below) Send the user to Authorize.net when they submit the form, with pre-populated values After the authentication, the response is posted to merchant site Verify for success in the response. If you opted for payment on the authorize.net site itself, display the receipt. If you have opted for check out at your site, Confirm payment from the user and submit a new request of `x_type = &#39;PRIOR_AUTH_CAPTURE&#39;`, also include the `x_trans_id` obtained in the response. (preferably as an AJAX request) If error occurs or if customer cancels, submit a void request. The integration essentially involves, sending a list of hidden fields in a form to the specified url: Include the following Required fields in the form, set to appropriate values. x_fp_hash                       The fingerprint x_fp_timestamp             UTC time in seconds since epoch x_fp_sequence             Invoice number, or a random number x_login                           Login ID of merchant, provided by Authorize.net x_show_form                  TRUE, to show form x_amount                        Total Amount of the transaction Set the response type, `x_relay_response` to TRUE, and `url_response` to the url that to which POST has to be posted- We prefer to use the same url which is submitting the request. Set the `x_type` to `Auth_only` for a checkout at your site, or `Auth_capture` for a checkout at Authorize.net Include Additional fields, where appropriate. Entire list of fields Set the form submit to the Authorize.net specified url. Submissions go to: https://secure.authorize.net/gateway/transact.dll The following view code should indicate how you should go about doing it: import hmac,time,urllib,urllib2 def payment1(req): if (req.method == &#39;GET&#39;): #Use these values in the template to pre-populate a form that submits #these hidded fields to url http://secure.authorize.net/gateway/transact.dll payload = { &#39;x_login&#39; : &#39;login-id&#39;, &#39;x_amount&#39; : &#39;100.00&#39;, &#39;x_show_form&#39; : &#39;PAYMENT_FORM&#39;, &#39;x_type&#39; : &#39;AUTH_CAPTURE&#39;, &#39;x_method&#39; : &#39;CC&#39;, &#39;x_fp_sequence&#39; : &#39;101&#39;, &#39;x_version&#39; : &#39;3.1&#39;, &#39;x_relay_response&#39; : &#39;TRUE&#39;, &#39;x_fp_timestamp&#39; : str(int(time.time())), #The same Url as the current one, whatever it is. &#39;x_relay_url&#39; : reverse(&quot;payment_url&quot;) } msg = &#39;^&#39;.join([params[&#39;x_login&#39;], params[&#39;x_fp_sequence&#39;], params[&#39;x_fp_timestamp&#39;], params[&#39;x_amount&#39;] ])+&#39;^&#39; fingerprint = hmac.new(&#39;9LyEU8t87h9Hj49Y&#39;,msg).hexdigest() payload[&#39;x_fp_hash&#39;] = fingerprint return render_to_response(&#39;template1.html&#39;, payload, RequestContext(request)) else if (req.method == &#39;POST&#39;): #Handle the response, Verify POST dictionary if(req.post[x_response_code] == 1) : #Success #Display the receipt or #Confirm from the user pass Looking to develop an e-commerce website? We offer services. Get in touch.","author":{"@type":"Person","name":"lakshman"},"@type":"BlogPosting","url":"http://localhost:4000/ecommerce/2009/03/31/exploring-authorizenet-payment-gateway-options-and.html","headline":"Exploring Authorize.net Payment Gateway Options and integrating it with django","dateModified":"2009-03-31T19:54:33+05:30","datePublished":"2009-03-31T19:54:33+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/ecommerce/2009/03/31/exploring-authorizenet-payment-gateway-options-and.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Exploring Authorize.net Payment Gateway Options and integrating it with django</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-03-31T19:54:33+05:30" itemprop="datePublished">Mar 31, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">lakshman</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><a href="http://authorize.net/" target="_blank">Authorize.net</a> has a user base of over 200k merchants making it the largest <a class="zem_slink" title="Payment gateway" rel="wikipedia" href="http://en.wikipedia.org/wiki/Payment_gateway">payment gateway</a> service provider. Most e-commerce solutions already integrate with Authorize.net, including our favorite e-commerce store <a href="http://www.satchmoproject.com/" target="_blank">Satchmo</a>, developed in django, that <a href="http://uswaretech.com/blog/2009/03/create-your-own-online-store-in-few-hours-using-satchmo-django/">we have covered earlier.</a></p>
+
+<p>However, many shopping portals still require custom development. The robust <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">REST API</a> Authorize.net offers (AIM and SIM) allows for integration with e-commerce merchants’ websites.</p>
+
+<p>The AIM API allows for the check out of the customer within the merchant’s site, it requires <a class="zem_slink" title="Transport Layer Security" rel="wikipedia" href="http://en.wikipedia.org/wiki/Transport_Layer_Security">SSL certificate</a> for the merchants site and data is to be transferred in an 128-bit encrypted format.</p>
+
+<p>The SIM API on the other hand allows for a hosted check out from Authorize.net’s site. The appearance, look and feel, CSS, logos, header and footer of their site can be customised, so that users experience a similar interface.</p>
+
+<p>Thus a merchant can perform, based on his business need, one of the following:</p>
+<ol>
+	<li>Using the SIM API, perform the checkout and display the receipt on Authorize.net</li>
+	<li>Using the SIM API perform the checkout on Authorize.net and display the receipt on merchant's site, by using relay response</li>
+	<li>Using the SIM API obtain Authorization confirmation on Authorize.net and perform the checkout and display the recipt on the merchant's site</li>
+	<li>Using AIM API, perform the entire checkout process on merchant's site</li>
+</ol>
+<p>The third option above is interesting. The Authorize.net’s SIM provides the flexibility to checkout on merchant’s site for transactions, even without SSL, for the cost of a round trip of http handshakes, just like the <a href="http://uswaretech.com/blog/2008/11/using-paypal-with-django/">Paypal’s Express Checkout API</a>.</p>
+
+<p>Typically, users return back to the merchant site and where the receipt is displayed (case 2) or confirm at the merchant site (case 3). Lets examine the workflow for such a scenario.</p>
+<ul>
+	<li>Find the total amount payable by user, all inclusive. (incl taxes, shipping)</li>
+	<li>Generate the fingerprint of transaction, based on merchant login-id, invoice-number, time-stamp and amount using the MD5 hashing library.</li>
+	<li>Pre-populate all the hidden input form fields for the transaction on the template. (covered in detail, below)</li>
+	<li>Send the user to Authorize.net when they submit the form, with pre-populated values</li>
+	<li>After the authentication, the response is posted to merchant site</li>
+	<li>Verify for success in the response.</li>
+	<li>If you opted for payment on the authorize.net site itself, display the receipt.</li>
+	<li>If you have opted for check out at your site, Confirm payment from the user and submit a new request of `x_type = 'PRIOR_AUTH_CAPTURE'`, also include the `x_trans_id` obtained in the response. (preferably as an AJAX request)</li>
+	<li>If error occurs or if customer cancels, submit a void request.</li>
+</ul>
+<p>The integration essentially involves, sending a list of hidden fields in a form to the specified url:</p>
+<ul>
+	<li>Include the following Required fields in the form, set to appropriate values.</li>
+</ul>
+
+<p><code class="highlighter-rouge">x_fp_hash</code>                       The fingerprint</p>
+
+<p><code class="highlighter-rouge">x_fp_timestamp</code>
+             
+UTC time in seconds since epoch</p>
+
+<p><code class="highlighter-rouge">x_fp_sequence</code>
+            
+Invoice number, or a random number</p>
+
+<p><code class="highlighter-rouge">x_login</code>                           Login ID of merchant, provided by Authorize.net</p>
+
+<p><code class="highlighter-rouge">x_show_form</code>                 
+TRUE, to show form</p>
+
+<p><code class="highlighter-rouge">x_amount</code>                        Total Amount of the transaction</p>
+<ul>
+	<li> Set the response type, `x_relay_response` to TRUE, and `url_response` to the url that to which POST has to be posted- We prefer to use the same url which is submitting the request.</li>
+	<li>Set the `x_type` to `Auth_only` for a checkout at your site, or `Auth_capture` for a checkout at Authorize.net</li>
+	<li>Include Additional fields, where appropriate. <a href="http://developer.authorize.net/guides/SIM/Appendix_B/Appendix_B_Alphabetized_List_of_API_Fields.htm">Entire list of fields</a></li>
+	<li>Set the form submit to the Authorize.net specified url. Submissions go to: https://secure.authorize.net/gateway/transact.dll</li>
+</ul>
+<p>The following view code should indicate how you should go about doing it:</p>
+
+<div class="highlight">
+<pre><span style="font-weight: bold; color: rgb(0, 112, 32);">import</span> <span style="font-weight: bold; color: rgb(14, 132, 181);">hmac</span><span style="color: rgb(102, 102, 102);">,</span><span style="font-weight: bold; color: rgb(14, 132, 181);">time</span><span style="color: rgb(102, 102, 102);">,</span><span style="font-weight: bold; color: rgb(14, 132, 181);">urllib</span><span style="color: rgb(102, 102, 102);">,</span><span style="font-weight: bold; color: rgb(14, 132, 181);">urllib2</span>
+
+<span style="font-weight: bold; color: rgb(0, 112, 32);">def</span> <span style="color: rgb(6, 40, 126);">payment1</span>(req):
+
+    <span style="font-weight: bold; color: rgb(0, 112, 32);">if</span> (req<span style="color: rgb(102, 102, 102);">.</span>method <span style="color: rgb(102, 102, 102);">==</span> <span style="color: rgb(64, 112, 160);">'GET'</span>):
+
+        <span style="font-style: italic; color: rgb(96, 160, 176);">#Use these values in the template to pre-populate a form that submits</span>
+        <span style="font-style: italic; color: rgb(96, 160, 176);">#these hidded fields to url http://secure.authorize.net/gateway/transact.dll</span>
+        payload <span style="color: rgb(102, 102, 102);">=</span> {
+            <span style="color: rgb(64, 112, 160);">'x_login'</span> : <span style="color: rgb(64, 112, 160);">'login-id'</span>,
+            <span style="color: rgb(64, 112, 160);">'x_amount'</span> : <span style="color: rgb(64, 112, 160);">'100.00'</span>,
+            <span style="color: rgb(64, 112, 160);">'x_show_form'</span> : <span style="color: rgb(64, 112, 160);">'PAYMENT_FORM'</span>,
+            <span style="color: rgb(64, 112, 160);">'x_type'</span> : <span style="color: rgb(64, 112, 160);">'AUTH_CAPTURE'</span>,
+            <span style="color: rgb(64, 112, 160);">'x_method'</span> : <span style="color: rgb(64, 112, 160);">'CC'</span>,
+            <span style="color: rgb(64, 112, 160);">'x_fp_sequence'</span> : <span style="color: rgb(64, 112, 160);">'101'</span>,
+            <span style="color: rgb(64, 112, 160);">'x_version'</span> : <span style="color: rgb(64, 112, 160);">'3.1'</span>,
+            <span style="color: rgb(64, 112, 160);">'x_relay_response'</span> : <span style="color: rgb(64, 112, 160);">'TRUE'</span>,
+            <span style="color: rgb(64, 112, 160);">'x_fp_timestamp'</span> : <span style="color: rgb(0, 112, 32);">str</span>(<span style="color: rgb(0, 112, 32);">int</span>(time<span style="color: rgb(102, 102, 102);">.</span>time())),
+
+            <span style="font-style: italic; color: rgb(96, 160, 176);">#The same Url as the current one, whatever it is.</span>
+            <span style="color: rgb(64, 112, 160);">'x_relay_url'</span> : reverse(<span style="color: rgb(64, 112, 160);">"payment_url"</span>)
+            }
+
+        msg <span style="color: rgb(102, 102, 102);">=</span> <span style="color: rgb(64, 112, 160);">'^'</span><span style="color: rgb(102, 102, 102);">.</span>join([params[<span style="color: rgb(64, 112, 160);">'x_login'</span>],
+               params[<span style="color: rgb(64, 112, 160);">'x_fp_sequence'</span>],
+               params[<span style="color: rgb(64, 112, 160);">'x_fp_timestamp'</span>],
+               params[<span style="color: rgb(64, 112, 160);">'x_amount'</span>]
+               ])<span style="color: rgb(102, 102, 102);">+</span><span style="color: rgb(64, 112, 160);">'^'</span>
+
+        fingerprint <span style="color: rgb(102, 102, 102);">=</span> hmac<span style="color: rgb(102, 102, 102);">.</span>new(<span style="color: rgb(64, 112, 160);">'9LyEU8t87h9Hj49Y'</span>,msg)<span style="color: rgb(102, 102, 102);">.</span>hexdigest()
+        payload[<span style="color: rgb(64, 112, 160);">'x_fp_hash'</span>] <span style="color: rgb(102, 102, 102);">=</span> fingerprint
+
+        <span style="font-weight: bold; color: rgb(0, 112, 32);">return</span> render_to_response(<span style="color: rgb(64, 112, 160);">'template1.html'</span>, payload, RequestContext(request))
+
+    <span style="font-weight: bold; color: rgb(0, 112, 32);">else</span> <span style="font-weight: bold; color: rgb(0, 112, 32);">if</span> (req<span style="color: rgb(102, 102, 102);">.</span>method <span style="color: rgb(102, 102, 102);">==</span> <span style="color: rgb(64, 112, 160);">'POST'</span>):
+
+        <span style="font-style: italic; color: rgb(96, 160, 176);">#Handle the response, Verify POST dictionary</span>
+        <span style="font-weight: bold; color: rgb(0, 112, 32);">if</span>(req<span style="color: rgb(102, 102, 102);">.</span>post[x_response_code] <span style="color: rgb(102, 102, 102);">==</span> <span style="color: rgb(64, 160, 112);">1</span>) :
+            <span style="font-style: italic; color: rgb(96, 160, 176);">#Success </span>
+            <span style="font-style: italic; color: rgb(96, 160, 176);">#Display the receipt or</span>
+            <span style="font-style: italic; color: rgb(96, 160, 176);">#Confirm from the user</span>
+            <span style="font-weight: bold; color: rgb(0, 112, 32);">pass</span></pre>
+</div>
+<hr />
+
+<p>Looking to develop an e-commerce website? We offer services. <a href="http://uswaretech.com/contact">Get in touch</a>.</p>
+
+
+  </div><a class="u-url" href="/ecommerce/2009/03/31/exploring-authorizenet-payment-gateway-options-and.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

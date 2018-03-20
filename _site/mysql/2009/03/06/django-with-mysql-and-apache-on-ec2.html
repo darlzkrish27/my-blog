@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>Django with Mysql and Apache on EC2 | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="Django with Mysql and Apache on EC2" />
+<meta name="author" content="shabda" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="What is EC2 Unless you have been living on Mars these last few years, you are sure to have heard of EC2. Amazon’s cloud offering, it offers infinite scalability. Using EC2, you can bring up any number of machines online at minutes notice, and after you are done with them, bring them down. How does EC2 work? A EC2 machine is nothing but a bare machine. An Amazon Machine Image (AMI) is a machine bundled as an Image, with preconfigured software which you can start at moments notice. We will take a AMI with a basic Ubuntu installed, and install Django with Mysql and Apache there. The prerequisites You need to have an AWS account with EC2 enabled. We don’t like to use not standard tools from the shell, right? So we will install ElasticFox, a Firefox plugin to enable using AWS services from within Firefox. Give ElasticFox your EC2 credentials. Launch ElasticFox and lunch an AMI. This is covered in extreme detail in ElasticFox owners manual so we will not cover that here. I started the AMI with AMI id ami-f27c999b. This is a 64 bit Ubuntu Gutsy AMI. After you start your ami, right click in ElasticFox on your instance and get its Public DNS. This will allow you to ssh to the instance. But you don’t have the root password for it, eh? When you launched your AMI, you used a keypair, right? So you can ssh to your server using your private key. My public dns was ec2-75-101-203-97.compute-1.amazonaws.com, my private key is stored in a file called id-django. So i login as, shabda@shabda-laptop:~$ ssh -i id-django root@ec2-75-101-203-97.compute-1.amazonaws.com .......... root@domU-12-31-39-02-BC-E1:~# Fine, we are in our brand new EC2 server now! Ok, we do not want to work as root, create a new user and give sudo rights to it. root@domU-12-31-39-02-BC-E1:~# adduser shabda Adding user `shabda&#39; ... Adding new group `shabda&#39; (1000) ... Adding new user `shabda&#39; (1000) with group `shabda&#39; ... Creating home directory `/home/shabda&#39; ... Copying files from `/etc/skel&#39; ... Enter new UNIX password: Retype new UNIX password: passwd: password updated successfully Changing the user information for shabda Enter the new value, or press ENTER for the default Full Name []: Room Number []: Work Phone []: Home Phone []: Other []: Is the information correct? [y/N] y root@domU-12-31-39-02-BC-E1:~# visudo Ok, so we created a new user and gave the new user shabda sudo rights. Logout and login as shabda. shabda@shabda-laptop:~$ ssh shabda@ec2-75-101-203-97.compute-1.amazonaws.com shabda@ec2-75-101-203-97.compute-1.amazonaws.com&#39;s password: ... shabda@domU-12-31-39-02-BC-E1:~$ Ok we are logged in as shabda. Let us install mysql, apache, mod_python, django and associated libraries. shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install mysql-server mysql-client shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install apache2 shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install libapache2-mod-python shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install python-mysqldb shabda@domU-12-31-39-02-BC-E1:~$ wget http://www.djangoproject.com/download/1.0.2/tarball/ shabda@domU-12-31-39-02-BC-E1:~$ tar -xvzf Django-1.0.2-final.tzf shabda@domU-12-31-39-02-BC-E1:~$ cd Django-1.0.2-final/ shabda@domU-12-31-39-02-BC-E1:~$ sudo python setup.py install Fine, seems like we are done. Lets start a python interpretor and see id we can import Django shabda@domU-12-31-39-02-BC-E1:~/Django-1.0.2-final$ python Python 2.5.2 (r252:60911, Apr 8 2008, 21:47:16) [GCC 4.2.3 (Ubuntu 4.2.3-2ubuntu7)] on linux2 Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information. &amp;gt;&amp;gt;&amp;gt; import django &amp;gt;&amp;gt;&amp;gt; shabda@domU-12-31-39-02-BC-E1:~$ django-admin.py startproject testproject shabda@domU-12-31-39-02-BC-E1:~$ cd testproject shabda@domU-12-31-39-02-BC-E1:~/testproject$ python manage.py validate 0 errors found Ok we have django running. Lets checkout something , so apt-get subversion. shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install subversion Ok we can run our site on the dev server, lets configure Apache to serve our content. shabda@domU-12-31-39-02-BC-E1:~$ sudo vim /etc/apache2/httpd.conf &lt;location&gt; SetHandler python-program PythonHandler django.core.handlers.modpython SetEnv DJANGO_SETTINGS_MODULE settings PythonOption django.root PythonDebug On PythonPath &quot;[&#39;/home/shabda/testproject&#39;, &#39;/var&#39;] + sys.path&quot; &lt;/location&gt; Alias /media /usr/lib/python2.5/site-packages/django/contrib/admin/media &lt;location media=&quot;&quot;&gt; SetHandler None &lt;/location&gt; Alias /static /var/www_django/static &lt;location static=&quot;&quot;&gt; SetHandler None &lt;/location&gt; Check ec2-75-101-203-97.compute-1.amazonaws.com, you get a “Congratulations on your first Django-powered page.” page Lets create a database now. shabda@domU-12-31-39-02-BC-E1:~$ mysql -u root -p mysql&amp;gt; create database djangotest; mysql&amp;gt; GRANT ALL PRIVILEGES ON *.* TO &#39;shabda8&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;some_pass&#39; WITH GRANT OPTION; shabda@domU-12-31-39-02-BC-E1:~/testproject$ mysql -u shabda8 -p Enter password: Welcome to the MySQL monitor. Commands end with ; or \g. Your MySQL connection id is 17 Server version: 5.0.51a-3ubuntu5 (Ubuntu) Type &#39;help;&#39; or &#39;\h&#39; for help. Type &#39;\c&#39; to clear the buffer. mysql&amp;gt; Ok we have a database. Lets checkout a reusable django app in our project directory. shabda@domU-12-31-39-02-BC-E1:~$ svn co https://svn.uswaretech.com/djikiki/trunk/djikiki/ djikiki Edit the settings.py and add database setting and this app to installed apps shabda@domU-12-31-39-02-BC-E1:~$ python manage.py validate Oh and we are done. Navigate to the public url of your instance and you should see your site. Play around with it. Hmm, we want to test how well does our site perform. We are going to use the awesome benchmarking tool called ab. ab is Apache Benchmark tool, it comes installed with Apache Httpd server. However to benchmark we need to bring up another instance, as running the server and benchmarking tool on same server gives wrong result. Ok so we bring up another server, login and run the ab tool. Here is the ouput. root@domU-12-31-39-03-40-97:~# ab -n 5000 -c 70 http://ec2-75-101-203-97.compute-1.amazonaws.com/djikiki/page/A-title/ This is ApacheBench, Version 2.3 &amp;lt;$Revision: 655654 $&amp;gt; Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/ Licensed to The Apache Software Foundation, http://www.apache.org/ Benchmarking ec2-75-101-203-97.compute-1.amazonaws.com (be patient) Completed 500 requests Completed 1000 requests Completed 1500 requests Completed 2000 requests Completed 2500 requests Completed 3000 requests Completed 3500 requests Completed 4000 requests Completed 4500 requests Completed 5000 requests Finished 5000 requests Server Software: Apache/2.2.8 Server Hostname: ec2-75-101-203-97.compute-1.amazonaws.com Server Port: 80 Document Path: /djikiki/page/A-title/ Document Length: 2703 bytes Concurrency Level: 70 Time taken for tests: 32.344 seconds Complete requests: 5000 Failed requests: 0 Write errors: 0 Total transferred: 14465000 bytes HTML transferred: 13515000 bytes Requests per second: 154.59 [#/sec] (mean) Time per request: 452.814 [ms] (mean) Time per request: 6.469 [ms] (mean, across all concurrent requests) Transfer rate: 436.74 [Kbytes/sec] received Connection Times (ms) min mean[+/-sd] median max Connect: 0 5 6.5 1 61 Processing: 22 446 228.9 421 2356 Waiting: 22 444 228.6 419 2356 Total: 23 450 229.3 426 2356 Percentage of the requests served within a certain time (ms) 50% 426 66% 524 75% 588 80% 631 90% 740 95% 833 98% 935 99% 1026 100% 2356 (longest request) 150+ requests per second. (This page does about 10 database queries). Not bad for an unoptimized server with even DEBUG = True, eh? We still have a lot to do to make this server production ready. If you bring down this instance, all you data is lost. So you need to get an EBS volume and attach it to your instance. You also want to backup your data on S2. But more about those in another post. Want Usware to build a high performance web application for you? Click here to contact us." />
+<meta property="og:description" content="What is EC2 Unless you have been living on Mars these last few years, you are sure to have heard of EC2. Amazon’s cloud offering, it offers infinite scalability. Using EC2, you can bring up any number of machines online at minutes notice, and after you are done with them, bring them down. How does EC2 work? A EC2 machine is nothing but a bare machine. An Amazon Machine Image (AMI) is a machine bundled as an Image, with preconfigured software which you can start at moments notice. We will take a AMI with a basic Ubuntu installed, and install Django with Mysql and Apache there. The prerequisites You need to have an AWS account with EC2 enabled. We don’t like to use not standard tools from the shell, right? So we will install ElasticFox, a Firefox plugin to enable using AWS services from within Firefox. Give ElasticFox your EC2 credentials. Launch ElasticFox and lunch an AMI. This is covered in extreme detail in ElasticFox owners manual so we will not cover that here. I started the AMI with AMI id ami-f27c999b. This is a 64 bit Ubuntu Gutsy AMI. After you start your ami, right click in ElasticFox on your instance and get its Public DNS. This will allow you to ssh to the instance. But you don’t have the root password for it, eh? When you launched your AMI, you used a keypair, right? So you can ssh to your server using your private key. My public dns was ec2-75-101-203-97.compute-1.amazonaws.com, my private key is stored in a file called id-django. So i login as, shabda@shabda-laptop:~$ ssh -i id-django root@ec2-75-101-203-97.compute-1.amazonaws.com .......... root@domU-12-31-39-02-BC-E1:~# Fine, we are in our brand new EC2 server now! Ok, we do not want to work as root, create a new user and give sudo rights to it. root@domU-12-31-39-02-BC-E1:~# adduser shabda Adding user `shabda&#39; ... Adding new group `shabda&#39; (1000) ... Adding new user `shabda&#39; (1000) with group `shabda&#39; ... Creating home directory `/home/shabda&#39; ... Copying files from `/etc/skel&#39; ... Enter new UNIX password: Retype new UNIX password: passwd: password updated successfully Changing the user information for shabda Enter the new value, or press ENTER for the default Full Name []: Room Number []: Work Phone []: Home Phone []: Other []: Is the information correct? [y/N] y root@domU-12-31-39-02-BC-E1:~# visudo Ok, so we created a new user and gave the new user shabda sudo rights. Logout and login as shabda. shabda@shabda-laptop:~$ ssh shabda@ec2-75-101-203-97.compute-1.amazonaws.com shabda@ec2-75-101-203-97.compute-1.amazonaws.com&#39;s password: ... shabda@domU-12-31-39-02-BC-E1:~$ Ok we are logged in as shabda. Let us install mysql, apache, mod_python, django and associated libraries. shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install mysql-server mysql-client shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install apache2 shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install libapache2-mod-python shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install python-mysqldb shabda@domU-12-31-39-02-BC-E1:~$ wget http://www.djangoproject.com/download/1.0.2/tarball/ shabda@domU-12-31-39-02-BC-E1:~$ tar -xvzf Django-1.0.2-final.tzf shabda@domU-12-31-39-02-BC-E1:~$ cd Django-1.0.2-final/ shabda@domU-12-31-39-02-BC-E1:~$ sudo python setup.py install Fine, seems like we are done. Lets start a python interpretor and see id we can import Django shabda@domU-12-31-39-02-BC-E1:~/Django-1.0.2-final$ python Python 2.5.2 (r252:60911, Apr 8 2008, 21:47:16) [GCC 4.2.3 (Ubuntu 4.2.3-2ubuntu7)] on linux2 Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information. &amp;gt;&amp;gt;&amp;gt; import django &amp;gt;&amp;gt;&amp;gt; shabda@domU-12-31-39-02-BC-E1:~$ django-admin.py startproject testproject shabda@domU-12-31-39-02-BC-E1:~$ cd testproject shabda@domU-12-31-39-02-BC-E1:~/testproject$ python manage.py validate 0 errors found Ok we have django running. Lets checkout something , so apt-get subversion. shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install subversion Ok we can run our site on the dev server, lets configure Apache to serve our content. shabda@domU-12-31-39-02-BC-E1:~$ sudo vim /etc/apache2/httpd.conf &lt;location&gt; SetHandler python-program PythonHandler django.core.handlers.modpython SetEnv DJANGO_SETTINGS_MODULE settings PythonOption django.root PythonDebug On PythonPath &quot;[&#39;/home/shabda/testproject&#39;, &#39;/var&#39;] + sys.path&quot; &lt;/location&gt; Alias /media /usr/lib/python2.5/site-packages/django/contrib/admin/media &lt;location media=&quot;&quot;&gt; SetHandler None &lt;/location&gt; Alias /static /var/www_django/static &lt;location static=&quot;&quot;&gt; SetHandler None &lt;/location&gt; Check ec2-75-101-203-97.compute-1.amazonaws.com, you get a “Congratulations on your first Django-powered page.” page Lets create a database now. shabda@domU-12-31-39-02-BC-E1:~$ mysql -u root -p mysql&amp;gt; create database djangotest; mysql&amp;gt; GRANT ALL PRIVILEGES ON *.* TO &#39;shabda8&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;some_pass&#39; WITH GRANT OPTION; shabda@domU-12-31-39-02-BC-E1:~/testproject$ mysql -u shabda8 -p Enter password: Welcome to the MySQL monitor. Commands end with ; or \g. Your MySQL connection id is 17 Server version: 5.0.51a-3ubuntu5 (Ubuntu) Type &#39;help;&#39; or &#39;\h&#39; for help. Type &#39;\c&#39; to clear the buffer. mysql&amp;gt; Ok we have a database. Lets checkout a reusable django app in our project directory. shabda@domU-12-31-39-02-BC-E1:~$ svn co https://svn.uswaretech.com/djikiki/trunk/djikiki/ djikiki Edit the settings.py and add database setting and this app to installed apps shabda@domU-12-31-39-02-BC-E1:~$ python manage.py validate Oh and we are done. Navigate to the public url of your instance and you should see your site. Play around with it. Hmm, we want to test how well does our site perform. We are going to use the awesome benchmarking tool called ab. ab is Apache Benchmark tool, it comes installed with Apache Httpd server. However to benchmark we need to bring up another instance, as running the server and benchmarking tool on same server gives wrong result. Ok so we bring up another server, login and run the ab tool. Here is the ouput. root@domU-12-31-39-03-40-97:~# ab -n 5000 -c 70 http://ec2-75-101-203-97.compute-1.amazonaws.com/djikiki/page/A-title/ This is ApacheBench, Version 2.3 &amp;lt;$Revision: 655654 $&amp;gt; Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/ Licensed to The Apache Software Foundation, http://www.apache.org/ Benchmarking ec2-75-101-203-97.compute-1.amazonaws.com (be patient) Completed 500 requests Completed 1000 requests Completed 1500 requests Completed 2000 requests Completed 2500 requests Completed 3000 requests Completed 3500 requests Completed 4000 requests Completed 4500 requests Completed 5000 requests Finished 5000 requests Server Software: Apache/2.2.8 Server Hostname: ec2-75-101-203-97.compute-1.amazonaws.com Server Port: 80 Document Path: /djikiki/page/A-title/ Document Length: 2703 bytes Concurrency Level: 70 Time taken for tests: 32.344 seconds Complete requests: 5000 Failed requests: 0 Write errors: 0 Total transferred: 14465000 bytes HTML transferred: 13515000 bytes Requests per second: 154.59 [#/sec] (mean) Time per request: 452.814 [ms] (mean) Time per request: 6.469 [ms] (mean, across all concurrent requests) Transfer rate: 436.74 [Kbytes/sec] received Connection Times (ms) min mean[+/-sd] median max Connect: 0 5 6.5 1 61 Processing: 22 446 228.9 421 2356 Waiting: 22 444 228.6 419 2356 Total: 23 450 229.3 426 2356 Percentage of the requests served within a certain time (ms) 50% 426 66% 524 75% 588 80% 631 90% 740 95% 833 98% 935 99% 1026 100% 2356 (longest request) 150+ requests per second. (This page does about 10 database queries). Not bad for an unoptimized server with even DEBUG = True, eh? We still have a lot to do to make this server production ready. If you bring down this instance, all you data is lost. So you need to get an EBS volume and attach it to your instance. You also want to backup your data on S2. But more about those in another post. Want Usware to build a high performance web application for you? Click here to contact us." />
+<link rel="canonical" href="http://localhost:4000/mysql/2009/03/06/django-with-mysql-and-apache-on-ec2.html" />
+<meta property="og:url" content="http://localhost:4000/mysql/2009/03/06/django-with-mysql-and-apache-on-ec2.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2009-03-06T13:48:17+05:30" />
+<script type="application/ld+json">
+{"description":"What is EC2 Unless you have been living on Mars these last few years, you are sure to have heard of EC2. Amazon’s cloud offering, it offers infinite scalability. Using EC2, you can bring up any number of machines online at minutes notice, and after you are done with them, bring them down. How does EC2 work? A EC2 machine is nothing but a bare machine. An Amazon Machine Image (AMI) is a machine bundled as an Image, with preconfigured software which you can start at moments notice. We will take a AMI with a basic Ubuntu installed, and install Django with Mysql and Apache there. The prerequisites You need to have an AWS account with EC2 enabled. We don’t like to use not standard tools from the shell, right? So we will install ElasticFox, a Firefox plugin to enable using AWS services from within Firefox. Give ElasticFox your EC2 credentials. Launch ElasticFox and lunch an AMI. This is covered in extreme detail in ElasticFox owners manual so we will not cover that here. I started the AMI with AMI id ami-f27c999b. This is a 64 bit Ubuntu Gutsy AMI. After you start your ami, right click in ElasticFox on your instance and get its Public DNS. This will allow you to ssh to the instance. But you don’t have the root password for it, eh? When you launched your AMI, you used a keypair, right? So you can ssh to your server using your private key. My public dns was ec2-75-101-203-97.compute-1.amazonaws.com, my private key is stored in a file called id-django. So i login as, shabda@shabda-laptop:~$ ssh -i id-django root@ec2-75-101-203-97.compute-1.amazonaws.com .......... root@domU-12-31-39-02-BC-E1:~# Fine, we are in our brand new EC2 server now! Ok, we do not want to work as root, create a new user and give sudo rights to it. root@domU-12-31-39-02-BC-E1:~# adduser shabda Adding user `shabda&#39; ... Adding new group `shabda&#39; (1000) ... Adding new user `shabda&#39; (1000) with group `shabda&#39; ... Creating home directory `/home/shabda&#39; ... Copying files from `/etc/skel&#39; ... Enter new UNIX password: Retype new UNIX password: passwd: password updated successfully Changing the user information for shabda Enter the new value, or press ENTER for the default Full Name []: Room Number []: Work Phone []: Home Phone []: Other []: Is the information correct? [y/N] y root@domU-12-31-39-02-BC-E1:~# visudo Ok, so we created a new user and gave the new user shabda sudo rights. Logout and login as shabda. shabda@shabda-laptop:~$ ssh shabda@ec2-75-101-203-97.compute-1.amazonaws.com shabda@ec2-75-101-203-97.compute-1.amazonaws.com&#39;s password: ... shabda@domU-12-31-39-02-BC-E1:~$ Ok we are logged in as shabda. Let us install mysql, apache, mod_python, django and associated libraries. shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install mysql-server mysql-client shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install apache2 shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install libapache2-mod-python shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install python-mysqldb shabda@domU-12-31-39-02-BC-E1:~$ wget http://www.djangoproject.com/download/1.0.2/tarball/ shabda@domU-12-31-39-02-BC-E1:~$ tar -xvzf Django-1.0.2-final.tzf shabda@domU-12-31-39-02-BC-E1:~$ cd Django-1.0.2-final/ shabda@domU-12-31-39-02-BC-E1:~$ sudo python setup.py install Fine, seems like we are done. Lets start a python interpretor and see id we can import Django shabda@domU-12-31-39-02-BC-E1:~/Django-1.0.2-final$ python Python 2.5.2 (r252:60911, Apr 8 2008, 21:47:16) [GCC 4.2.3 (Ubuntu 4.2.3-2ubuntu7)] on linux2 Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information. &amp;gt;&amp;gt;&amp;gt; import django &amp;gt;&amp;gt;&amp;gt; shabda@domU-12-31-39-02-BC-E1:~$ django-admin.py startproject testproject shabda@domU-12-31-39-02-BC-E1:~$ cd testproject shabda@domU-12-31-39-02-BC-E1:~/testproject$ python manage.py validate 0 errors found Ok we have django running. Lets checkout something , so apt-get subversion. shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install subversion Ok we can run our site on the dev server, lets configure Apache to serve our content. shabda@domU-12-31-39-02-BC-E1:~$ sudo vim /etc/apache2/httpd.conf &lt;location&gt; SetHandler python-program PythonHandler django.core.handlers.modpython SetEnv DJANGO_SETTINGS_MODULE settings PythonOption django.root PythonDebug On PythonPath &quot;[&#39;/home/shabda/testproject&#39;, &#39;/var&#39;] + sys.path&quot; &lt;/location&gt; Alias /media /usr/lib/python2.5/site-packages/django/contrib/admin/media &lt;location media=&quot;&quot;&gt; SetHandler None &lt;/location&gt; Alias /static /var/www_django/static &lt;location static=&quot;&quot;&gt; SetHandler None &lt;/location&gt; Check ec2-75-101-203-97.compute-1.amazonaws.com, you get a “Congratulations on your first Django-powered page.” page Lets create a database now. shabda@domU-12-31-39-02-BC-E1:~$ mysql -u root -p mysql&amp;gt; create database djangotest; mysql&amp;gt; GRANT ALL PRIVILEGES ON *.* TO &#39;shabda8&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;some_pass&#39; WITH GRANT OPTION; shabda@domU-12-31-39-02-BC-E1:~/testproject$ mysql -u shabda8 -p Enter password: Welcome to the MySQL monitor. Commands end with ; or \\g. Your MySQL connection id is 17 Server version: 5.0.51a-3ubuntu5 (Ubuntu) Type &#39;help;&#39; or &#39;\\h&#39; for help. Type &#39;\\c&#39; to clear the buffer. mysql&amp;gt; Ok we have a database. Lets checkout a reusable django app in our project directory. shabda@domU-12-31-39-02-BC-E1:~$ svn co https://svn.uswaretech.com/djikiki/trunk/djikiki/ djikiki Edit the settings.py and add database setting and this app to installed apps shabda@domU-12-31-39-02-BC-E1:~$ python manage.py validate Oh and we are done. Navigate to the public url of your instance and you should see your site. Play around with it. Hmm, we want to test how well does our site perform. We are going to use the awesome benchmarking tool called ab. ab is Apache Benchmark tool, it comes installed with Apache Httpd server. However to benchmark we need to bring up another instance, as running the server and benchmarking tool on same server gives wrong result. Ok so we bring up another server, login and run the ab tool. Here is the ouput. root@domU-12-31-39-03-40-97:~# ab -n 5000 -c 70 http://ec2-75-101-203-97.compute-1.amazonaws.com/djikiki/page/A-title/ This is ApacheBench, Version 2.3 &amp;lt;$Revision: 655654 $&amp;gt; Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/ Licensed to The Apache Software Foundation, http://www.apache.org/ Benchmarking ec2-75-101-203-97.compute-1.amazonaws.com (be patient) Completed 500 requests Completed 1000 requests Completed 1500 requests Completed 2000 requests Completed 2500 requests Completed 3000 requests Completed 3500 requests Completed 4000 requests Completed 4500 requests Completed 5000 requests Finished 5000 requests Server Software: Apache/2.2.8 Server Hostname: ec2-75-101-203-97.compute-1.amazonaws.com Server Port: 80 Document Path: /djikiki/page/A-title/ Document Length: 2703 bytes Concurrency Level: 70 Time taken for tests: 32.344 seconds Complete requests: 5000 Failed requests: 0 Write errors: 0 Total transferred: 14465000 bytes HTML transferred: 13515000 bytes Requests per second: 154.59 [#/sec] (mean) Time per request: 452.814 [ms] (mean) Time per request: 6.469 [ms] (mean, across all concurrent requests) Transfer rate: 436.74 [Kbytes/sec] received Connection Times (ms) min mean[+/-sd] median max Connect: 0 5 6.5 1 61 Processing: 22 446 228.9 421 2356 Waiting: 22 444 228.6 419 2356 Total: 23 450 229.3 426 2356 Percentage of the requests served within a certain time (ms) 50% 426 66% 524 75% 588 80% 631 90% 740 95% 833 98% 935 99% 1026 100% 2356 (longest request) 150+ requests per second. (This page does about 10 database queries). Not bad for an unoptimized server with even DEBUG = True, eh? We still have a lot to do to make this server production ready. If you bring down this instance, all you data is lost. So you need to get an EBS volume and attach it to your instance. You also want to backup your data on S2. But more about those in another post. Want Usware to build a high performance web application for you? Click here to contact us.","author":{"@type":"Person","name":"shabda"},"@type":"BlogPosting","url":"http://localhost:4000/mysql/2009/03/06/django-with-mysql-and-apache-on-ec2.html","headline":"Django with Mysql and Apache on EC2","dateModified":"2009-03-06T13:48:17+05:30","datePublished":"2009-03-06T13:48:17+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/mysql/2009/03/06/django-with-mysql-and-apache-on-ec2.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Django with Mysql and Apache on EC2</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2009-03-06T13:48:17+05:30" itemprop="datePublished">Mar 6, 2009
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">shabda</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="what-is-ec2">What is EC2</h2>
+
+<p>Unless you have been living on Mars these last few years, you are sure to have heard of <a href="http://aws.amazon.com/ec2/">EC2</a>. Amazon’s cloud offering,
+it offers infinite scalability. Using EC2, you can bring up any number of machines online at minutes notice, and after
+you are done with them, bring them down.</p>
+
+<h2 id="how-does-ec2-work">How does EC2 work?</h2>
+
+<p>A EC2 machine is nothing but a bare machine. An <a href="http://aws.amazon.com/ec2/instance-types/">Amazon Machine Image</a> (AMI) is a machine bundled as an Image, with preconfigured software which you can 
+start at moments notice. We will take a AMI with a basic Ubuntu installed, and install Django with Mysql and Apache there.</p>
+
+<h2 id="the-prerequisites">The prerequisites</h2>
+<p>You need to have an <a href="http://aws.amazon.com/">AWS account</a> with EC2 enabled. We don’t like to use not standard tools from the shell, right? So we will install
+<a href="http://sourceforge.net/projects/elasticfox/">ElasticFox</a>, a Firefox plugin to enable using AWS services from within Firefox.</p>
+
+<p>Give ElasticFox your EC2 credentials.  Launch ElasticFox and lunch an AMI. This is covered in extreme detail in <a href="http://ec2-downloads.s3.amazonaws.com/elasticfox-owners-manual.pdf">ElasticFox owners manual</a>
+so we will not cover that here.</p>
+
+<p>I started the AMI with AMI id ami-f27c999b. This is a 64 bit Ubuntu Gutsy AMI.</p>
+
+<p>After you start your ami, right click in ElasticFox on your instance and get its Public DNS. This will allow you to ssh to the instance. But you don’t have the root password for it, eh? When you launched your AMI, you used a keypair, right? So you can ssh to your server using your private key.</p>
+
+<p>My public dns was ec2-75-101-203-97.compute-1.amazonaws.com, my private key is stored in a file called id-django. So i login as,</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@shabda-laptop:~$ ssh -i id-django root@ec2-75-101-203-97.compute-1.amazonaws.com
+
+
+..........
+
+root@domU-12-31-39-02-BC-E1:~# 
+</code></pre></div></div>
+
+<p>Fine, we are in our brand new EC2 server now! Ok, we do not want to work as root, create a new user and give sudo rights to it.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@domU-12-31-39-02-BC-E1:~# adduser shabda
+Adding user `shabda' ...
+Adding new group `shabda' (1000) ...
+Adding new user `shabda' (1000) with group `shabda' ...
+Creating home directory `/home/shabda' ...
+Copying files from `/etc/skel' ...
+Enter new UNIX password: 
+Retype new UNIX password: 
+passwd: password updated successfully
+Changing the user information for shabda
+Enter the new value, or press ENTER for the default
+	Full Name []: 
+	Room Number []: 
+	Work Phone []: 
+	Home Phone []: 
+	Other []: 
+Is the information correct? [y/N] y
+root@domU-12-31-39-02-BC-E1:~# visudo	
+</code></pre></div></div>
+
+<p>Ok, so we created a new user and gave the new user shabda sudo rights. Logout and login as shabda.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@shabda-laptop:~$ ssh shabda@ec2-75-101-203-97.compute-1.amazonaws.com
+shabda@ec2-75-101-203-97.compute-1.amazonaws.com's password: 
+
+...
+shabda@domU-12-31-39-02-BC-E1:~$ 
+</code></pre></div></div>
+
+<p>Ok we are logged in as shabda. Let us install mysql, apache, mod_python, django and associated libraries.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install mysql-server mysql-client
+shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install apache2
+shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install libapache2-mod-python
+shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install python-mysqldb
+shabda@domU-12-31-39-02-BC-E1:~$ wget http://www.djangoproject.com/download/1.0.2/tarball/
+shabda@domU-12-31-39-02-BC-E1:~$ tar -xvzf Django-1.0.2-final.tzf
+shabda@domU-12-31-39-02-BC-E1:~$ cd Django-1.0.2-final/
+shabda@domU-12-31-39-02-BC-E1:~$ sudo python setup.py install
+</code></pre></div></div>
+
+<p>Fine, seems like we are done. Lets start a python interpretor and see id we can import Django</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@domU-12-31-39-02-BC-E1:~/Django-1.0.2-final$ python
+Python 2.5.2 (r252:60911, Apr  8 2008, 21:47:16) 
+[GCC 4.2.3 (Ubuntu 4.2.3-2ubuntu7)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+&amp;gt;&amp;gt;&amp;gt; import django
+&amp;gt;&amp;gt;&amp;gt; 
+shabda@domU-12-31-39-02-BC-E1:~$ django-admin.py startproject testproject
+shabda@domU-12-31-39-02-BC-E1:~$ cd testproject
+shabda@domU-12-31-39-02-BC-E1:~/testproject$ python manage.py validate
+0 errors found
+</code></pre></div></div>
+
+<p>Ok we have django running. Lets checkout something , so apt-get subversion.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@domU-12-31-39-02-BC-E1:~$ sudo apt-get install subversion
+</code></pre></div></div>
+
+<p>Ok we can run our site on the dev server, lets configure Apache to serve our content.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@domU-12-31-39-02-BC-E1:~$ sudo vim /etc/apache2/httpd.conf 
+
+&lt;location&gt;
+    SetHandler python-program
+    PythonHandler django.core.handlers.modpython
+    SetEnv DJANGO_SETTINGS_MODULE settings
+    PythonOption django.root
+    PythonDebug On
+    PythonPath "['/home/shabda/testproject', '/var'] + sys.path"
+&lt;/location&gt;
+
+Alias /media /usr/lib/python2.5/site-packages/django/contrib/admin/media
+&lt;location media=""&gt;
+    SetHandler None
+&lt;/location&gt;
+
+Alias /static /var/www_django/static
+&lt;location static=""&gt;
+    SetHandler None
+&lt;/location&gt;
+</code></pre></div></div>
+
+<p>Check ec2-75-101-203-97.compute-1.amazonaws.com, you get a “Congratulations on your first Django-powered page.” page</p>
+
+<p>Lets create a database now.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@domU-12-31-39-02-BC-E1:~$ mysql -u root -p
+
+mysql&amp;gt; create database djangotest;
+
+mysql&amp;gt; GRANT ALL PRIVILEGES ON *.* TO 'shabda8'@'localhost' IDENTIFIED BY 'some_pass' WITH GRANT OPTION;
+
+shabda@domU-12-31-39-02-BC-E1:~/testproject$ mysql -u shabda8 -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 17
+Server version: 5.0.51a-3ubuntu5 (Ubuntu)
+
+Type 'help;' or '\h' for help. Type '\c' to clear the buffer.
+
+mysql&amp;gt; 
+</code></pre></div></div>
+
+<p>Ok we have a database. Lets checkout a reusable django app in our project directory.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@domU-12-31-39-02-BC-E1:~$ svn co  https://svn.uswaretech.com/djikiki/trunk/djikiki/ djikiki
+</code></pre></div></div>
+
+<p>Edit the settings.py and add database setting and this app to installed apps</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shabda@domU-12-31-39-02-BC-E1:~$ python manage.py validate
+</code></pre></div></div>
+
+<p>Oh and we are done. Navigate to the public url of your instance and you should see your site. Play around with it.</p>
+
+<p>Hmm, we want to test how well does our site perform. We are going to use the awesome benchmarking tool called ab.
+ab is Apache Benchmark tool, it comes installed with Apache Httpd server. However to benchmark we need to bring up another instance, as 
+running the server and benchmarking tool on same server gives wrong result.</p>
+
+<p>Ok so we bring up another server, login and run the ab tool. Here is the ouput.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@domU-12-31-39-03-40-97:~# ab -n 5000 -c 70 http://ec2-75-101-203-97.compute-1.amazonaws.com/djikiki/page/A-title/
+This is ApacheBench, Version 2.3 &amp;lt;$Revision: 655654 $&amp;gt;
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking ec2-75-101-203-97.compute-1.amazonaws.com (be patient)
+Completed 500 requests
+Completed 1000 requests
+Completed 1500 requests
+Completed 2000 requests
+Completed 2500 requests
+Completed 3000 requests
+Completed 3500 requests
+Completed 4000 requests
+Completed 4500 requests
+Completed 5000 requests
+Finished 5000 requests
+
+
+Server Software:        Apache/2.2.8
+Server Hostname:        ec2-75-101-203-97.compute-1.amazonaws.com
+Server Port:            80
+
+Document Path:          /djikiki/page/A-title/
+Document Length:        2703 bytes
+
+Concurrency Level:      70
+Time taken for tests:   32.344 seconds
+Complete requests:      5000
+Failed requests:        0
+Write errors:           0
+Total transferred:      14465000 bytes
+HTML transferred:       13515000 bytes
+Requests per second:    154.59 [#/sec] (mean)
+Time per request:       452.814 [ms] (mean)
+Time per request:       6.469 [ms] (mean, across all concurrent requests)
+Transfer rate:          436.74 [Kbytes/sec] received
+
+Connection Times (ms)
+	      min  mean[+/-sd] median   max
+Connect:        0    5   6.5      1      61
+Processing:    22  446 228.9    421    2356
+Waiting:       22  444 228.6    419    2356
+Total:         23  450 229.3    426    2356
+
+Percentage of the requests served within a certain time (ms)
+  50%    426
+  66%    524
+  75%    588
+  80%    631
+  90%    740
+  95%    833
+  98%    935
+  99%   1026
+ 100%   2356 (longest request)
+</code></pre></div></div>
+
+<p>150+ requests per second. (This page does about 10 database queries). Not bad for an unoptimized server with even DEBUG = True, eh?</p>
+
+<p>We still have a lot to do to make this server production ready. If you bring down this instance, all you data is lost.
+So you need to get an <a href="http://aws.amazon.com/ebs/">EBS</a> volume and attach it to your instance. You also want to backup your data on <a href="http://aws.amazon.com/s2/">S2</a>. But more about those 
+in another post.</p>
+
+<hr />
+<p>Want <a href="http://uswaretech.com/">Usware</a> to build a high performance web application for you? <a href="http://uswaretech.com/contact/">Click here</a> to contact us.</p>
+
+
+  </div><a class="u-url" href="/mysql/2009/03/06/django-with-mysql-and-apache-on-ec2.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>iPhone and Android application development using Titanium | Agiliq Blogs</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="iPhone and Android application development using Titanium" />
+<meta name="author" content="dheeru" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Titanium Mobile is Appcelerator’s development platform for developing cross-platform native mobile applications. In this article we will be introducing you to installation and developing applications using Titanium. Installation Follow the steps mentioned here, to install Titanium and the corresponding sdks for your developement platform Hello world application Creating a new application and aplication structure is elaborately described in appcelerator gettting started guide Creating Forms Field Label var win = Titanium.UI.currentWindow; // get refernce to the current window var label = Titanium.UI.createLabel({ text: &#39;Label Name&#39;, height: 50, color: &#39;#000000&#39;, font:{fontSize:14}, top: 20, // vertical postion of label on the screen w.r.t screen top left: 20, // horizontal postion of label on the screen w.r.t screen left width: 200 // width of the label }); win.add(label); // add label to the current window Check more properties of label in Titanium Label API Text Field var text_field = Titanium.UI.createTextField({ color:&#39;#000000&#39;, height: 50, top: 70, // vertical postion of label on the screen w.r.t screen top left: 20, // horizontal postion of label on the screen w.r.t screen left width: 200, // width of the field borderStyle:Titanium.UI.INPUT_BORDERSTYLE_ROUNDED }); win.add(text_field); // add field to the current window Check more properties of textfield in Titanium Text Field API Button var button = Titanium.UI.createButton({ title: &#39;Button&#39;, top: 160, // vertical postion of label on the screen w.r.t screen top width: 200, // width of the button height: 50 // width of the button }); win.add(button); // add button to the current window Check more properties of button in [Titanium Button API](http://developer.appcelerator.com/apidoc/mobile/latest/Titanium.UI.Button-object) Submiting Form Data Form submission has to be handled via ‘click’ event listner on button button.addEventListener(&#39;click&#39;, function() { var field_value = text_field.value; }); Screenshot of how the form with the above code looks Accessing database and saving data to database is mentioned in the next section. Database Creating database var db = Titanium.Database.open(&#39;db_name&#39;); ‘open’ returns a reference to the opened database. If the database doesn’t yet exist, ‘open’ creates the database. Executing SQL queries db.execute(&#39;CREATE TABLE IF NOT EXISTS table_name (id INTEGER PRIMARY KEY, field1 VARCHAR, field2 VARCHAR);&#39;); Inserting data into table var f1 = &#39;v1&#39;; var f2 = &#39;v2&#39;; db.execute(&#39;INSERT INTO table_name (f1, f2) VALUES (?, ?)&#39;, f1, f2); Id of last inserted row is the value of ‘lastInsertRowId’ property on the database var last_insert_id = db.lastInsertRowId; Selecting and looping over the data from table var rows = db.execute(&#39;select * from table_name&#39;); while (rows.isValidRow()) { // check below on how to access field values of a row rows.next(); } rows.close(); Accessing the field values of a row by index(zero based) var id = rows.field(0); var v1 = rows.field(1); var v2 = rows.field(2); Accessing the field values of a row by name var id = rows.fieldByName(&#39;id&#39;); var v1 = rows.fieldByName(&#39;field1&#39;); var v2 = rows.fieldByName(&#39;field2&#39;); More about Database API Titanium.Database.install(‘meditracker’);, raised invalid database path error when tried to run the application on device. So I opted to use Titanium.Database.open Code Resources https://github.com/appcelerator/KitchenSink/ https://github.com/agiliq/meditracker, our sample application for tracking medicine timings. http://itunes.apple.com/in/app/track-my-med/id415622449?mt=8# The github code on Apple App store http://market.android.com/details?id=com.agiliq.trackmymed same code on Android stors" />
+<meta property="og:description" content="Titanium Mobile is Appcelerator’s development platform for developing cross-platform native mobile applications. In this article we will be introducing you to installation and developing applications using Titanium. Installation Follow the steps mentioned here, to install Titanium and the corresponding sdks for your developement platform Hello world application Creating a new application and aplication structure is elaborately described in appcelerator gettting started guide Creating Forms Field Label var win = Titanium.UI.currentWindow; // get refernce to the current window var label = Titanium.UI.createLabel({ text: &#39;Label Name&#39;, height: 50, color: &#39;#000000&#39;, font:{fontSize:14}, top: 20, // vertical postion of label on the screen w.r.t screen top left: 20, // horizontal postion of label on the screen w.r.t screen left width: 200 // width of the label }); win.add(label); // add label to the current window Check more properties of label in Titanium Label API Text Field var text_field = Titanium.UI.createTextField({ color:&#39;#000000&#39;, height: 50, top: 70, // vertical postion of label on the screen w.r.t screen top left: 20, // horizontal postion of label on the screen w.r.t screen left width: 200, // width of the field borderStyle:Titanium.UI.INPUT_BORDERSTYLE_ROUNDED }); win.add(text_field); // add field to the current window Check more properties of textfield in Titanium Text Field API Button var button = Titanium.UI.createButton({ title: &#39;Button&#39;, top: 160, // vertical postion of label on the screen w.r.t screen top width: 200, // width of the button height: 50 // width of the button }); win.add(button); // add button to the current window Check more properties of button in [Titanium Button API](http://developer.appcelerator.com/apidoc/mobile/latest/Titanium.UI.Button-object) Submiting Form Data Form submission has to be handled via ‘click’ event listner on button button.addEventListener(&#39;click&#39;, function() { var field_value = text_field.value; }); Screenshot of how the form with the above code looks Accessing database and saving data to database is mentioned in the next section. Database Creating database var db = Titanium.Database.open(&#39;db_name&#39;); ‘open’ returns a reference to the opened database. If the database doesn’t yet exist, ‘open’ creates the database. Executing SQL queries db.execute(&#39;CREATE TABLE IF NOT EXISTS table_name (id INTEGER PRIMARY KEY, field1 VARCHAR, field2 VARCHAR);&#39;); Inserting data into table var f1 = &#39;v1&#39;; var f2 = &#39;v2&#39;; db.execute(&#39;INSERT INTO table_name (f1, f2) VALUES (?, ?)&#39;, f1, f2); Id of last inserted row is the value of ‘lastInsertRowId’ property on the database var last_insert_id = db.lastInsertRowId; Selecting and looping over the data from table var rows = db.execute(&#39;select * from table_name&#39;); while (rows.isValidRow()) { // check below on how to access field values of a row rows.next(); } rows.close(); Accessing the field values of a row by index(zero based) var id = rows.field(0); var v1 = rows.field(1); var v2 = rows.field(2); Accessing the field values of a row by name var id = rows.fieldByName(&#39;id&#39;); var v1 = rows.fieldByName(&#39;field1&#39;); var v2 = rows.fieldByName(&#39;field2&#39;); More about Database API Titanium.Database.install(‘meditracker’);, raised invalid database path error when tried to run the application on device. So I opted to use Titanium.Database.open Code Resources https://github.com/appcelerator/KitchenSink/ https://github.com/agiliq/meditracker, our sample application for tracking medicine timings. http://itunes.apple.com/in/app/track-my-med/id415622449?mt=8# The github code on Apple App store http://market.android.com/details?id=com.agiliq.trackmymed same code on Android stors" />
+<link rel="canonical" href="http://localhost:4000/mobile/applications/2011/02/03/iphoneandroid-application-development-using-titani.html" />
+<meta property="og:url" content="http://localhost:4000/mobile/applications/2011/02/03/iphoneandroid-application-development-using-titani.html" />
+<meta property="og:site_name" content="Agiliq Blogs" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2011-02-03T20:52:06+05:30" />
+<script type="application/ld+json">
+{"description":"Titanium Mobile is Appcelerator’s development platform for developing cross-platform native mobile applications. In this article we will be introducing you to installation and developing applications using Titanium. Installation Follow the steps mentioned here, to install Titanium and the corresponding sdks for your developement platform Hello world application Creating a new application and aplication structure is elaborately described in appcelerator gettting started guide Creating Forms Field Label var win = Titanium.UI.currentWindow; // get refernce to the current window var label = Titanium.UI.createLabel({ text: &#39;Label Name&#39;, height: 50, color: &#39;#000000&#39;, font:{fontSize:14}, top: 20, // vertical postion of label on the screen w.r.t screen top left: 20, // horizontal postion of label on the screen w.r.t screen left width: 200 // width of the label }); win.add(label); // add label to the current window Check more properties of label in Titanium Label API Text Field var text_field = Titanium.UI.createTextField({ color:&#39;#000000&#39;, height: 50, top: 70, // vertical postion of label on the screen w.r.t screen top left: 20, // horizontal postion of label on the screen w.r.t screen left width: 200, // width of the field borderStyle:Titanium.UI.INPUT_BORDERSTYLE_ROUNDED }); win.add(text_field); // add field to the current window Check more properties of textfield in Titanium Text Field API Button var button = Titanium.UI.createButton({ title: &#39;Button&#39;, top: 160, // vertical postion of label on the screen w.r.t screen top width: 200, // width of the button height: 50 // width of the button }); win.add(button); // add button to the current window Check more properties of button in [Titanium Button API](http://developer.appcelerator.com/apidoc/mobile/latest/Titanium.UI.Button-object) Submiting Form Data Form submission has to be handled via ‘click’ event listner on button button.addEventListener(&#39;click&#39;, function() { var field_value = text_field.value; }); Screenshot of how the form with the above code looks Accessing database and saving data to database is mentioned in the next section. Database Creating database var db = Titanium.Database.open(&#39;db_name&#39;); ‘open’ returns a reference to the opened database. If the database doesn’t yet exist, ‘open’ creates the database. Executing SQL queries db.execute(&#39;CREATE TABLE IF NOT EXISTS table_name (id INTEGER PRIMARY KEY, field1 VARCHAR, field2 VARCHAR);&#39;); Inserting data into table var f1 = &#39;v1&#39;; var f2 = &#39;v2&#39;; db.execute(&#39;INSERT INTO table_name (f1, f2) VALUES (?, ?)&#39;, f1, f2); Id of last inserted row is the value of ‘lastInsertRowId’ property on the database var last_insert_id = db.lastInsertRowId; Selecting and looping over the data from table var rows = db.execute(&#39;select * from table_name&#39;); while (rows.isValidRow()) { // check below on how to access field values of a row rows.next(); } rows.close(); Accessing the field values of a row by index(zero based) var id = rows.field(0); var v1 = rows.field(1); var v2 = rows.field(2); Accessing the field values of a row by name var id = rows.fieldByName(&#39;id&#39;); var v1 = rows.fieldByName(&#39;field1&#39;); var v2 = rows.fieldByName(&#39;field2&#39;); More about Database API Titanium.Database.install(‘meditracker’);, raised invalid database path error when tried to run the application on device. So I opted to use Titanium.Database.open Code Resources https://github.com/appcelerator/KitchenSink/ https://github.com/agiliq/meditracker, our sample application for tracking medicine timings. http://itunes.apple.com/in/app/track-my-med/id415622449?mt=8# The github code on Apple App store http://market.android.com/details?id=com.agiliq.trackmymed same code on Android stors","author":{"@type":"Person","name":"dheeru"},"@type":"BlogPosting","url":"http://localhost:4000/mobile/applications/2011/02/03/iphoneandroid-application-development-using-titani.html","headline":"iPhone and Android application development using Titanium","dateModified":"2011-02-03T20:52:06+05:30","datePublished":"2011-02-03T20:52:06+05:30","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/mobile/applications/2011/02/03/iphoneandroid-application-development-using-titani.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Agiliq Blogs" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Agiliq Blogs</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">iPhone and Android application development using Titanium</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2011-02-03T20:52:06+05:30" itemprop="datePublished">Feb 3, 2011
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">dheeru</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><a href="http://www.appcelerator.com/products/titanium-mobile-application-development/">Titanium Mobile</a> is <a href="http://www.appcelerator.com/">Appcelerator’s</a> development platform for developing cross-platform native mobile applications. In this article we will be introducing you to installation and developing applications using Titanium.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>Follow the steps mentioned <a href="http://guides.appcelerator.com/en/getting_started.html#installing_titanium">here</a>, to install Titanium and the corresponding sdks for your developement platform</p>
+
+<h2 id="hello-world-application">Hello world application</h2>
+
+<p>Creating a new application and aplication structure is elaborately described in <a href="http://guides.appcelerator.com/en/getting_started.html#hello_world!">appcelerator gettting started guide</a></p>
+
+<h2 id="creating-forms">Creating Forms</h2>
+
+<h4 id="field-label">Field Label</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var win = Titanium.UI.currentWindow; // get refernce to the current window
+var label = Titanium.UI.createLabel({
+	text: 'Label Name',
+	height: 50,
+	color: '#000000',
+	font:{fontSize:14},
+	top: 20, // vertical postion of label on the screen w.r.t screen top
+	left: 20, // horizontal postion of label on the screen w.r.t screen left
+	width: 200 // width of the label
+});
+win.add(label); // add label to the current window
+</code></pre></div></div>
+
+<p>Check more properties of label in <a href="http://developer.appcelerator.com/apidoc/mobile/latest/Titanium.UI.Label-object.html">Titanium Label API</a></p>
+
+<h4 id="text-field">Text Field</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var text_field = Titanium.UI.createTextField({
+	color:'#000000',
+	height: 50,
+	top: 70, // vertical postion of label on the screen w.r.t screen top
+	left: 20, // horizontal postion of label on the screen w.r.t screen left
+	width: 200, // width of the field
+	borderStyle:Titanium.UI.INPUT_BORDERSTYLE_ROUNDED
+});
+win.add(text_field); // add field to the current window
+</code></pre></div></div>
+
+<p>Check more properties of textfield in <a href="http://developer.appcelerator.com/apidoc/mobile/latest/Titanium.UI.TextField-object.html">Titanium Text Field API</a></p>
+
+<h4 id="button">Button</h4>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var button = Titanium.UI.createButton({
+	title: 'Button',
+	top: 160, // vertical postion of label on the screen w.r.t screen top
+	width: 200, // width of the button
+	height: 50 // width of the button
+});
+win.add(button); // add button to the current window Check more properties of button in [Titanium Button API](http://developer.appcelerator.com/apidoc/mobile/latest/Titanium.UI.Button-object)
+</code></pre></div></div>
+
+<h4 id="submiting-form-data">Submiting Form Data</h4>
+
+<p>Form submission has to be handled via ‘click’ event listner on button</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>button.addEventListener('click', function() { 
+	var field_value = text_field.value;
+});
+</code></pre></div></div>
+
+<p>Screenshot of how the form with the above code looks
+<img src="http://media.agiliq.com/images/blog/iphone_screenshot.png" alt="Screenshot of form" title="Form Screenshot" /></p>
+
+<p>Accessing database and saving data to database is mentioned in the next section.</p>
+
+<h2 id="database">Database</h2>
+
+<h4 id="creating-database">Creating database</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var db = Titanium.Database.open('db_name');
+</code></pre></div></div>
+
+<p>‘open’ returns a reference to the opened database. If the database doesn’t yet exist, ‘open’ creates the database.</p>
+
+<h4 id="executing-sql-queries">Executing SQL queries</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>db.execute('CREATE TABLE IF NOT EXISTS table_name (id INTEGER PRIMARY KEY, field1 VARCHAR, field2 VARCHAR);');
+</code></pre></div></div>
+
+<h4 id="inserting-data-into-table">Inserting data into table</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var f1 = 'v1';
+var f2 = 'v2';
+db.execute('INSERT INTO table_name (f1, f2) VALUES (?, ?)', f1, f2);
+</code></pre></div></div>
+
+<p>Id of last inserted row is the value of ‘lastInsertRowId’ property on the database
+    var last_insert_id = db.lastInsertRowId;</p>
+
+<h4 id="selecting-and-looping-over-the-data-from-table">Selecting and looping over the data from table</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var rows = db.execute('select * from table_name');
+
+while (rows.isValidRow()) {
+    // check below on how to access field values of a row
+    rows.next();
+}
+rows.close();
+</code></pre></div></div>
+
+<h4 id="accessing-the-field-values-of-a-row-by-indexzero-based">Accessing the field values of a row by index(zero based)</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var id = rows.field(0);
+var v1 = rows.field(1);
+var v2 = rows.field(2);
+</code></pre></div></div>
+
+<h4 id="accessing-the-field-values-of-a-row-by-name">Accessing the field values of a row by name</h4>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>var id = rows.fieldByName('id');
+var v1 = rows.fieldByName('field1');
+var v2 = rows.fieldByName('field2');
+</code></pre></div></div>
+
+<p>More about <a href="http://developer.appcelerator.com/apidoc/mobile/latest/Titanium.Database-module">Database API</a></p>
+
+<ul>
+  <li>Titanium.Database.install(‘meditracker’);, raised invalid database path error when tried to run the application on device. So I opted to use Titanium.Database.open</li>
+</ul>
+
+<h4 id="code-resources">Code Resources</h4>
+
+<ul>
+  <li><a href="https://github.com/appcelerator/KitchenSink/">https://github.com/appcelerator/KitchenSink/</a></li>
+  <li><a href="https://github.com/agiliq/meditracker">https://github.com/agiliq/meditracker</a>, our sample application for tracking medicine timings.</li>
+  <li><a href="http://itunes.apple.com/in/app/track-my-med/id415622449?mt=8#">http://itunes.apple.com/in/app/track-my-med/id415622449?mt=8#</a> The <a href="https://github.com/agiliq/meditracker">github code</a> on Apple App store</li>
+  <li><a href="http://market.android.com/details?id=com.agiliq.trackmymed">http://market.android.com/details?id=com.agiliq.trackmymed</a> same code on Android stors</li>
+</ul>
+
+
+  </div><a class="u-url" href="/mobile/applications/2011/02/03/iphoneandroid-application-development-using-titani.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Agiliq Blogs</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Agiliq Blogs</li><li><a class="u-email" href="mailto:your-email@example.com">your-email@example.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jekyll"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jekyll</span></a></li><li><a href="https://www.twitter.com/jekyllrb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">jekyllrb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
