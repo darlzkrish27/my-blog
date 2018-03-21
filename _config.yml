@@ -30,7 +30,7 @@ theme: minima
 plugins:
   - jekyll-feed
 
-baseurl: "/_site"
+baseurl: "my-blog/_site"
 
 
 # Exclude from processing.
