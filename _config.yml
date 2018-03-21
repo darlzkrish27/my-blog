@@ -30,6 +30,8 @@ theme: minima
 plugins:
   - jekyll-feed
 
+baseurl: "/darlzkrish27.github.io/my-blog/"
+
 <link rel="stylesheet" href="{{ site.baseurl }}/main.css">
 
 # Exclude from processing.
