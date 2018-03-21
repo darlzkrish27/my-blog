@@ -30,7 +30,7 @@ theme: minima
 plugins:
   - jekyll-feed
 
-baseurl: "/darlzkrish27.github.io"
+baseurl: "/_site/assets"
 
 
 # Exclude from processing.
